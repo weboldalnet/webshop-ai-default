@@ -1,13 +1,13 @@
 <?php
 
-namespace Weboldalnet\PackageTemplate;
+namespace Weboldalnet\WebshopAiDefault;
 
 use Illuminate\Support\ServiceProvider;
-use Weboldalnet\PackageTemplate\Support\PackageHelper;
-use Weboldalnet\PackageTemplate\Console\ExtendViewsArticlesCommand;
-use Weboldalnet\PackageTemplate\Console\InstallArticlesCommand;
+use Weboldalnet\WebshopAiDefault\Support\PackageHelper;
+use Weboldalnet\WebshopAiDefault\Console\ExtendViewsArticlesCommand;
+use Weboldalnet\WebshopAiDefault\Console\InstallArticlesCommand;
 
-class ArticleServiceProvider extends ServiceProvider
+class WebshopAiDefaultServiceProvider extends ServiceProvider
 {
     public function boot()
     {

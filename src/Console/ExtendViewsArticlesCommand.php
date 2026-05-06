@@ -1,10 +1,10 @@
 <?php
 
-namespace Weboldalnet\PackageTemplate\Console;
+namespace Weboldalnet\WebshopAiDefault\Console;
 
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Artisan;
-use Weboldalnet\PackageTemplate\Support\PackageHelper;
+use Weboldalnet\WebshopAiDefault\Support\PackageHelper;
 
 class ExtendViewsArticlesCommand extends Command
 {

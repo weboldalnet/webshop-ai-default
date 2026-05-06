@@ -1,10 +1,10 @@
 <?php
 
-namespace Weboldalnet\PackageTemplate\Console;
+namespace Weboldalnet\WebshopAiDefault\Console;
 
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Artisan;
-use Weboldalnet\PackageTemplate\Support\PackageHelper;
+use Weboldalnet\WebshopAiDefault\Support\PackageHelper;
 
 class InstallArticlesCommand extends Command
 {
@@ -18,7 +18,7 @@ class InstallArticlesCommand extends Command
         $this->info(PackageHelper::PACKAGE_NAME . ' fájlok publikálása a projectbe...');
 
         Artisan::call('vendor:publish', [
-            '--provider' => 'Weboldalnet\\PackageTemplate\\ArticleServiceProvider',
+            '--provider' => 'Weboldalnet\\WebshopAiDefault\\WebshopAiDefaultServiceProvider',
             '--tag' => $tag,
             '--force' => true,
         ]);

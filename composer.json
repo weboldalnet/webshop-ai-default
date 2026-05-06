@@ -1,19 +1,19 @@
 {
-    "name": "weboldalnet/package-template",
-    "description": "teszt",
+    "name": "weboldalnet/webshop-ai-default",
+    "description": "Webshop.ai default package",
     "type": "library",
     "autoload": {
         "psr-4": {
-            "Weboldalnet\\PackageTemplate\\": [ "src/",  "app/"]
+            "Weboldalnet\\WebshopAiDefault\\": [ "src/",  "app/"]
         }
     },
     "extra": {
         "laravel": {
             "providers": [
-                "Weboldalnet\\PackageTemplate\\ArticleServiceProvider"
+                "Weboldalnet\\WebshopAiDefault\\WebshopAiDefaultServiceProvider"
             ],
             "aliases": {
-                "ArticleServiceProvider": "Weboldalnet\\PackageTemplate\\ArticleServiceProvider"
+                "WebshopAiDefaultServiceProvider": "Weboldalnet\\WebshopAiDefault\\WebshopAiDefaultServiceProvider"
             }
         }
     },
