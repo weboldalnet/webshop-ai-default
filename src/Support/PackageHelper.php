@@ -4,8 +4,8 @@ namespace Weboldalnet\WebshopAiDefault\Support;
 
 class PackageHelper
 {
-    const PACKAGE_NAME = 'Blog/Cikkek modul';
-    const PACKAGE_PREFIX = 'article';
+    const PACKAGE_NAME = 'Webshop modul';
+    const PACKAGE_PREFIX = 'webshop';
 
     const PACKAGE_LIST = [
         'app' => [
