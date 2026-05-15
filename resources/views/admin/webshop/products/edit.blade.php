@@ -45,12 +45,20 @@
                 <div class="col-lg-6 mb-3">
                     <h3 class="header-box product-info">Elsődleges kép</h3>
                     <div class="content-box bordered">
-                        @if($product->primary_image)
-                            <div class="mb-2"><img src="{{ $product->primary_image }}" class="img-fluid ws-img-preview"></div>
-                        @endif
-                        <div class="form-group">
-                            <input type="file" class="form-control-file" id="primary_image" name="primary_image" accept=".jpg,.jpeg,.png,.webp">
-                        </div>
+{{--                        @if($product->primary_image)--}}
+{{--                            <div class="mb-2"><img src="{{ $product->primary_image }}" class="img-fluid ws-img-preview"></div>--}}
+{{--                        @endif--}}
+{{--                        <div class="form-group">--}}
+{{--                            <input type="file" class="form-control-file" id="primary_image" name="primary_image" accept=".jpg,.jpeg,.png,.webp">--}}
+{{--                        </div>--}}
+
+                        @include('admin.elements.commons.img-crop-object-input', [
+                                    'object' => $product,
+                                    'label' => 'Elsődleges kép',
+                                    'variable' => 'primary_image',
+                                    'imgWidth' => \Weboldalnet\WebshopAiDefault\Helpers\ProductHelper::PRIMARY_IMG_SIZE['crop']['width'],
+                                    'imgHeight' => \Weboldalnet\WebshopAiDefault\Helpers\ProductHelper::PRIMARY_IMG_SIZE['crop']['height'],
+                                ])
                     </div>
 
                     {{-- Árak --}}
@@ -214,6 +222,9 @@
             </div>
         </form>
     </div>
+
+
+    @include('admin.commons.img-cropper')
 
     <link rel="stylesheet" href="/packages/webshop/admin/css/webshop-admin.css">
     <script src="/packages/webshop/admin/js/webshop-admin.js"></script>

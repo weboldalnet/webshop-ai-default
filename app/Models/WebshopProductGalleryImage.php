@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * @property int $id
  * @property int $product_id
  * @property string $image
+ * @property string $image_thumb
  * @property string|null $alt
  * @property int $sort_order
  * @property bool $is_active
@@ -20,7 +21,7 @@ class WebshopProductGalleryImage extends Model
 
     protected $table = 'public.webshop_product_gallery_images';
 
-    protected $fillable = ['product_id', 'image', 'alt', 'sort_order', 'is_active'];
+    protected $fillable = ['product_id', 'image', 'image_thumb', 'alt', 'sort_order', 'is_active'];
 
     protected $casts = ['product_id' => 'integer', 'sort_order' => 'integer', 'is_active' => 'boolean'];
 

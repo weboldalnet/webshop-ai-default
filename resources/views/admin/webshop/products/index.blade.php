@@ -71,6 +71,11 @@
                             </div>
                         </td>
                         <td class="ws-nowrap">
+                            @if(($ws['site_product_reviews_enabled'] ?? 'false') === 'true')
+                                <a href="{{ route('admin.webshop.products.reviews.index', $prod) }}" class="btn btn-sm {{ $prod->reviews_count > 0 ? 'btn-info' : 'btn-outline-info' }} mr-1" title="Vélemények">
+                                    <i class="fa fa-comment"></i> @if($prod->reviews_count > 0)<span class="badge badge-light ml-1">{{ $prod->reviews_count }}</span>@endif
+                                </a>
+                            @endif
                             <a href="{{ route('admin.webshop.products.edit', $prod) }}" class="btn btn-sm btn-primary"><i class="fa fa-pen"></i></a>
                             <button type="button" class="btn btn-sm btn-danger js-delete-btn" data-url="{{ route('admin.webshop.products.destroy', $prod) }}"><i class="fa fa-trash-alt"></i></button>
                         </td>

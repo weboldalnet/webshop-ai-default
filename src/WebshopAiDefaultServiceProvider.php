@@ -3,6 +3,11 @@
 namespace Weboldalnet\WebshopAiDefault;
 
 use Illuminate\Support\ServiceProvider;
+use Illuminate\Support\Facades\View;
+use Weboldalnet\WebshopAiDefault\Models\WebshopCategory;
+use Weboldalnet\WebshopAiDefault\Services\Webshop\WebshopCartService;
+use Weboldalnet\WebshopAiDefault\Services\Webshop\WebshopCompareService;
+use Weboldalnet\WebshopAiDefault\Services\Webshop\WebshopSettingsService;
 use Weboldalnet\WebshopAiDefault\Support\PackageHelper;
 use Weboldalnet\WebshopAiDefault\Console\ExtendViewsArticlesCommand;
 use Weboldalnet\WebshopAiDefault\Console\InstallArticlesCommand;
@@ -47,6 +52,16 @@ class WebshopAiDefaultServiceProvider extends ServiceProvider
         $this->publishes([
             __DIR__.'/../public/packages/webshop' => public_path('packages/webshop'),
         ], PackageHelper::PACKAGE_PREFIX . '-assets');
+
+        // View Composers a Site oldalhoz
+        View::composer(['site.webshop.*', 'site.layouts.*'], function ($view) {
+            if (request()->is('webshop*') || (request()->route() && str_starts_with(request()->route()->getName(), 'site.webshop.'))) {
+                $view->with('stickyCategories', WebshopCategory::active()->stickyHeader()->ordered()->with('children.children')->get());
+                $view->with('cartCount', WebshopCartService::getCount());
+                $view->with('compareCount', WebshopCompareService::getCount());
+                $view->with('ws', WebshopSettingsService::all());
+            }
+        });
     }
 
     public function register()

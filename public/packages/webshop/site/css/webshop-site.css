@@ -1,0 +1,122 @@
+/* Sticky kategória navigáció */
+.ws-category-nav {
+    border-bottom: 1px solid #dee2e6;
+    z-index: 1020;
+    top: 0;
+}
+
+.ws-category-nav .btn-category {
+    border-radius: 20px;
+    font-weight: 600;
+    transition: all 0.2s;
+    white-space: nowrap;
+}
+
+.ws-category-nav .btn-category.active {
+    background-color: #343a40;
+    color: #fff;
+}
+
+/* Termékkártya */
+.ws-product-card {
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.ws-product-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 .5rem 1rem rgba(0,0,0,.15)!important;
+}
+
+.ws-product-card-img img {
+    transition: transform 0.3s;
+}
+
+.ws-product-card:hover .ws-product-card-img img {
+    transform: scale(1.05);
+}
+
+.ws-product-card-title {
+    height: 44px;
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+}
+
+/* Floating gombok */
+.ws-cart-button, .ws-compare-button {
+    transition: transform 0.2s;
+}
+
+.ws-cart-button:hover, .ws-compare-button:hover {
+    transform: scale(1.1);
+}
+
+/* Galéria */
+.js-thumb.active {
+    border-width: 2px !important;
+}
+
+/* Összehasonlítás táblázat */
+.ws-compare-table th {
+    vertical-align: middle;
+}
+
+.ws-compare-table td {
+    vertical-align: middle;
+    text-align: center;
+}
+
+/* Checkout */
+.ws-checkout-item img {
+    max-height: 80px;
+}
+
+/* Általános */
+.ws-nowrap {
+    white-space: nowrap;
+}
+
+.opacity-25 {
+    opacity: 0.25;
+}
+
+/* Vélemények csillagozás */
+.ws-rating-input .fa-star {
+    margin-right: 5px;
+}
+
+.ws-rating-input .fa-solid.fa-star {
+    color: #ffc107;
+}
+
+/* Sidebar szűrők */
+.ws-filter-box {
+    border: none;
+    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+}
+
+.ws-filter-group h6 {
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    font-size: 0.85rem;
+    color: #495057;
+}
+
+/* Betöltés állapot */
+#product-list-container {
+    transition: opacity 0.3s;
+}
+
+.small {
+    font-size: 90%;
+}
+
+.badge {
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.fa-spin {
+    font-size: 24px;
+}

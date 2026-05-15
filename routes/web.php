@@ -4,15 +4,47 @@ use Weboldalnet\WebshopAiDefault\Http\Controllers\Admin\Webshop\WebshopPropertyC
 use Weboldalnet\WebshopAiDefault\Http\Controllers\Admin\Webshop\WebshopPropertyController;
 use Weboldalnet\WebshopAiDefault\Http\Controllers\Admin\Webshop\WebshopCategoryController;
 use Weboldalnet\WebshopAiDefault\Http\Controllers\Admin\Webshop\WebshopProductController;
+use Weboldalnet\WebshopAiDefault\Http\Controllers\Admin\Webshop\WebshopProductReviewController;
 use Weboldalnet\WebshopAiDefault\Http\Controllers\Admin\Webshop\WebshopOrderController;
 use Weboldalnet\WebshopAiDefault\Http\Controllers\Admin\Webshop\WebshopSettingController;
+use Weboldalnet\WebshopAiDefault\Http\Controllers\Site\Webshop\WebshopCategoryController as SiteCategoryController;
+use Weboldalnet\WebshopAiDefault\Http\Controllers\Site\Webshop\WebshopProductController as SiteProductController;
+use Weboldalnet\WebshopAiDefault\Http\Controllers\Site\Webshop\WebshopCartController;
+use Weboldalnet\WebshopAiDefault\Http\Controllers\Site\Webshop\WebshopCompareController;
+use Weboldalnet\WebshopAiDefault\Http\Controllers\Site\Webshop\WebshopCheckoutController;
+use Weboldalnet\WebshopAiDefault\Http\Controllers\Site\Webshop\WebshopReviewController;
 
 Route::middleware('web')->group(function () {
-    // Site oldali route-ok (előkészítés, még nincs implementáció)
+    // Site oldali route-ok
     Route::domain(getSiteDomain())
         ->middleware('site_share')
+        ->prefix('webshop')
+        ->name('site.webshop.')
         ->group(function () {
-            // Site webshop route-ok ide kerülnek később
+            Route::get('/', [SiteCategoryController::class, 'index'])->name('categories.index');
+            Route::get('/kategoria/{category:slug}', [SiteCategoryController::class, 'show'])->name('categories.show');
+            Route::get('/kategoria/{category:slug}/products', [SiteCategoryController::class, 'products'])->name('categories.products');
+            Route::get('/termek/{product:slug}', [SiteProductController::class, 'show'])->name('products.show');
+
+            // Kosár
+            Route::post('/cart/add', [WebshopCartController::class, 'add'])->name('cart.add');
+            Route::get('/cart/dropdown', [WebshopCartController::class, 'dropdown'])->name('cart.dropdown');
+            Route::post('/cart/update', [WebshopCartController::class, 'update'])->name('cart.update');
+            Route::delete('/cart/remove', [WebshopCartController::class, 'remove'])->name('cart.remove');
+
+            // Összehasonlítás
+            Route::post('/compare/add', [WebshopCompareController::class, 'add'])->name('compare.add');
+            Route::get('/compare/dropdown', [WebshopCompareController::class, 'dropdown'])->name('compare.dropdown');
+            Route::delete('/compare/remove', [WebshopCompareController::class, 'remove'])->name('compare.remove');
+            Route::get('/compare', [WebshopCompareController::class, 'index'])->name('compare.index');
+
+            // Checkout
+            Route::get('/checkout', [WebshopCheckoutController::class, 'index'])->name('checkout.index');
+            Route::post('/checkout', [WebshopCheckoutController::class, 'store'])->name('checkout.store');
+            Route::get('/checkout/success/{order}', [WebshopCheckoutController::class, 'success'])->name('checkout.success');
+
+            // Vélemények
+            Route::post('/reviews', [WebshopReviewController::class, 'store'])->name('reviews.store');
         });
 
     // Admin oldali route-ok
@@ -61,6 +93,11 @@ Route::middleware('web')->group(function () {
             Route::delete('/products/{product}', [WebshopProductController::class, 'destroy'])->name('products.destroy');
             Route::post('/products/toggle-active', [WebshopProductController::class, 'toggleActive'])->name('products.toggle-active');
             Route::post('/products/sort', [WebshopProductController::class, 'sort'])->name('products.sort');
+
+            // Termék vélemények
+            Route::get('/products/{product}/reviews', [WebshopProductReviewController::class, 'index'])->name('products.reviews.index');
+            Route::delete('/products/{product}/reviews/{review}', [WebshopProductReviewController::class, 'destroy'])->name('products.reviews.destroy');
+            Route::post('/products/{product}/reviews/toggle-active', [WebshopProductReviewController::class, 'toggleActive'])->name('products.reviews.toggle-active');
 
             // Termék galéria
             Route::post('/products/{product}/gallery', [WebshopProductController::class, 'storeGalleryImage'])->name('products.gallery.store');

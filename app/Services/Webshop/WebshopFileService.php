@@ -8,14 +8,19 @@ use Illuminate\Support\Facades\Storage;
 
 class WebshopFileService
 {
-    public static function saveProductImage(UploadedFile $file, string $name): string
+    public static function saveProductImage(UploadedFile $file, string $name, $width, $height): string
     {
-        return ImageService::saveCustomImage($file, 'webshop/products', $name, 800, 800);
+        return ImageService::saveCustomImage($file, 'webshop/products', $name, $width, $height);
+    }
+
+    public static function saveProductImageThumbnail(UploadedFile $file, string $name, $width, $height): string
+    {
+        return ImageService::saveCustomImage($file, 'webshop/products', ($name . '-thumb'), $width, $height);
     }
 
     public static function saveGalleryImage(UploadedFile $file, string $name): string
     {
-        return ImageService::saveCustomImage($file, 'webshop/products/gallery', $name, 800, 800);
+        return ImageService::saveCustomImage($file, 'webshop/products/gallery', $name, 800);
     }
 
     public static function saveCategoryOgImage(UploadedFile $file, string $name): string

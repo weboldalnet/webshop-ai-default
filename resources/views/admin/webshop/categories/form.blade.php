@@ -21,6 +21,12 @@
                 <label for="description">Leírás</label>
                 <textarea class="form-control js-tinymce" id="description" name="description" rows="4">{{ old('description', $isEdit ? $category->description : '') }}</textarea>
             </div>
+            <hr>
+            <div class="custom-control custom-switch">
+                <input type="checkbox" class="custom-control-input" id="show_in_sticky_header" name="show_in_sticky_header" value="1"
+                       @if(old('show_in_sticky_header', $isEdit ? $category->show_in_sticky_header : false)) checked @endif>
+                <label class="custom-control-label" for="show_in_sticky_header">Megjelenik a sticky fejlécben</label>
+            </div>
         </div>
     </div>
 

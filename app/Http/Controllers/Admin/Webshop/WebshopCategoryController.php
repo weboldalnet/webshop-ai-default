@@ -41,6 +41,7 @@ class WebshopCategoryController extends AdminExtendedController
         ]);
 
         $data = $request->only(['name_singular', 'name_plural', 'description', 'og_title', 'og_description', 'parent_id']);
+        $data['show_in_sticky_header'] = $request->has('show_in_sticky_header');
         $data['slug'] = WebshopSlugService::generateUniqueSlug($data['name_singular'], 'public.webshop_categories');
         $data['is_active'] = true;
         $data['sort_order'] = (WebshopCategory::max('sort_order') ?? 0) + 1;
@@ -87,6 +88,7 @@ class WebshopCategoryController extends AdminExtendedController
         ]);
 
         $data = $request->only(['name_singular', 'name_plural', 'description', 'og_title', 'og_description', 'parent_id']);
+        $data['show_in_sticky_header'] = $request->has('show_in_sticky_header');
         $data['slug'] = WebshopSlugService::generateUniqueSlug($data['name_singular'], 'public.webshop_categories', $category->id);
         if (empty($data['og_title'])) $data['og_title'] = $data['name_singular'];
         if (empty($data['og_description'])) $data['og_description'] = $data['description'] ?? '';

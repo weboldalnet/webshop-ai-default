@@ -16,6 +16,10 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * @property string|null $shipping_data
  * @property float $total_price
  * @property string $currency
+ * @property string $type
+ * @property string|null $customer_company
+ * @property string|null $customer_tax_number
+ * @property string|null $note
  * @property bool $is_completed
  * @property \Illuminate\Support\Carbon|null $completed_at
  * @property string|null $admin_note
@@ -34,6 +38,14 @@ class WebshopOrder extends Model
     const STATUS_COMPLETED = 'completed';
     const STATUS_CANCELLED = 'cancelled';
 
+    const TYPE_ORDER = 'order';
+    const TYPE_QUOTE = 'quote';
+
+    const TYPES = [
+        self::TYPE_ORDER => 'Rendelés',
+        self::TYPE_QUOTE => 'Ajánlatkérés',
+    ];
+
     const STATUSES = [
         self::STATUS_PENDING => 'Függőben',
         self::STATUS_PROCESSING => 'Feldolgozás alatt',
@@ -43,9 +55,9 @@ class WebshopOrder extends Model
     ];
 
     protected $fillable = [
-        'order_number', 'status', 'customer_name', 'customer_email', 'customer_phone',
-        'billing_data', 'shipping_data', 'total_price', 'currency',
-        'is_completed', 'completed_at', 'admin_note',
+        'order_number', 'status', 'type', 'customer_name', 'customer_email', 'customer_phone',
+        'customer_company', 'customer_tax_number', 'billing_data', 'shipping_data',
+        'total_price', 'currency', 'is_completed', 'completed_at', 'admin_note', 'note',
     ];
 
     protected $casts = ['total_price' => 'float', 'is_completed' => 'boolean', 'completed_at' => 'datetime'];
@@ -69,4 +81,5 @@ class WebshopOrder extends Model
     }
 
     public function getStatusLabelAttribute(): string { return self::STATUSES[$this->status] ?? $this->status; }
+    public function getTypeLabelAttribute(): string { return self::TYPES[$this->type] ?? $this->type; }
 }

@@ -12,6 +12,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * @property string $slug
  * @property string|null $description
  * @property string|null $primary_image
+ * @property string|null $primary_image_thumb
  * @property string|null $sku
  * @property bool $stock_enabled
  * @property int|null $stock_quantity
@@ -20,6 +21,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * @property bool $is_active
  * @property int $sort_order
  * @property-read \Weboldalnet\WebshopAiDefault\Models\WebshopCategory $category
+ * @property-read \Illuminate\Database\Eloquent\Collection $reviews
  * @mixin \Eloquent
  */
 class WebshopProduct extends Model
@@ -29,7 +31,7 @@ class WebshopProduct extends Model
     protected $table = 'public.webshop_products';
 
     protected $fillable = [
-        'category_id', 'name', 'slug', 'description', 'primary_image', 'sku',
+        'category_id', 'name', 'slug', 'description', 'primary_image', 'primary_image_thumb', 'sku',
         'stock_enabled', 'stock_quantity', 'price', 'sale_price', 'is_active', 'sort_order',
     ];
 
@@ -41,6 +43,7 @@ class WebshopProduct extends Model
     public function category() { return $this->belongsTo(WebshopCategory::class, 'category_id'); }
     public function productProperties() { return $this->hasMany(WebshopProductProperty::class, 'product_id'); }
     public function galleryImages() { return $this->hasMany(WebshopProductGalleryImage::class, 'product_id'); }
+    public function reviews() { return $this->hasMany(WebshopProductReview::class, 'product_id'); }
 
     public function relatedProducts()
     {

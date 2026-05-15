@@ -17,6 +17,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * @property string|null $og_img
  * @property string|null $icon
  * @property bool $is_active
+ * @property bool $show_in_sticky_header
  * @property int $sort_order
  * @property-read \Weboldalnet\WebshopAiDefault\Models\WebshopCategory|null $parent
  * @property-read \Illuminate\Database\Eloquent\Collection $children
@@ -33,12 +34,13 @@ class WebshopCategory extends Model
 
     protected $fillable = [
         'parent_id', 'name_singular', 'name_plural', 'slug', 'description',
-        'og_title', 'og_description', 'og_img', 'icon', 'is_active', 'sort_order',
+        'og_title', 'og_description', 'og_img', 'icon', 'is_active', 'show_in_sticky_header', 'sort_order',
     ];
 
     protected $casts = [
         'parent_id' => 'integer',
         'is_active' => 'boolean',
+        'show_in_sticky_header' => 'boolean',
         'sort_order' => 'integer',
     ];
 
@@ -59,6 +61,7 @@ class WebshopCategory extends Model
     public function products() { return $this->hasMany(WebshopProduct::class, 'category_id'); }
 
     public function scopeActive($query) { return $query->where('is_active', true); }
+    public function scopeStickyHeader($query) { return $query->where('show_in_sticky_header', true); }
     public function scopeOrdered($query) { return $query->orderBy('sort_order'); }
     public function scopeTopLevel($query) { return $query->whereNull('parent_id'); }
 

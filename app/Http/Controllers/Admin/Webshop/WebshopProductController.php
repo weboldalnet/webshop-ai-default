@@ -3,6 +3,7 @@
 namespace Weboldalnet\WebshopAiDefault\Http\Controllers\Admin\Webshop;
 
 use App\Http\Controllers\Admin\AdminExtendedController;
+use Weboldalnet\WebshopAiDefault\Helpers\ProductHelper;
 use Weboldalnet\WebshopAiDefault\Models\WebshopCategory;
 use Weboldalnet\WebshopAiDefault\Models\WebshopProduct;
 use Weboldalnet\WebshopAiDefault\Models\WebshopProductGalleryImage;
@@ -18,7 +19,7 @@ class WebshopProductController extends AdminExtendedController
 {
     public function index(Request $request)
     {
-        $query = WebshopProduct::ordered()->with('category');
+        $query = WebshopProduct::ordered()->with('category')->withCount('reviews');
         if ($request->filled('search')) $query->search($request->input('search'));
         if ($request->filled('category_id')) $query->byCategory($request->input('category_id'));
         if ($request->filled('is_active') && $request->input('is_active') !== '') $query->where('is_active', $request->input('is_active') === '1');
@@ -73,7 +74,8 @@ class WebshopProductController extends AdminExtendedController
     public function update(Request $request, WebshopProduct $product)
     {
         $ws = WebshopSettingsService::all();
-        $rules = ['name' => 'required|string|max:255', 'category_id' => 'required|integer', 'primary_image' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:5120'];
+//        $rules = ['name' => 'required|string|max:255', 'category_id' => 'required|integer', 'primary_image[img]' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:5120'];
+        $rules = ['name' => 'required|string|max:255', 'category_id' => 'required|integer'];
         if (($ws['product_price_enabled'] ?? 'false') === 'true') { $rules['price'] = 'nullable|numeric|min:0'; $rules['sale_price'] = 'nullable|numeric|min:0'; }
         if (($ws['product_stock_enabled'] ?? 'false') === 'true') { $rules['stock_quantity'] = 'nullable|integer|min:0'; }
         $request->validate($rules);
@@ -87,7 +89,21 @@ class WebshopProductController extends AdminExtendedController
 
         if (($ws['product_price_enabled'] ?? 'false') === 'true') { $data['price'] = $request->input('price'); $data['sale_price'] = $request->input('sale_price'); }
         if (($ws['product_stock_enabled'] ?? 'false') === 'true') { $data['stock_enabled'] = $request->has('stock_enabled'); $data['stock_quantity'] = $request->input('stock_quantity'); }
-        if ($request->hasFile('primary_image')) { $data['primary_image'] = WebshopFileService::saveProductImage($request->file('primary_image'), getTransformedString($data['name']).'-'.$product->id); }
+        if ($request->hasFile('primary_image')) {
+            $sizes = $request->input('primary_image');
+            $data['primary_image'] = WebshopFileService::saveProductImage(
+                $request->file('primary_image')['img'],
+                getTransformedString($data['name']).'-'.$product->id,
+                $sizes['width'],
+                $sizes['height']
+            );
+            
+            $data['primary_image_thumb'] = WebshopFileService::saveProductImageThumbnail(
+                $request->file('primary_image')['img'],
+                getTransformedString($data['name']).'-'.$product->id,
+                ProductHelper::PRIMARY_IMG_SIZE['thumb']['width'],
+                ProductHelper::PRIMARY_IMG_SIZE['thumb']['height']);
+        }
 
         $product->update($data);
         $this->saveProductProperties($product, $request);

@@ -70,9 +70,98 @@
 
             <div class="row">
                 <div class="col-lg-6 mb-3">
-                    <h2 class="header-box product-info">Site beállítások <span class="badge badge-secondary">Előkészítés</span></h2>
+                    <h2 class="header-box product-info">Site Kategória beállítások</h2>
                     <div class="content-box bordered">
-                        <p class="text-muted mb-0"><i class="fa fa-info-circle"></i> A site oldali beállítások egy későbbi fejlesztési körben lesznek implementálva.</p>
+                        <div class="custom-control custom-switch mb-3">
+                            <input type="checkbox" class="custom-control-input" id="site_category_view_switcher_enabled" name="site_category_view_switcher_enabled"
+                                   @if(($ws['site_category_view_switcher_enabled'] ?? 'false') === 'true') checked @endif>
+                            <label class="custom-control-label" for="site_category_view_switcher_enabled">Nézet váltó gomb látható-e</label>
+                        </div>
+                        <div class="form-group">
+                            <label for="site_category_cards_per_row">Kártyák száma egy sorban</label>
+                            <select class="form-control" id="site_category_cards_per_row" name="site_category_cards_per_row">
+                                <option value="3" @if(($ws['site_category_cards_per_row'] ?? '3') == '3') selected @endif>3 kártya</option>
+                                <option value="4" @if(($ws['site_category_cards_per_row'] ?? '3') == '4') selected @endif>4 kártya</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-lg-6 mb-3">
+                    <h2 class="header-box product-info">Site Termék beállítások</h2>
+                    <div class="content-box bordered">
+                        <div class="custom-control custom-switch mb-3">
+                            <input type="checkbox" class="custom-control-input" id="site_related_products_modal_enabled" name="site_related_products_modal_enabled"
+                                   @if(($ws['site_related_products_modal_enabled'] ?? 'false') === 'true') checked @endif>
+                            <label class="custom-control-label" for="site_related_products_modal_enabled">Kapcsolódó termékek modal felugrik-e</label>
+                        </div>
+                        <div class="custom-control custom-switch mb-3">
+                            <input type="checkbox" class="custom-control-input" id="site_product_reviews_enabled" name="site_product_reviews_enabled"
+                                   @if(($ws['site_product_reviews_enabled'] ?? 'false') === 'true') checked @endif>
+                            <label class="custom-control-label" for="site_product_reviews_enabled">Lehessen véleményeket írni</label>
+                        </div>
+                        <div class="custom-control custom-switch mb-3">
+                            <input type="checkbox" class="custom-control-input" id="site_product_prices_visible" name="site_product_prices_visible"
+                                   @if(($ws['site_product_prices_visible'] ?? 'false') === 'true') checked @endif>
+                            <label class="custom-control-label" for="site_product_prices_visible">Árak látszódnak-e</label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-lg-6 mb-3">
+                    <h2 class="header-box product-info">Site Checkout beállítások</h2>
+                    <div class="content-box bordered">
+                        <div class="form-group">
+                            <label for="site_checkout_mode">Checkout mód</label>
+                            <select class="form-control" id="site_checkout_mode" name="site_checkout_mode">
+                                <option value="order" @if(($ws['site_checkout_mode'] ?? 'order') == 'order') selected @endif>Rendelés leadása</option>
+                                <option value="quote" @if(($ws['site_checkout_mode'] ?? 'order') == 'quote') selected @endif>Ajánlatkérés</option>
+                            </select>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="custom-control custom-checkbox mb-2">
+                                    <input type="checkbox" class="custom-control-input" id="site_checkout_phone_enabled" name="site_checkout_phone_enabled"
+                                           @if(($ws['site_checkout_phone_enabled'] ?? 'false') === 'true') checked @endif>
+                                    <label class="custom-control-label" for="site_checkout_phone_enabled">Telefonszám</label>
+                                </div>
+                                <div class="custom-control custom-checkbox mb-2">
+                                    <input type="checkbox" class="custom-control-input" id="site_checkout_company_enabled" name="site_checkout_company_enabled"
+                                           @if(($ws['site_checkout_company_enabled'] ?? 'false') === 'true') checked @endif>
+                                    <label class="custom-control-label" for="site_checkout_company_enabled">Cégnév</label>
+                                </div>
+                                <div class="custom-control custom-checkbox mb-2">
+                                    <input type="checkbox" class="custom-control-input" id="site_checkout_tax_number_enabled" name="site_checkout_tax_number_enabled"
+                                           @if(($ws['site_checkout_tax_number_enabled'] ?? 'false') === 'true') checked @endif>
+                                    <label class="custom-control-label" for="site_checkout_tax_number_enabled">Adószám</label>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="custom-control custom-checkbox mb-2">
+                                    <input type="checkbox" class="custom-control-input" id="site_checkout_billing_enabled" name="site_checkout_billing_enabled"
+                                           @if(($ws['site_checkout_billing_enabled'] ?? 'false') === 'true') checked @endif>
+                                    <label class="custom-control-label" for="site_checkout_billing_enabled">Számlázási adatok</label>
+                                </div>
+                                <div class="custom-control custom-checkbox mb-2">
+                                    <input type="checkbox" class="custom-control-input" id="site_checkout_shipping_enabled" name="site_checkout_shipping_enabled"
+                                           @if(($ws['site_checkout_shipping_enabled'] ?? 'false') === 'true') checked @endif>
+                                    <label class="custom-control-label" for="site_checkout_shipping_enabled">Szállítási adatok</label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-lg-6 mb-3">
+                    <h2 class="header-box product-info">Egyéb Site beállítások</h2>
+                    <div class="content-box bordered">
+                        <div class="custom-control custom-switch mb-3">
+                            <input type="checkbox" class="custom-control-input" id="site_product_compare_enabled" name="site_product_compare_enabled"
+                                   @if(($ws['site_product_compare_enabled'] ?? 'false') === 'true') checked @endif>
+                            <label class="custom-control-label" for="site_product_compare_enabled">Termék összehasonlítás</label>
+                        </div>
                     </div>
                 </div>
             </div>
