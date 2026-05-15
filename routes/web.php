@@ -104,6 +104,7 @@ Route::middleware('web')->group(function () {
             Route::delete('/products/{product}/gallery/{image}', [WebshopProductController::class, 'destroyGalleryImage'])->name('products.gallery.destroy');
             Route::post('/products/gallery/sort', [WebshopProductController::class, 'sortGallery'])->name('products.gallery.sort');
             Route::post('/products/gallery/toggle-active', [WebshopProductController::class, 'toggleGalleryActive'])->name('products.gallery.toggle-active');
+            Route::post('/products/gallery/update-alt', [WebshopProductController::class, 'updateGalleryAlt'])->name('products.gallery.update-alt');
 
             // Rendelések
             Route::get('/orders', [WebshopOrderController::class, 'index'])->name('orders.index');

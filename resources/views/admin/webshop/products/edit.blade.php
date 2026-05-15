@@ -152,31 +152,23 @@
                     <div class="content-box bordered">
                         <div id="gallery-sortable" class="row mb-3">
                             @foreach($product->galleryImages->sortBy('sort_order') as $img)
-                                <div class="col-md-3 col-6 mb-2 ws-gallery-item">
-                                    <input type="hidden" class="js-sort-id" value="{{ $img->id }}">
-                                    <img src="{{ $img->image }}" class="img-fluid rounded mb-1">
-                                    <div class="d-flex justify-content-between align-items-center">
-                                        <div class="custom-control custom-switch">
-                                            <input type="checkbox" class="custom-control-input js-toggle-active" id="gal{{ $img->id }}" data-id="{{ $img->id }}" data-url="{{ route('admin.webshop.products.gallery.toggle-active') }}" @if($img->is_active) checked @endif>
-                                            <label class="custom-control-label" for="gal{{ $img->id }}"></label>
-                                        </div>
-                                        <form method="POST" action="{{ route('admin.webshop.products.gallery.destroy', [$product, $img]) }}" class="d-inline">
-                                            @csrf @method('DELETE')
-                                            <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Törlés?')"><i class="fa fa-trash-alt"></i></button>
-                                        </form>
-                                    </div>
-                                </div>
+                                @include('admin.webshop.products.partials.gallery-item', ['product' => $product, 'img' => $img])
                             @endforeach
                         </div>
-                    </div>
-                    <div class="content-box bordered mt-2">
-                        <h6>Új kép feltöltése</h6>
-                        <form method="POST" action="{{ route('admin.webshop.products.gallery.store', $product) }}" enctype="multipart/form-data" class="form-inline">
-                            @csrf
-                            <input type="file" class="form-control-file mr-2" name="gallery_image" accept=".jpg,.jpeg,.png,.webp" required>
-                            <input type="text" class="form-control mr-2" name="alt" placeholder="Alt szöveg">
-                            <button type="submit" class="btn btn-primary"><i class="fa fa-upload"></i> Feltöltés</button>
-                        </form>
+                        <hr>
+
+                        <h6>Új képek feltöltése</h6>
+                        <div class="form-inline">
+                            <input type="file" class="form-control-file mr-2 mb-1 js-gallery-upload"
+                                   data-url="{{ route('admin.webshop.products.gallery.store', $product) }}"
+                                   accept=".jpg,.jpeg,.png,.webp" multiple>
+                            <button type="button" class="btn btn-sm btn-success js-gallery-upload-start" style="display:none">
+                                <i class="fa fa-upload"></i> Kijelölt képek feltöltése
+                            </button>
+                            <div class="js-gallery-upload-status ml-2" style="display:none">
+                                <span class="spinner-border spinner-border-sm text-primary"></span> Feltöltés... (<span class="js-gallery-upload-count">0</span>/<span class="js-gallery-upload-total">0</span>)
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -226,12 +218,16 @@
 
     @include('admin.commons.img-cropper')
 
+    @include('admin.webshop.products.partials.gallery-item-alt')
+
+
     <link rel="stylesheet" href="/packages/webshop/admin/css/webshop-admin.css">
     <script src="/packages/webshop/admin/js/webshop-admin.js"></script>
     <script>
         WebshopAdmin.initToggleActive();
         @if(($ws['product_gallery_enabled'] ?? 'false') === 'true')
-        WebshopAdmin.initSortable('#gallery-sortable', '{{ route("admin.webshop.products.gallery.sort") }}');
+        WebshopAdmin.initSortable('#gallery-sortable', '{{ route("admin.webshop.products.gallery.sort") }}', null);
+        WebshopAdmin.initGalleryUpload('.js-gallery-upload', '#gallery-sortable');
         @endif
     </script>
 @endsection

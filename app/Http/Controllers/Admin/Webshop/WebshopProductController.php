@@ -145,13 +145,34 @@ class WebshopProductController extends AdminExtendedController
     {
         $request->validate(['gallery_image' => 'required|image|mimes:jpg,jpeg,png,webp|max:5120', 'alt' => 'nullable|string|max:255']);
         $image = WebshopFileService::saveGalleryImage($request->file('gallery_image'), getTransformedString($product->name).'-gallery-'.$product->id);
-        WebshopProductGalleryImage::create(['product_id' => $product->id, 'image' => $image, 'alt' => $request->input('alt'), 'sort_order' => ($product->galleryImages()->max('sort_order') ?? 0) + 1, 'is_active' => true]);
+        $galleryItem = WebshopProductGalleryImage::create([
+            'product_id' => $product->id,
+            'image' => $image,
+            'alt' => $request->input('alt'),
+            'sort_order' => ($product->galleryImages()->max('sort_order') ?? 0) + 1,
+            'is_active' => true
+        ]);
+
+        if ($request->ajax()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Galéria kép sikeresen feltöltve.',
+                'html' => view('admin.webshop.products.partials.gallery-item', [
+                    'product' => $product,
+                    'img' => $galleryItem
+                ])->render()
+            ]);
+        }
+
         return redirect()->route('admin.webshop.products.edit', $product)->with('success', 'Galéria kép sikeresen feltöltve.');
     }
 
     public function destroyGalleryImage(WebshopProduct $product, WebshopProductGalleryImage $image)
     {
         $image->delete();
+        if (request()->ajax()) {
+            return response()->json(['success' => true, 'message' => 'Galéria kép sikeresen törölve.']);
+        }
         return redirect()->route('admin.webshop.products.edit', $product)->with('success', 'Galéria kép sikeresen törölve.');
     }
 
@@ -168,6 +189,15 @@ class WebshopProductController extends AdminExtendedController
         $img->is_active = $request->input('is_active') === 'true' || $request->input('is_active') === true;
         $img->save();
         return response()->json(['success' => true, 'message' => 'Státusz frissítve.']);
+    }
+
+    public function updateGalleryAlt(Request $request)
+    {
+        $request->validate(['id' => 'required|integer', 'alt' => 'nullable|string|max:255']);
+        $img = WebshopProductGalleryImage::findOrFail($request->input('id'));
+        $img->alt = $request->input('alt');
+        $img->save();
+        return response()->json(['success' => true, 'message' => 'Alt szöveg frissítve.']);
     }
 
     private function saveProductProperties(WebshopProduct $product, Request $request): void

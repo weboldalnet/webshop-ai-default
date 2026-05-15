@@ -13,10 +13,20 @@
 
 /* Sortable placeholder */
 .ui-sortable-placeholder {
-    background: #e9ecef;
-    border: 2px dashed #ced4da;
+    background: #f8f9fa !important;
+    border: 2px dashed #dee2e6 !important;
     visibility: visible !important;
-    height: 50px;
+    min-height: 100px;
+}
+
+/* Ensure sortable container handles absolute positioning of helper */
+#gallery-sortable {
+    position: relative;
+}
+
+/* Prevent jumping by forcing dimensions on helper */
+.ui-sortable-helper {
+    box-shadow: 0 5px 15px rgba(0,0,0,0.2);
 }
 
 /* Nowrap for action buttons */
@@ -58,7 +68,7 @@
     position: relative;
 }
 .ws-gallery-item img {
-    max-height: 150px;
+    max-height: 200px;
     object-fit: cover;
     width: 100%;
 }
