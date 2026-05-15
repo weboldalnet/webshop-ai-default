@@ -11,13 +11,23 @@ class WebshopAiDefaultServiceProvider extends ServiceProvider
 {
     public function boot()
     {
-        // route-ok
+        // Route-ok betöltése
         $this->loadRoutesFrom(__DIR__.'/../routes/web.php');
+
+        // View-k betöltése - gyökér szintű hozzáadás, hogy `view('admin.webshop...')` működjön
+        // A fő projekt resources/views felülírja, ha ott is létezik a fájl
+        $this->app['view']->addLocation(__DIR__.'/../resources/views');
+
+        // Package prefixszel is elérhető view-k (webshop::...)
+        $this->loadViewsFrom(__DIR__.'/../resources/views', 'webshop');
+
+        // Korábbi settings/views kezelés
         $this->loadViewsFrom(__DIR__.'/../settings/views', PackageHelper::PACKAGE_PREFIX);
 
-        // migrációk
-        //$this->loadMigrationsFrom(__DIR__.'/../database/migrations');
+        // Migrációk betöltése
+        $this->loadMigrationsFrom(__DIR__.'/../database/migrations');
 
+        // Publisholható elemek (PackageHelper-ből)
         $publishList = [];
         foreach (PackageHelper::PACKAGE_LIST as $name => $publish) {
             $this->publishes([
@@ -26,8 +36,17 @@ class WebshopAiDefaultServiceProvider extends ServiceProvider
 
             $publishList[$publish['source']] = base_path($publish['destination']);
         }
-
         $this->publishes($publishList, PackageHelper::PACKAGE_PREFIX . '-all');
+
+        // View-k publisholása a fő projektbe
+        $this->publishes([
+            __DIR__.'/../resources/views/admin/webshop' => resource_path('views/admin/webshop'),
+        ], PackageHelper::PACKAGE_PREFIX . '-views');
+
+        // Publikus assetek publisholása
+        $this->publishes([
+            __DIR__.'/../public/packages/webshop' => public_path('packages/webshop'),
+        ], PackageHelper::PACKAGE_PREFIX . '-assets');
     }
 
     public function register()

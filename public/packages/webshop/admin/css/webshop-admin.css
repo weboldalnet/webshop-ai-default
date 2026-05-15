@@ -1,0 +1,81 @@
+/* Webshop Admin CSS - Bootstrap 4.6 kiegészítő stílusok */
+
+/* Drag handle */
+.ws-drag-handle {
+    cursor: move;
+    cursor: grab;
+    padding: 8px 4px;
+    text-align: center;
+}
+.ws-drag-handle:active {
+    cursor: grabbing;
+}
+
+/* Sortable placeholder */
+.ui-sortable-placeholder {
+    background: #e9ecef;
+    border: 2px dashed #ced4da;
+    visibility: visible !important;
+    height: 50px;
+}
+
+/* Nowrap for action buttons */
+.ws-nowrap {
+    white-space: nowrap;
+}
+
+/* Image preview */
+.ws-img-preview {
+    max-height: 200px;
+    border-radius: 4px;
+    border: 1px solid #dee2e6;
+}
+
+/* Property group */
+.ws-property-group {
+    border-bottom: 1px solid #e9ecef;
+    padding-bottom: 10px;
+}
+.ws-property-group:last-child {
+    border-bottom: none;
+}
+.ws-property-header {
+    cursor: pointer;
+    padding: 8px 0;
+    margin-bottom: 5px;
+    font-size: 1rem;
+}
+.ws-property-header.collapsed .fa-chevron-down {
+    transform: rotate(-90deg);
+    transition: transform 0.2s;
+}
+.ws-property-header .fa-chevron-down {
+    transition: transform 0.2s;
+}
+
+/* Gallery item */
+.ws-gallery-item {
+    position: relative;
+}
+.ws-gallery-item img {
+    max-height: 150px;
+    object-fit: cover;
+    width: 100%;
+}
+
+/* Toast notification */
+.ws-toast {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 9999;
+    min-width: 250px;
+    max-width: 400px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.15);
+}
+
+/* Loading state */
+.ws-loading {
+    opacity: 0.6;
+    pointer-events: none;
+}

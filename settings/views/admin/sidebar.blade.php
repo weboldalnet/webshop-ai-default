@@ -1,26 +1,21 @@
-@if($settings->has_blog)
-    <div class="mb-1">
-        <a class="menu-point collapsed @if($menuHelper::isActiveMenu($menuHelper::ARTICLES, $url)) active @endif"
-           data-toggle="collapse" href="#articleCollapse" role="button"
-        >
-            <span><i class="fas fa-newspaper mr-1"></i>Blog</span>
-            <i class="fa-solid fa-chevron-down"></i>
-        </a>
-        <div class="collapse collapse-box @if($menuHelper::isActiveMenu($menuHelper::ARTICLES, $url)) show @endif" id="articleCollapse">
-            <div class="collapse-menu-points">
-                <a href="/article-list" class="fw-800">
-                    Cikkek listája <i class="fa-solid fa-chevron-right"></i>
-                </a>
-                <a href="/article-category-list">
-                    Cikk kategóriák <i class="fa-solid fa-chevron-right"></i>
-                </a>
+<div class="mb-1">
+    <a class="menu-point collapsed @if(str_contains('webshop', $url)) active @endif"
+       data-toggle="collapse" href="#webshopCollapse" role="button"
+    >
+        <span><i class="fa-solid fa-cart-shopping mr-1"></i>Webshop</span>
+        <i class="fa-solid fa-chevron-down"></i>
+    </a>
+    <div class="collapse collapse-box @if(str_contains('webshop', $url)) show @endif " id="webshopCollapse">
+        <div class="collapse-menu-points">
+            <a href="/webshop/orders" class="fw-800">Rendelések</a>
+            <a href="/webshop/categories">Kategóriák</a>
+            <a href="/webshop/property-categories">Tulajdonságok</a>
+            <a href="/webshop/products">Termékek</a>
 
+            @if($user->is_super)
                 <hr class="d-block w-fill my-1 mx-2">
-
-                <a href="/label-list">
-                    Címkék <i class="fa-solid fa-chevron-right"></i>
-                </a>
-            </div>
+                <a href="/webshop/settings" class="fw-800">Beállítások</a>
+            @endif
         </div>
     </div>
-@endif
+</div>
