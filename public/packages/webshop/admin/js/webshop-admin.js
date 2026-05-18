@@ -16,7 +16,7 @@ var WebshopAdmin = (function ($) {
     function initSortable(selector, url, axis) {
         var $el = $(selector);
         var isGrid = $el.hasClass('row');
-        
+
         $el.sortable({
             handle: '.ws-drag-handle',
             axis: axis || (isGrid ? false : 'y'),
@@ -36,7 +36,7 @@ var WebshopAdmin = (function ($) {
                 // Megőrizzük a szélességet a segédelem számára (grid és táblázat esetén is)
                 var $helper = ui.clone();
                 $helper.width(ui.outerWidth());
-                
+
                 if (!isGrid) {
                     // Táblázat esetén a belső cellák szélességét is fixáljuk
                     var $originals = ui.children();
@@ -154,7 +154,7 @@ var WebshopAdmin = (function ($) {
     function initGalleryUpload(inputSelector, containerSelector) {
         $(document).on('change', inputSelector, function () {
             var files = $(this)[0].files;
-            var $btnStart = $(this).closest('.form-inline').find('.js-gallery-upload-start');
+            var $btnStart = $(this).closest('.js-gallery-upload-container').find('.js-gallery-upload-start');
             if (files.length > 0) {
                 $btnStart.show();
             } else {
@@ -164,7 +164,7 @@ var WebshopAdmin = (function ($) {
 
         $(document).on('click', '.js-gallery-upload-start', function () {
             var $btnStart = $(this);
-            var $section = $btnStart.closest('.form-inline');
+            var $section = $btnStart.closest('.js-gallery-upload-container');
             var $input = $section.find(inputSelector);
             var url = $input.data('url');
             var $container = $(containerSelector);
@@ -178,6 +178,7 @@ var WebshopAdmin = (function ($) {
             $status.show();
             $btnStart.hide();
             $input.prop('disabled', true);
+            $input.next('label').removeClass('font-weight-bold').text('Kép feltöltése folyamatban..');
             $total.text(files.length);
             $count.text(0);
 
@@ -213,6 +214,7 @@ var WebshopAdmin = (function ($) {
                     },
                     complete: function () {
                         uploadSequence(index + 1);
+                        $input.next('label').text('Képek feltöltve!');
                     }
                 });
             };

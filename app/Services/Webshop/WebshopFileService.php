@@ -20,7 +20,12 @@ class WebshopFileService
 
     public static function saveGalleryImage(UploadedFile $file, string $name): string
     {
-        return ImageService::saveCustomImage($file, 'webshop/products/gallery', $name, 800);
+        return ImageService::saveCustomImage($file, 'webshop/products/gallery', $name, 1000);
+    }
+
+    public static function saveGalleryImageThumbnail(UploadedFile $file, string $name): string
+    {
+        return ImageService::saveCustomImage($file, 'webshop/products/gallery', $name, 150);
     }
 
     public static function saveCategoryOgImage(UploadedFile $file, string $name): string

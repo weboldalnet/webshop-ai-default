@@ -1,4 +1,4 @@
-<div class="ws-filter-box card mb-4">
+<div class="ws-filter-box card mb-lg-4 mb-0">
     <div class="card-header bg-dark text-white font-weight-bold">
         <i class="fa fa-filter"></i> Szűrők
     </div>
@@ -7,7 +7,7 @@
             @foreach($category->propertyCategories()->where('filter_enabled', true)->orderBy('sort_order')->get() as $pc)
                 <div class="ws-filter-group mb-4">
                     <h6 class="font-weight-bold border-bottom pb-2">{{ $pc->name }} @if($pc->suffix)<small class="text-muted">({{ $pc->suffix }})</small>@endif</h6>
-                    
+
                     @if($pc->filter_type === 'number')
                         <div class="row no-gutters">
                             <div class="col-6 pr-1">
@@ -20,10 +20,10 @@
                     @else
                         @foreach($pc->properties()->active()->ordered()->get() as $prop)
                             <div class="custom-control custom-{{ $pc->filter_type === 'radio' ? 'radio' : 'checkbox' }} mb-1">
-                                <input type="{{ $pc->filter_type === 'radio' ? 'radio' : 'checkbox' }}" 
-                                       class="custom-control-input js-filter-input" 
-                                       id="f{{ $prop->id }}" 
-                                       name="f[{{ $pc->id }}]{{ $pc->filter_type === 'radio' ? '' : '[]' }}" 
+                                <input type="{{ $pc->filter_type === 'radio' ? 'radio' : 'checkbox' }}"
+                                       class="custom-control-input js-filter-input"
+                                       id="f{{ $prop->id }}"
+                                       name="f[{{ $pc->id }}]{{ $pc->filter_type === 'radio' ? '' : '[]' }}"
                                        value="{{ $prop->id }}"
                                        @if(is_array(request("f.{$pc->id}")) ? in_array($prop->id, request("f.{$pc->id}")) : request("f.{$pc->id}") == $prop->id) checked @endif
                                 >

@@ -23,6 +23,4 @@
         </div>
     </div>
 
-    @include('site.webshop.partials.cart-button')
-    @include('site.webshop.partials.compare-button')
 @endsection

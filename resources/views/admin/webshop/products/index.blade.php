@@ -1,3 +1,7 @@
+<?php
+    /** @var \Weboldalnet\WebshopAiDefault\Models\WebshopProduct $prod */
+?>
+
 @extends('admin.layouts.layout')
 @section('title', 'Termékek')
 
@@ -48,6 +52,7 @@
                 <thead class="thead-dark">
                 <tr>
                     <th style="width:40px"><i class="fa fa-arrows-alt"></i></th>
+                    <th class="py-1"><i class="fa fa-image fs-20"></i></th>
                     <th>Név</th>
                     <th>Kategória</th>
                     @if(($ws['product_price_enabled'] ?? 'false') === 'true')<th>Ár</th>@endif
@@ -59,10 +64,18 @@
                 @foreach($products as $prod)
                     <tr>
                         <td class="ws-drag-handle"><i class="fa fa-grip-vertical text-muted"></i><input type="hidden" class="js-sort-id" value="{{ $prod->id }}"></td>
+                        <td class="py-1" style="max-width: 50px"><img src="{{ $prod->primary_image_thumb ?? $prod->primary_image }}" class="img-fluid" style="max-width: 50px; max-height: 50px;"></td>
                         <td class="font-weight-bold">{{ $prod->name }}</td>
                         <td>{{ $prod->category->name_singular ?? '-' }}</td>
                         @if(($ws['product_price_enabled'] ?? 'false') === 'true')
-                            <td>{{ $prod->price ? number_format($prod->price, 0, ',', ' ') . ' Ft' : '-' }}</td>
+                            <td class="py-1 lh-12">
+                                @if($prod->sale_price)
+                                    <span class="text-muted small" style="text-decoration: line-through;">{{ $prod->price ? hufFormat($prod->price) : '-' }}</span>
+                                    <p class="mb-0 text-danger fw-600">{{hufFormat($prod->sale_price)}}</p>
+                                @else
+                                    <span>{{ $prod->price ? hufFormat($prod->price) : '-' }}</span>
+                                @endif
+                            </td>
                         @endif
                         <td>
                             <div class="custom-control custom-switch">

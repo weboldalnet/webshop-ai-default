@@ -12,7 +12,7 @@ class WebshopCartService
     public static function add(int $productId, int $quantity = 1): void
     {
         $cart = self::getContent();
-        
+
         if (isset($cart[$productId])) {
             $cart[$productId]['quantity'] += $quantity;
         } else {
@@ -26,6 +26,7 @@ class WebshopCartService
                 'quantity' => $quantity,
                 'price' => $product->sale_price ?? $product->price ?? 0,
                 'image' => $product->primary_image,
+                'image_thumb' => $product->primary_image_thumb,
                 'category_id' => $product->category_id,
             ];
         }

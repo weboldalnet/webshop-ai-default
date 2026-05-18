@@ -4,6 +4,7 @@ namespace Weboldalnet\WebshopAiDefault\Http\Controllers\Admin\Webshop;
 
 use App\Http\Controllers\Admin\AdminExtendedController;
 use Weboldalnet\WebshopAiDefault\Helpers\ProductHelper;
+use Weboldalnet\WebshopAiDefault\Helpers\WebshopHelper;
 use Weboldalnet\WebshopAiDefault\Models\WebshopCategory;
 use Weboldalnet\WebshopAiDefault\Models\WebshopProduct;
 use Weboldalnet\WebshopAiDefault\Models\WebshopProductGalleryImage;
@@ -97,12 +98,12 @@ class WebshopProductController extends AdminExtendedController
                 $sizes['width'],
                 $sizes['height']
             );
-            
+
             $data['primary_image_thumb'] = WebshopFileService::saveProductImageThumbnail(
                 $request->file('primary_image')['img'],
                 getTransformedString($data['name']).'-'.$product->id,
-                ProductHelper::PRIMARY_IMG_SIZE['thumb']['width'],
-                ProductHelper::PRIMARY_IMG_SIZE['thumb']['height']);
+                WebshopHelper::PRIMARY_IMG_SIZE['thumb']['width'],
+                WebshopHelper::PRIMARY_IMG_SIZE['thumb']['height']);
         }
 
         $product->update($data);
@@ -145,9 +146,11 @@ class WebshopProductController extends AdminExtendedController
     {
         $request->validate(['gallery_image' => 'required|image|mimes:jpg,jpeg,png,webp|max:5120', 'alt' => 'nullable|string|max:255']);
         $image = WebshopFileService::saveGalleryImage($request->file('gallery_image'), getTransformedString($product->name).'-gallery-'.$product->id);
+        $imageThumb = WebshopFileService::saveGalleryImageThumbnail($request->file('gallery_image'), getTransformedString($product->name).'-gallery-thumb-'.$product->id);
         $galleryItem = WebshopProductGalleryImage::create([
             'product_id' => $product->id,
             'image' => $image,
+            'image_thumb' => $imageThumb,
             'alt' => $request->input('alt'),
             'sort_order' => ($product->galleryImages()->max('sort_order') ?? 0) + 1,
             'is_active' => true

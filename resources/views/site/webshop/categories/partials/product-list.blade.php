@@ -9,7 +9,7 @@
                 $colClass = ($ws['site_category_cards_per_row'] ?? '3') == '4' ? 'col-lg-3' : 'col-lg-4';
             @endphp
             @foreach($products as $product)
-                <div class="{{ $colClass }} col-md-6 mb-4">
+                <div class="{{ $colClass }} col-md-4 col-sm-6 mb-4">
                     @include('site.webshop.categories.partials.product-card', ['product' => $product, 'ws' => $ws])
                 </div>
             @endforeach

@@ -15,21 +15,29 @@
             <!-- Kép blokk -->
             <div class="col-lg-4 col-md-6 mb-4">
                 <div class="ws-product-gallery card shadow-sm">
-                    <div class="ws-main-image p-3 text-center">
+                    <div class="ws-main-image p-3 text-center gallery">
                         @if($product->primary_image)
-                            <img src="{{ $product->primary_image }}" id="ws-main-img" alt="{{ $product->name }}" class="img-fluid" style="max-height: 100%;">
+                            <a href="{{ $product->primary_image }}">
+                                <img src="{{ $product->primary_image }}" id="ws-main-img" alt="{{ $product->name }}" class="img-fluid" style="max-height: 100%;">
+                            </a>
                         @else
                             <i class="fa fa-image fa-5x text-muted opacity-25"></i>
+                        @endif
+
+                        @if($product->galleryImages->isNotEmpty())
+                            @foreach($product->galleryImages as $img)
+                                <a href="{{ $img->image }}"></a>
+                            @endforeach
                         @endif
                     </div>
                     @if($product->galleryImages->isNotEmpty())
                         <div class="ws-thumbnails p-2 d-flex flex-wrap border-top">
-                            <div class="ws-thumb p-1" style="width: 20%; cursor: pointer;">
+                            <div class="ws-thumb p-1" style="width: 25%; cursor: pointer;">
                                 <img src="{{ $product->primary_image }}" class="img-fluid border rounded js-thumb active" data-src="{{ $product->primary_image }}">
                             </div>
                             @foreach($product->galleryImages as $img)
-                                <div class="ws-thumb p-1" style="width: 20%; cursor: pointer;">
-                                    <img src="{{ $img->image }}" class="img-fluid border rounded js-thumb" data-src="{{ $img->image }}" alt="{{ $img->alt }}">
+                                <div class="ws-thumb p-1" style="width: 25%; cursor: pointer;">
+                                    <img src="{{ $img->image_thumb }}" class="img-fluid border rounded js-thumb" data-src="{{ $img->image }}" alt="{{ $img->alt }}">
                                 </div>
                             @endforeach
                         </div>
@@ -67,7 +75,7 @@
 
             <!-- Ár és kosár blokk -->
             <div class="col-lg-4 col-md-6 mx-auto mb-4">
-                <div class="card shadow-sm h-100 border-0 bg-light">
+                <div class="card shadow-sm bg-light">
                     <div class="card-body d-flex flex-column">
                         <h4 class="font-weight-bold mb-4 border-bottom pb-2 text-primary">Vásárlás</h4>
 
@@ -77,7 +85,7 @@
 
                         <div class="form-group mb-4">
                             <label for="quantity" class="font-weight-bold">Mennyiség:</label>
-                            <select id="quantity" class="form-control form-control-lg w-100 js-quantity-select">
+                            <select id="quantity" class="form-control form-control w-100 js-quantity-select">
                                 @for($i=1; $i<=10; $i++)
                                     <option value="{{ $i }}">{{ $i }} db</option>
                                 @endfor
@@ -107,11 +115,11 @@
                     <div class="card-header bg-white p-0">
                         <ul class="nav nav-tabs ws-tabs" role="tablist">
                             <li class="nav-item">
-                                <a class="nav-link active px-4 py-2 font-weight-bold" id="desc-tab" data-toggle="tab" href="#desc" role="tab">Leírás</a>
+                                <a class="nav-link active px-4 py-2 font-weight-bold fs-20" id="desc-tab" data-toggle="tab" href="#desc" role="tab">Leírás</a>
                             </li>
                             @if(($ws['site_product_reviews_enabled'] ?? 'false') === 'true')
                                 <li class="nav-item">
-                                    <a class="nav-link px-4 py-2 font-weight-bold" id="reviews-tab" data-toggle="tab" href="#reviews" role="tab">Vélemények ({{ $product->reviews()->active()->count() }})</a>
+                                    <a class="nav-link px-4 py-2 font-weight-bold fs-20" id="reviews-tab" data-toggle="tab" href="#reviews" role="tab">Vélemények ({{ $product->reviews()->active()->count() }})</a>
                                 </li>
                             @endif
                         </ul>
@@ -154,8 +162,6 @@
     </div>
 
     @include('site.webshop.modals.review-form')
-    @include('site.webshop.partials.cart-button')
-    @include('site.webshop.partials.compare-button')
 
     @push('scripts')
         <script src="/packages/webshop/site/js/webshop-site.js"></script>

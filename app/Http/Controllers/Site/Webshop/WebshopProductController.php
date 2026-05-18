@@ -23,7 +23,7 @@ class WebshopProductController extends Controller
         return view('site.webshop.products.show', [
             'product' => $product,
             'similarProducts' => $similarProducts,
-            'ws' => WebshopSettingsService::all()
+            'isProductPage' => true,
         ]);
     }
 }

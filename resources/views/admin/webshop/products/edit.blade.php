@@ -56,8 +56,8 @@
                                     'object' => $product,
                                     'label' => 'Elsődleges kép',
                                     'variable' => 'primary_image',
-                                    'imgWidth' => \Weboldalnet\WebshopAiDefault\Helpers\ProductHelper::PRIMARY_IMG_SIZE['crop']['width'],
-                                    'imgHeight' => \Weboldalnet\WebshopAiDefault\Helpers\ProductHelper::PRIMARY_IMG_SIZE['crop']['height'],
+                                    'imgWidth' => \Weboldalnet\WebshopAiDefault\Helpers\WebshopHelper::PRIMARY_IMG_SIZE['crop']['width'],
+                                    'imgHeight' => \Weboldalnet\WebshopAiDefault\Helpers\WebshopHelper::PRIMARY_IMG_SIZE['crop']['height'],
                                 ])
                     </div>
 
@@ -66,12 +66,30 @@
                         <h3 class="header-box product-info mt-3">Árak</h3>
                         <div class="content-box bordered">
                             <div class="form-group">
-                                <label for="price">Ár (Ft)</label>
-                                <input type="number" class="form-control" id="price" name="price" step="0.01" value="{{ old('price', $product->price) }}">
+                                <label for="price">
+                                    Ár (Ft)
+                                    @if(($ws['site_product_prices_visible'] ?? 'true') === 'true')
+                                        <span class="text-danger">*</span>
+                                    @endif
+                                </label>
+                                <input type="number"
+                                       class="form-control"
+                                       id="price"
+                                       name="price"
+                                       value="{{ $product->price }}"
+                                       aria-describedby="priceHelp"
+                                       @if(($ws['site_product_prices_visible'] ?? 'true') === 'true') required @endif
+                                >
+                                <small id="priceHelp" class="form-text text-muted">Ár megadása Ft-ban. Például: 10000</small>
                             </div>
                             <div class="form-group">
                                 <label for="sale_price">Akciós ár (Ft)</label>
-                                <input type="number" class="form-control" id="sale_price" name="sale_price" step="0.01" value="{{ old('sale_price', $product->sale_price) }}">
+                                <input type="number"
+                                       class="form-control"
+                                       id="sale_price"
+                                       name="sale_price"
+                                       value="{{ $product->sale_price }}"
+                                >
                             </div>
                         </div>
                     @endif
@@ -98,48 +116,52 @@
                 <div class="col-lg-12 mb-3">
                     <h3 class="header-box product-info">Tulajdonságok</h3>
                     <div class="content-box bordered">
+                        <div class="row">
                         @foreach($allPropertyCategories as $pc)
                             @php
                                 $isDefault = in_array($pc->id, $categoryPropertyCatIds);
                                 $pcProps = $existingProps->get($pc->id, collect());
                             @endphp
-                            <div class="ws-property-group mb-3 {{ !$isDefault ? 'ws-collapsed' : '' }}">
-                                <h5 class="ws-property-header {{ !$isDefault ? 'js-collapse-toggle collapsed' : '' }}" data-toggle="{{ !$isDefault ? 'collapse' : '' }}" data-target="#propGroup{{ $pc->id }}">
-                                    {{ $pc->name }} <span class="badge badge-info">{{ $pc->filter_type }}</span>
-                                    @if(!$isDefault) <i class="fa fa-chevron-down float-right"></i> @endif
-                                </h5>
-                                <div id="propGroup{{ $pc->id }}" class="{{ !$isDefault ? 'collapse' : '' }}">
-                                    @if($pc->isNumber())
-                                        <div class="form-group">
-                                            <div class="input-group">
-                                                <input type="number" class="form-control" name="properties[{{ $pc->id }}][number_value]" step="0.01"
-                                                       value="{{ $pcProps->first()->number_value ?? '' }}">
-                                                @if($pc->suffix)
-                                                    <div class="input-group-append"><span class="input-group-text">{{ $pc->suffix }}</span></div>
-                                                @endif
+                            <div class="col-xl-4 col-md-6">
+                                <div class="ws-property-group {{ !$isDefault ? 'ws-collapsed' : '' }}">
+                                    <h5 class="ws-property-header {{ !$isDefault ? 'js-collapse-toggle collapsed' : '' }}" data-toggle="{{ !$isDefault ? 'collapse' : '' }}" data-target="#propGroup{{ $pc->id }}">
+                                        {{ $pc->name }} <span class="badge badge-info">{{ $pc->filter_type }}</span>
+                                        @if(!$isDefault) <i class="fa fa-chevron-down float-right"></i> @endif
+                                    </h5>
+                                    <div id="propGroup{{ $pc->id }}" class="{{ !$isDefault ? 'collapse' : '' }}">
+                                        @if($pc->isNumber())
+                                            <div class="form-group">
+                                                <div class="input-group">
+                                                    <input type="number" class="form-control" name="properties[{{ $pc->id }}][number_value]" step="0.01"
+                                                           value="{{ $pcProps->first()->number_value ?? '' }}">
+                                                    @if($pc->suffix)
+                                                        <div class="input-group-append"><span class="input-group-text">{{ $pc->suffix }}</span></div>
+                                                    @endif
+                                                </div>
                                             </div>
-                                        </div>
-                                    @else
-                                        @php $selectedPropIds = $pcProps->pluck('property_id')->toArray(); @endphp
-                                        @foreach($pc->properties as $prop)
-                                            @if($pc->filter_type === 'radio')
-                                                <div class="custom-control custom-radio mb-1">
-                                                    <input type="radio" class="custom-control-input" id="prop{{ $prop->id }}" name="properties[{{ $pc->id }}][selected]" value="{{ $prop->id }}"
-                                                           @if(in_array($prop->id, $selectedPropIds)) checked @endif>
-                                                    <label class="custom-control-label" for="prop{{ $prop->id }}">{{ $prop->name }}</label>
-                                                </div>
-                                            @else
-                                                <div class="custom-control custom-checkbox mb-1">
-                                                    <input type="checkbox" class="custom-control-input" id="prop{{ $prop->id }}" name="properties[{{ $pc->id }}][selected][]" value="{{ $prop->id }}"
-                                                           @if(in_array($prop->id, $selectedPropIds)) checked @endif>
-                                                    <label class="custom-control-label" for="prop{{ $prop->id }}">{{ $prop->name }}</label>
-                                                </div>
-                                            @endif
-                                        @endforeach
-                                    @endif
+                                        @else
+                                            @php $selectedPropIds = $pcProps->pluck('property_id')->toArray(); @endphp
+                                            @foreach($pc->properties as $prop)
+                                                @if($pc->filter_type === 'radio')
+                                                    <div class="custom-control custom-radio mb-1">
+                                                        <input type="radio" class="custom-control-input" id="prop{{ $prop->id }}" name="properties[{{ $pc->id }}][selected]" value="{{ $prop->id }}"
+                                                               @if(in_array($prop->id, $selectedPropIds)) checked @endif>
+                                                        <label class="custom-control-label" for="prop{{ $prop->id }}">{{ $prop->name }}</label>
+                                                    </div>
+                                                @else
+                                                    <div class="custom-control custom-checkbox mb-1">
+                                                        <input type="checkbox" class="custom-control-input" id="prop{{ $prop->id }}" name="properties[{{ $pc->id }}][selected][]" value="{{ $prop->id }}"
+                                                               @if(in_array($prop->id, $selectedPropIds)) checked @endif>
+                                                        <label class="custom-control-label" for="prop{{ $prop->id }}">{{ $prop->name }}</label>
+                                                    </div>
+                                                @endif
+                                            @endforeach
+                                        @endif
+                                    </div>
                                 </div>
                             </div>
                         @endforeach
+                        </div>
                     </div>
                 </div>
             </div>
@@ -157,12 +179,27 @@
                         </div>
                         <hr>
 
-                        <h6>Új képek feltöltése</h6>
-                        <div class="form-inline">
-                            <input type="file" class="form-control-file mr-2 mb-1 js-gallery-upload"
-                                   data-url="{{ route('admin.webshop.products.gallery.store', $product) }}"
-                                   accept=".jpg,.jpeg,.png,.webp" multiple>
-                            <button type="button" class="btn btn-sm btn-success js-gallery-upload-start" style="display:none">
+                        <h5 class="fw-600">Új képek feltöltése</h5>
+                        <div class="js-gallery-upload-container mw-400">
+{{--                            <input type="file" class="form-control-file mr-2 mb-1 js-gallery-upload"--}}
+{{--                                   data-url="{{ route('admin.webshop.products.gallery.store', $product) }}"--}}
+{{--                                   accept=".jpg,.jpeg,.png,.webp" multiple>--}}
+                            <div class="input-group mb-1">
+                                <div class="input-group-prepend">
+                                    <span class="input-group-text"><i class="fa-regular fa-images fs-18"></i></span>
+                                </div>
+                                <div class="custom-file">
+                                    <input type="file"
+                                           class="custom-file-input js-gallery-upload"
+                                           data-url="{{ route('admin.webshop.products.gallery.store', $product) }}"
+                                           accept=".jpg,.jpeg,.png,.webp"
+                                           multiple
+                                    >
+                                    <label class="custom-file-label text-muted">Kép kiválasztása</label>
+                                </div>
+                            </div>
+
+                            <button type="button" class="btn btn-sm btn-success fs-16 js-gallery-upload-start mb-1" style="display:none">
                                 <i class="fa fa-upload"></i> Kijelölt képek feltöltése
                             </button>
                             <div class="js-gallery-upload-status ml-2" style="display:none">

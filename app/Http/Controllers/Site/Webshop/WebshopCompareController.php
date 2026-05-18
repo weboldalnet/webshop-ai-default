@@ -34,8 +34,7 @@ class WebshopCompareController extends Controller
 
         return view('site.webshop.compare.index', [
             'products' => $products,
-            'propertyCategories' => $propertyCategories,
-            'ws' => WebshopSettingsService::all()
+            'propertyCategories' => $propertyCategories
         ]);
     }
 

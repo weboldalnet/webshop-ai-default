@@ -18,14 +18,14 @@
                     <th class="bg-light" style="width: 200px;"></th>
                     @foreach($products as $product)
                         <th class="text-center">
-                            <div class="mb-2" style="height: 120px;">
+                            <div class="mb-2 mx-auto" style="height: 140px; max-width: 140px;">
                                 @if($product->primary_image)
                                     <img src="{{ $product->primary_image }}" class="img-fluid h-100" style="object-fit: contain;">
                                 @else
                                     <i class="fa fa-image fa-3x text-muted opacity-25"></i>
                                 @endif
                             </div>
-                            <h5 class="h6 font-weight-bold">{{ $product->name }}</h5>
+                            <h5 class="fs-18 font-weight-bold">{{ $product->name }}</h5>
                             <button type="button" class="btn btn-sm btn-link text-danger js-remove-compare-item" data-id="{{ $product->id }}" data-reload="true">
                                 <i class="fa fa-trash-can mr-1"></i> Törlés
                             </button>
@@ -55,7 +55,7 @@
                         @endforeach
                     </tr>
                 @endforeach
-                
+
                 @if(($ws['site_product_prices_visible'] ?? 'true') === 'true')
                     <tr>
                         <th class="bg-light">Ár</th>
@@ -76,7 +76,7 @@
                     <th class="bg-light">Művelet</th>
                     @foreach($products as $product)
                         <td class="text-center">
-                            <button type="button" class="btn btn-primary btn-block js-add-to-cart" data-id="{{ $product->id }}">
+                            <button type="button" class="btn btn-primary btn-block js-add-to-cart ws-nowrap fs-16" data-id="{{ $product->id }}">
                                 <i class="fa fa-shopping-cart mr-2"></i> Kosárba
                             </button>
                         </td>
@@ -86,9 +86,6 @@
             </table>
         </div>
     </div>
-
-    @include('site.webshop.partials.cart-button')
-    @include('site.webshop.partials.compare-button')
 
     @push('scripts')
         <script src="/packages/webshop/site/js/webshop-site.js"></script>

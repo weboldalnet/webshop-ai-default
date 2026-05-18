@@ -21,7 +21,7 @@
 
                         <div class="d-flex align-items-center mt-2 mt-md-0">
                             @if(($ws['site_category_view_switcher_enabled'] ?? 'false') === 'true')
-                                <div class="btn-group btn-group-sm mr-3 ws-view-switcher" role="group">
+                                <div class="btn-group btn-group-sm mr-2 ws-view-switcher" role="group">
                                     <button type="button" class="btn btn-outline-dark active js-view-mode" data-mode="card" title="Kártyás nézet"><i class="fa fa-th-large"></i></button>
                                     <button type="button" class="btn btn-outline-dark js-view-mode" data-mode="table" title="Táblázatos nézet"><i class="fa fa-list"></i></button>
                                 </div>
@@ -35,10 +35,10 @@
                                 <option value="name_desc">Név szerint (Z-A)</option>
                             </select>
 
-                            <select class="form-control form-control-sm w-auto js-per-page-select">
-                                <option value="30">30 / oldal</option>
-                                <option value="60">60 / oldal</option>
-                                <option value="90">90 / oldal</option>
+                            <select class="form-control form-control-sm w-auto js-per-page-select px-1">
+                                <option value="30">30/oldal</option>
+                                <option value="60">60/oldal</option>
+                                <option value="90">90/oldal</option>
                             </select>
                         </div>
                     </div>
@@ -55,9 +55,6 @@
             </div>
         </div>
     </div>
-
-    @include('site.webshop.partials.cart-button')
-    @include('site.webshop.partials.compare-button')
 
     @push('scripts')
         <script src="/packages/webshop/site/js/webshop-site.js"></script>

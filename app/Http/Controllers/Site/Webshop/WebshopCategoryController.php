@@ -31,8 +31,7 @@ class WebshopCategoryController extends Controller
         }
 
         return view('site.webshop.categories.show', [
-            'category' => $category,
-            'ws' => WebshopSettingsService::all()
+            'category' => $category
         ]);
     }
 

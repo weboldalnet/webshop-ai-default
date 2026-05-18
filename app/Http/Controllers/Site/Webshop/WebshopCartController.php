@@ -38,8 +38,7 @@ class WebshopCartController extends Controller
             'success' => true,
             'html' => view('site.webshop.cart.dropdown', [
                 'items' => WebshopCartService::getContent(),
-                'total' => WebshopCartService::getTotal(),
-                'ws' => WebshopSettingsService::all()
+                'total' => WebshopCartService::getTotal()
             ])->render(),
             'count' => WebshopCartService::getCount()
         ]);

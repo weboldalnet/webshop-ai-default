@@ -1,18 +1,55 @@
 /* Sticky kategória navigáció */
 .ws-category-nav {
     border-bottom: 1px solid #dee2e6;
-    z-index: 1020;
-    top: 0;
+    z-index: 80;
+    top: 66px;
+
+    @media (min-width: 992px) {
+        top: 70px;
+    }
+
+    .category-box {
+        overflow: unset;
+        overflow-x: clip;
+
+        @media (min-width: 1200px) {
+            overflow: unset;
+            overflow-x: clip;
+        }
+
+        .category-mover {
+            box-shadow: unset;
+        }
+    }
+
+    .category-row {
+        overflow: auto;
+
+        &.visible {
+            overflow: visible;
+        }
+    }
+
+    .dropdown {
+        position: relative;
+    }
 }
 
 .ws-category-nav .btn-category {
-    border-radius: 20px;
+    border-radius: 4px;
     font-weight: 600;
     transition: all 0.2s;
     white-space: nowrap;
+    border: none;
 }
 
 .ws-category-nav .btn-category.active {
+    background-color: #343a40;
+    color: #fff;
+}
+
+.filter-btn {
+    padding: 8px 12px;
     background-color: #343a40;
     color: #fff;
 }
@@ -43,18 +80,44 @@
     -webkit-box-orient: vertical;
 }
 
-/* Floating gombok */
-.ws-cart-button, .ws-compare-button {
-    transition: transform 0.2s;
+.ws-product-properties {
+    display: grid;
+    grid-template-columns: repeat(1, 1fr);
+    gap: 8px 4px;
+
+    @media (min-width: 768px) {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .badge {
+        white-space: unset;
+        text-align: left;
+    }
 }
 
-.ws-cart-button:hover, .ws-compare-button:hover {
-    transform: scale(1.1);
+/* Floating gombok */
+.ws-cart-button, .ws-compare-button {
+    transition: all 0.2s ease-in-out;
 }
+
+/*.ws-cart-button:hover, .ws-compare-button:hover {*/
+/*    transform: scale(1.1);*/
+/*}*/
 
 /* Galéria */
 .js-thumb.active {
     border-width: 2px !important;
+}
+
+.ws-thumbnails {
+    .ws-thumb {
+        img {
+            width: 100%;
+            height: 100%;
+            aspect-ratio: 1 / 1;
+            object-fit: cover;
+        }
+    }
 }
 
 /* Összehasonlítás táblázat */
@@ -91,6 +154,43 @@
 }
 
 /* Sidebar szűrők */
+.ws-filter-sidebar {
+    @media (max-width: 993px) {
+        position: fixed;
+        top: 66px;
+        left: -100%;
+        width: 100%;
+        z-index: 90;
+        transition: background-color 0.25s linear;
+
+        &.show {
+            left: 0;
+            background-color: rgba(0, 0, 0, 0.5);
+
+            .ws-filter-box {
+                left: 0;
+            }
+        }
+
+        .card-header, .card-body, .card {
+            border-radius: 0;
+        }
+
+        .ws-filter-box {
+            margin: 0 -15px;
+            width: 80%;
+            left: -100%;
+            height: calc(100vh - 66px);
+            height: calc(var(--viewHeight, 1vh) * 100 - 66px);
+            transition: left 0.25s linear;
+
+            .card-body {
+                overflow-y: auto;
+            }
+        }
+    }
+}
+
 .ws-filter-box {
     border: none;
     box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
@@ -108,6 +208,52 @@
     transition: opacity 0.3s;
 }
 
+
+/* Globális gombok */
+.ws-global-btn-items {
+    display: flex;
+    gap: 8px;
+
+    .ws-global-btn-item {
+    }
+
+    .ws-cart-button, .ws-compare-button {
+        .badge {
+            bottom: -4px;
+            right: -4px;
+            top: unset;
+            font-size: 12px;
+            transform: unset;
+            border-radius: 50%;
+            padding: 4px 6px;
+        }
+    }
+
+    .dropdown-menu {
+        z-index: 85;
+
+        @media (max-width: 993px) {
+            position: fixed !important;
+            top: 70px !important;
+            left: 2% !important;
+            transform: unset !important;
+            width: 96%;
+        }
+    }
+}
+
+.ws-cart-button, .ws-compare-button {
+    position: relative;
+    padding: 12px 16px;
+    border-radius: 8px;
+    font-size: 18px;
+    border: none;
+    line-height: 1;
+    z-index: 90;
+    box-shadow: unset !important;
+}
+
+/* Saját beállítások */
 .small {
     font-size: 90%;
 }
@@ -119,4 +265,57 @@
 
 .fa-spin {
     font-size: 24px;
+}
+
+/* ------ Bootstrap felüldefiniálások ----- */
+.btn, select, input, textarea {
+    box-shadow: none !important;
+}
+
+.text-primary {
+    color: #466CA7 !important;
+}
+
+.btn-primary {
+    background-color: #5178b6;
+    border-color: #5178b6;
+    color: #fff;
+
+    &:hover {
+        background-color: #466CA7;
+        border-color: #466CA7;
+        color: #fff;
+    }
+}
+
+.btn-info {
+    background-color: #4AAB73;
+    border-color: #4AAB73;
+    color: #fff;
+
+    &:hover {
+        background-color: #4AAB73;
+        border-color: #4AAB73;
+        color: #fff;
+    }
+}
+
+.btn-outline-info {
+    border-color: #4AAB73;
+    color: #4AAB73;
+
+    &:hover {
+        background-color: #4AAB73;
+        border-color: #4AAB73;
+        color: #fff;
+    }
+}
+
+.bg-dark {
+    background-color: #0A132C !important;
+}
+
+.badge-info, .badge-secondary {
+    background-color: #e9eded;
+    color: #0A132C;
 }

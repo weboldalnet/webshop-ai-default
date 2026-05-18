@@ -1,9 +1,9 @@
 <div class="card ws-product-card h-100 shadow-sm border-0">
-    <a href="{{ route('site.webshop.products.show', $product) }}" class="ws-product-card-img text-center bg-light d-block overflow-hidden" style="height: 220px;">
+    <a href="{{ route('site.webshop.products.show', $product) }}" class="ws-product-card-img text-center bg-light d-flex align-items-center justify-content-center overflow-hidden" style="height: 220px;">
         @if($product->primary_image)
             <img src="{{ $product->primary_image }}" alt="{{ $product->name }}" class="img-fluid" style="max-height: 100%;">
         @else
-            <i class="fa fa-image fa-4x text-muted opacity-25"></i>
+            <i class="fa fa-image fa-4x text-dark opacity-25 fs-30"></i>
         @endif
     </a>
     <div class="card-body d-flex py-3 flex-column">
@@ -32,10 +32,12 @@
             @endforeach
         </div>
 
-        <div class="mt-auto pt-2 border-top d-flex justify-content-between align-items-end">
-            @include('site.webshop.partials.product-price', ['product' => $product])
+        <div class="mt-auto pt-2 border-top d-flex flex-wrap justify-content-between align-items-end">
+            <div class="mr-2">
+                @include('site.webshop.partials.product-price', ['product' => $product])
+            </div>
 
-            <div class="ws-product-card-actions">
+            <div class="ws-product-card-actions ws-nowrap">
                 @if(($ws['site_product_compare_enabled'] ?? 'false') === 'true')
                     <button type="button" class="btn btn-sm btn-outline-info js-add-to-compare" data-id="{{ $product->id }}" title="Összehasonlítás">
                         <i class="fa fa-scale-balanced"></i>

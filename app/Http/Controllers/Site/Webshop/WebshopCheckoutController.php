@@ -20,8 +20,7 @@ class WebshopCheckoutController extends Controller
 
         return view('site.webshop.checkout.index', [
             'items' => $items,
-            'total' => WebshopCartService::getTotal(),
-            'ws' => WebshopSettingsService::all()
+            'total' => WebshopCartService::getTotal()
         ]);
     }
 

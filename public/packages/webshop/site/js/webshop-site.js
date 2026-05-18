@@ -11,25 +11,26 @@ const WebshopSite = {
         this.initGallery();
         this.initReviewStars();
         this.initReviewSubmit();
+        this.initOther();
     },
 
     initCart: function() {
         const self = this;
-        
+
         // Kosárba rakás
         $(document).on('click', '.js-add-to-cart', function() {
             const btn = $(this);
             const id = btn.data('id');
             const qty = btn.data('with-qty') ? $('.js-quantity-select').val() : 1;
 
-            btn.prop('disabled', true).append(' <i class="fa fa-spinner fa-spin"></i>');
+            btn.prop('disabled', true);
 
             $.post('/webshop/cart/add', { product_id: id, quantity: qty }, function(res) {
                 btn.prop('disabled', false).find('.fa-spinner').remove();
                 if (res.success) {
                     $('.js-cart-count').text(res.count);
                     self.updateCartDropdown();
-                    
+
                     if (res.related_html) {
                         $('#related-products-modal-container').remove();
                         $('body').append('<div id="related-products-modal-container">' + res.related_html + '</div>');
@@ -94,6 +95,11 @@ const WebshopSite = {
             });
         });
 
+        // Kosár dropdown megnyitáskor frissítés
+        $('.ws-compare-button').on('click', function() {
+            self.updateCompareDropdown();
+        });
+
         $(document).on('click', '.js-remove-compare-item', function() {
             const id = $(this).data('id');
             const reload = $(this).data('reload');
@@ -133,15 +139,15 @@ const WebshopSite = {
             const sort = $('.js-sort-select').val();
             const perPage = $('.js-per-page-select').val();
             const viewMode = $('.js-view-mode.active').data('mode') || 'card';
-            
+
             const params = formData + '&sort=' + sort + '&per_page=' + perPage + '&view_mode=' + viewMode;
-            
+
             $('#product-list-container').css('opacity', 0.5);
-            
+
             $.get(this.currentUrl, params, function(res) {
                 $('#product-list-container').html(res.html).css('opacity', 1);
                 $('#pagination-container').html(res.pagination);
-                
+
                 // History API update
                 const newUrl = window.location.pathname + '?' + params;
                 window.history.pushState({path: newUrl}, '', newUrl);
@@ -178,7 +184,10 @@ const WebshopSite = {
         $(document).on('click', '.js-thumb', function() {
             $('.js-thumb').removeClass('active border-primary');
             $(this).addClass('active border-primary');
-            $('#ws-main-img').attr('src', $(this).data('src'));
+            let wsMainImg = $('#ws-main-img');
+            wsMainImg.attr('src', $(this).data('src'));
+            wsMainImg.closest('a').attr('href', $(this).data('src'));
+            createGallery();
         });
     },
 
@@ -210,7 +219,7 @@ const WebshopSite = {
         $('#ws-review-form').on('submit', function(e) {
             e.preventDefault();
             if (!$('#ws-rating-value').val()) { alert('Kérjük, válasszon értékelést!'); return; }
-            
+
             const form = $(this);
             const btn = form.find('button[type="submit"]');
             btn.prop('disabled', true).prepend('<i class="fa fa-spinner fa-spin mr-2"></i>');
@@ -234,16 +243,38 @@ const WebshopSite = {
             const id = $(this).data('id');
             const input = $(`.js-qty-input[data-id="${id}"]`);
             let val = parseInt(input.val());
-            
+
             if ($(this).hasClass('js-qty-plus')) val++;
             else val--;
-            
+
             if (val < 1) return;
-            
+
             input.val(val);
             $.post('/webshop/cart/update', { product_id: id, quantity: val }, function(res) {
                 if (res.success) {
                     location.reload(); // Egyszerűbb, mint minden árat JS-ből újraszámolni a bonyolult layout miatt
+                }
+            });
+        });
+    },
+
+    initOther: function() {
+        $(document).ready(function () {
+            $('.js-category-dropdown').on('show.bs.dropdown', function () {
+                $(this).closest('.category-row').addClass('visible');
+            });
+
+            $('.js-category-dropdown').on('hide.bs.dropdown', function () {
+                $(this).closest('.category-row').removeClass('visible');
+            });
+
+            $('.js-show-filter-btn').on('click', function () {
+                $('.ws-filter-sidebar').toggleClass('show');
+            });
+
+            $('.ws-filter-sidebar').on('click', function (e) {
+                if (!$(e.target).closest('.ws-filter-box').length) {
+                    $(this).removeClass('show');
                 }
             });
         });

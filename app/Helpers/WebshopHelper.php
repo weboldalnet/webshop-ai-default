@@ -2,7 +2,7 @@
 
 namespace Weboldalnet\WebshopAiDefault\Helpers;
 
-class ProductHelper
+class WebshopHelper
 {
     const PRIMARY_IMG_SIZE = [
         'crop' => [
