@@ -41,9 +41,12 @@ class WebshopCheckoutController extends Controller
         if (WebshopSettingsService::getBool('site_checkout_tax_number_enabled')) $rules['tax_number'] = 'required|string|max:20';
 
         if (WebshopSettingsService::getBool('site_checkout_billing_enabled')) {
-            $rules['billing.zip'] = 'required|string|max:10';
-            $rules['billing.city'] = 'required|string|max:100';
-            $rules['billing.address'] = 'required|string|max:255';
+            if (!$request->has('billing_same_as_shipping')) {
+                $rules['billing.name'] = 'required|string|max:255';
+                $rules['billing.zip'] = 'required|string|max:10';
+                $rules['billing.city'] = 'required|string|max:100';
+                $rules['billing.address'] = 'required|string|max:255';
+            }
         }
 
         if (WebshopSettingsService::getBool('site_checkout_shipping_enabled')) {

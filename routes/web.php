@@ -85,6 +85,7 @@ Route::middleware('web')->group(function () {
             Route::post('/categories/sort', [WebshopCategoryController::class, 'sort'])->name('categories.sort');
 
             // Termékek
+            Route::get('/products/search', [WebshopProductController::class, 'search'])->name('products.search');
             Route::get('/products', [WebshopProductController::class, 'index'])->name('products.index');
             Route::get('/products/create', [WebshopProductController::class, 'create'])->name('products.create');
             Route::post('/products', [WebshopProductController::class, 'store'])->name('products.store');
@@ -108,8 +109,12 @@ Route::middleware('web')->group(function () {
 
             // Rendelések
             Route::get('/orders', [WebshopOrderController::class, 'index'])->name('orders.index');
+            Route::get('/orders/create', [WebshopOrderController::class, 'create'])->name('orders.create');
+            Route::post('/orders', [WebshopOrderController::class, 'store'])->name('orders.store');
+            Route::get('/orders/{order}/details', [WebshopOrderController::class, 'details'])->name('orders.details');
             Route::get('/orders/{order}/edit', [WebshopOrderController::class, 'edit'])->name('orders.edit');
             Route::put('/orders/{order}', [WebshopOrderController::class, 'update'])->name('orders.update');
+            Route::patch('/orders/{order}/status', [WebshopOrderController::class, 'updateStatus'])->name('orders.update-status');
             Route::delete('/orders/{order}', [WebshopOrderController::class, 'destroy'])->name('orders.destroy');
             Route::post('/orders/toggle-completed', [WebshopOrderController::class, 'toggleCompleted'])->name('orders.toggle-completed');
 

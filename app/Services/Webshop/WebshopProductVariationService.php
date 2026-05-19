@@ -29,10 +29,17 @@ class WebshopProductVariationService
                 foreach ($allNewGroupIds as $pid1) {
                     foreach ($allNewGroupIds as $pid2) {
                         if ($pid1 !== $pid2) {
-                            DB::table('public.webshop_product_variations')->insertOrIgnore([
-                                'product_id' => $pid1, 'variation_product_id' => $pid2,
-                                'created_at' => $now, 'updated_at' => $now,
-                            ]);
+                            if (!DB::table('public.webshop_product_variations')
+                                ->where('product_id', $pid1)
+                                ->where('variation_product_id', $pid2)
+                                ->exists()) {
+                                DB::table('public.webshop_product_variations')->insert([
+                                    'product_id' => $pid1,
+                                    'variation_product_id' => $pid2,
+                                    'created_at' => $now,
+                                    'updated_at' => $now,
+                                ]);
+                            }
                         }
                     }
                 }

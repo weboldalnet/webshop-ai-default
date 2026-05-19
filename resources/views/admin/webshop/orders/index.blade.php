@@ -2,10 +2,17 @@
 @section('title', 'Rendelések')
 
 @section('content')
-    <div class="container mt-lg-4 mt-3 mb-150">
+    <div class="container-fluid mt-lg-4 mt-3 mb-150">
         @include('admin.webshop.partials.alerts')
 
-        <div class="row"><div class="col-lg-12"><h2 class="header-box"><i class="fa fa-shopping-cart"></i> Rendelések</h2></div></div>
+        <div class="row">
+            <div class="col-lg-12 d-flex justify-content-between align-items-center mb-3">
+                <h2 class="header-box m-0"><i class="fa fa-shopping-cart"></i> Rendelések</h2>
+                <a href="{{ route('admin.webshop.orders.create') }}" class="btn btn-success font-weight-bold">
+                    <i class="fa fa-plus-circle mr-1"></i> Új rendelés létrehozása
+                </a>
+            </div>
+        </div>
 
         <div class="content-box bordered mb-3">
             <form method="GET" action="{{ route('admin.webshop.orders.index') }}" class="row align-items-end">
@@ -51,10 +58,12 @@
                     <th>Rendelésszám</th>
                     <th>Vevő</th>
                     <th>Státusz</th>
-                    <th>Összeg</th>
+                    @if($pricesVisible)
+                        <th>Összeg</th>
+                    @endif
                     <th>Teljesített</th>
                     <th>Dátum</th>
-                    <th><i class="fa fa-pen"></i></th>
+                    <th>Műveletek</th>
                 </tr>
                 </thead>
                 <tbody>
@@ -63,7 +72,9 @@
                         <td class="font-weight-bold">{{ $order->order_number }}</td>
                         <td>{{ $order->customer_name }}<br><small class="text-muted">{{ $order->customer_email }}</small></td>
                         <td><span class="badge badge-{{ $order->status === 'completed' ? 'success' : ($order->status === 'cancelled' ? 'danger' : 'warning') }}">{{ $order->status_label }}</span></td>
-                        <td>{{ number_format($order->total_price, 0, ',', ' ') }} {{ $order->currency }}</td>
+                        @if($pricesVisible)
+                            <td>{{ hufFormat($order->total_price) }}</td>
+                        @endif
                         <td>
                             <div class="custom-control custom-switch">
                                 <input type="checkbox" class="custom-control-input js-toggle-completed" id="completed{{ $order->id }}" data-id="{{ $order->id }}" data-url="{{ route('admin.webshop.orders.toggle-completed') }}" @if($order->is_completed) checked @endif>
@@ -72,8 +83,9 @@
                         </td>
                         <td>{{ $order->created_at->format('Y.m.d H:i') }}</td>
                         <td class="ws-nowrap">
-                            <a href="{{ route('admin.webshop.orders.edit', $order) }}" class="btn btn-sm btn-primary"><i class="fa fa-pen"></i></a>
-                            <button type="button" class="btn btn-sm btn-danger js-delete-btn" data-url="{{ route('admin.webshop.orders.destroy', $order) }}"><i class="fa fa-trash-alt"></i></button>
+                            <button type="button" class="btn btn-sm btn-info js-order-details" data-url="{{ route('admin.webshop.orders.details', $order) }}" title="Részletek"><i class="fa fa-eye"></i></button>
+                            <a href="{{ route('admin.webshop.orders.edit', $order) }}" class="btn btn-sm btn-primary" title="Szerkesztés"><i class="fa fa-pen"></i></a>
+                            <button type="button" class="btn btn-sm btn-danger js-delete-btn" data-url="{{ route('admin.webshop.orders.destroy', $order) }}" title="Törlés"><i class="fa fa-trash-alt"></i></button>
                         </td>
                     </tr>
                 @endforeach
@@ -83,10 +95,12 @@
     </div>
 
     @include('admin.webshop.modals.delete-confirm')
+    @include('admin.webshop.modals.order-details')
     <link rel="stylesheet" href="/packages/webshop/admin/css/webshop-admin.css">
     <script src="/packages/webshop/admin/js/webshop-admin.js"></script>
     <script>
         WebshopAdmin.initToggleCompleted();
         WebshopAdmin.initDeleteConfirm();
+        WebshopAdmin.initOrderDetails();
     </script>
 @endsection

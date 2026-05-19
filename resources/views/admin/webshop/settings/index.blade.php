@@ -68,6 +68,8 @@
                 </div>
             </div>
 
+            <hr>
+
             <div class="row">
                 <div class="col-lg-6 mb-3">
                     <h2 class="header-box product-info">Site Kategória beállítások</h2>

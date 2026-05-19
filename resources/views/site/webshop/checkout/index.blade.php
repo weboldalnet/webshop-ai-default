@@ -114,19 +114,32 @@
                         @endif
 
                         @if(($ws['site_checkout_billing_enabled'] ?? 'false') === 'true')
-                            <h5 class="mt-4 border-bottom pb-2 font-weight-bold">Számlázási adatok</h5>
-                            <div class="row">
-                                <div class="col-md-3 form-group">
-                                    <label>Irsz. <span class="text-danger">*</span></label>
-                                    <input type="text" name="billing[zip]" class="form-control" value="{{ old('billing.zip') }}" required>
+                            <div class="d-flex justify-content-between align-items-center mt-4 border-bottom pb-2 mb-3">
+                                <h5 class="m-0 font-weight-bold">Számlázási adatok</h5>
+                                <div class="custom-control custom-checkbox">
+                                    <input type="checkbox" name="billing_same_as_shipping" class="custom-control-input js-billing-same-as-shipping" id="billingSameAsShipping" value="1" {{ old('billing_same_as_shipping', '1') == '1' ? 'checked' : '' }}>
+                                    <label class="custom-control-label small pt-1" for="billingSameAsShipping">Megegyezik a szállítással</label>
                                 </div>
-                                <div class="col-md-9 form-group">
-                                    <label>Város <span class="text-danger">*</span></label>
-                                    <input type="text" name="billing[city]" class="form-control" value="{{ old('billing.city') }}" required>
-                                </div>
-                                <div class="col-md-12 form-group">
-                                    <label>Utca, házszám <span class="text-danger">*</span></label>
-                                    <input type="text" name="billing[address]" class="form-control" value="{{ old('billing.address') }}" required>
+                            </div>
+
+                            <div class="collapse {{ old('billing_same_as_shipping', '1') == '1' ? '' : 'show' }} js-billing-collapse">
+                                <div class="row">
+                                    <div class="col-md-12 form-group">
+                                        <label>Számlázási név <span class="text-danger">*</span></label>
+                                        <input type="text" name="billing[name]" class="form-control js-billing-required" value="{{ old('billing.name') }}" {{ old('billing_same_as_shipping', '1') == '1' ? '' : 'required' }}>
+                                    </div>
+                                    <div class="col-md-3 form-group">
+                                        <label>Irsz. <span class="text-danger">*</span></label>
+                                        <input type="text" name="billing[zip]" class="form-control js-billing-required" value="{{ old('billing.zip') }}" {{ old('billing_same_as_shipping', '1') == '1' ? '' : 'required' }}>
+                                    </div>
+                                    <div class="col-md-9 form-group">
+                                        <label>Város <span class="text-danger">*</span></label>
+                                        <input type="text" name="billing[city]" class="form-control js-billing-required" value="{{ old('billing.city') }}" {{ old('billing_same_as_shipping', '1') == '1' ? '' : 'required' }}>
+                                    </div>
+                                    <div class="col-md-12 form-group">
+                                        <label>Utca, házszám <span class="text-danger">*</span></label>
+                                        <input type="text" name="billing[address]" class="form-control js-billing-required" value="{{ old('billing.address') }}" {{ old('billing_same_as_shipping', '1') == '1' ? '' : 'required' }}>
+                                    </div>
                                 </div>
                             </div>
                         @endif

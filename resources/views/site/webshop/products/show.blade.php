@@ -54,7 +54,7 @@
                             @foreach($product->productProperties->groupBy('property.property_category_id') as $pcId => $pProps)
                                 @php $pc = $pProps->first()->property->propertyCategory ?? $pProps->first()->propertyCategory; @endphp
                                 @if($pc)
-                                    <div class="mb-3">
+                                    <div class="mb-lg-3 mb-0">
                                         <div class="font-weight-bold text-muted small">{{ $pc->name }}:</div>
                                         <div class="ws-prop-values">
                                             @foreach($pProps as $pp)
@@ -105,6 +105,10 @@
                         </div>
                     </div>
                 </div>
+
+                @if(($ws['product_variations_enabled'] ?? 'false') === 'true')
+                    @include('site.webshop.products.partials.variations')
+                @endif
             </div>
         </div>
 

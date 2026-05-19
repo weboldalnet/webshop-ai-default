@@ -112,6 +112,9 @@ var WebshopAdmin = (function ($) {
                 success: function (res) {
                     if (res.success) {
                         showToast('success', res.message || 'Státusz frissítve.');
+                        setTimeout(function () {
+                            window.location.reload();
+                        }, 500);
                     }
                 },
                 error: function () {
@@ -120,6 +123,120 @@ var WebshopAdmin = (function ($) {
                 }
             });
         });
+    }
+
+    /**
+     * Admin rendelés létrehozás JS
+     */
+    function initAdminOrderCreate() {
+        const self = this;
+        
+        // Termék kiválasztása datalist-ből
+        $(document).on('input', '.js-admin-order-product-search', function () {
+            const val = $(this).val();
+            const $list = $('#' + $(this).attr('list'));
+            const $option = $list.find('option').filter(function() {
+                return $(this).val() === val;
+            });
+
+            if ($option.length) {
+                const id = $option.data('id');
+                const price = $option.data('price');
+                const name = $option.val();
+                
+                $('.js-admin-order-product-id').val(id);
+                $('.js-admin-order-product-price').val(price);
+            } else {
+                $('.js-admin-order-product-id').val('');
+                $('.js-admin-order-product-price').val('');
+            }
+        });
+
+        // Termék hozzáadása
+        $(document).on('click', '.js-admin-order-add-item', function () {
+            const id = $('.js-admin-order-product-id').val();
+            const name = $('.js-admin-order-product-search').val();
+            const price = parseFloat($('.js-admin-order-product-price').val());
+            const qty = parseInt($('.js-admin-order-product-qty').val()) || 1;
+
+            if (!id || !name) {
+                alert('Kérjük, válasszon egy terméket a listából!');
+                return;
+            }
+
+            // Ellenőrizzük, hogy benne van-e már
+            const $existingRow = $(`.js-admin-order-item-row[data-id="${id}"]`);
+            if ($existingRow.length) {
+                const $qtyInput = $existingRow.find('.js-admin-order-item-qty');
+                const newQty = parseInt($qtyInput.val()) + qty;
+                $qtyInput.val(newQty).trigger('change');
+            } else {
+                const rowHtml = `
+                    <tr class="js-admin-order-item-row" data-id="${id}">
+                        <td>
+                            <input type="hidden" name="items[${id}][product_id]" value="${id}">
+                            <input type="hidden" name="items[${id}][name]" value="${name}">
+                            ${name}
+                        </td>
+                        <td>
+                            <input type="number" name="items[${id}][quantity]" class="form-control form-control-sm js-admin-order-item-qty" value="${qty}" min="1" style="width: 80px;">
+                        </td>
+                        <td class="js-price-col">
+                            <input type="hidden" class="js-admin-order-item-price" value="${price}">
+                            ${hufFormat(price)}
+                        </td>
+                        <td class="js-price-col">
+                            <span class="js-admin-order-line-total font-weight-bold">${hufFormat(price * qty)}</span>
+                        </td>
+                        <td class="text-right">
+                            <button type="button" class="btn btn-sm btn-danger js-admin-order-item-remove"><i class="fa fa-trash"></i></button>
+                        </td>
+                    </tr>
+                `;
+                $('.js-admin-order-items').append(rowHtml);
+            }
+
+            // Reset search
+            $('.js-admin-order-product-search').val('');
+            $('.js-admin-order-product-id').val('');
+            $('.js-admin-order-product-price').val('');
+            $('.js-admin-order-product-qty').val(1);
+            
+            updateGrandTotal();
+        });
+
+        // Darabszám módosítás
+        $(document).on('change keyup', '.js-admin-order-item-qty', function () {
+            const $row = $(this).closest('.js-admin-order-item-row');
+            const qty = parseInt($(this).val()) || 0;
+            const price = parseFloat($row.find('.js-admin-order-item-price').val()) || 0;
+            
+            $row.find('.js-admin-order-line-total').text(hufFormat(price * qty));
+            updateGrandTotal();
+        });
+
+        // Törlés
+        $(document).on('click', '.js-admin-order-item-remove', function () {
+            $(this).closest('.js-admin-order-item-row').remove();
+            updateGrandTotal();
+        });
+
+        function updateGrandTotal() {
+            let total = 0;
+            $('.js-admin-order-item-row').each(function () {
+                const qty = parseInt($(this).find('.js-admin-order-item-qty').val()) || 0;
+                const price = parseFloat($(this).find('.js-admin-order-item-price').val()) || 0;
+                total += qty * price;
+            });
+            $('.js-admin-order-grand-total').text(hufFormat(total));
+        }
+    }
+
+    /**
+     * HUF formázás JS
+     */
+    function hufFormat(amount) {
+        return new Intl.NumberFormat('hu-HU', { style: 'currency', currency: 'HUF', minimumFractionDigits: 0 }).format(amount);
     }
 
     /**
@@ -290,6 +407,73 @@ var WebshopAdmin = (function ($) {
     }
 
     /**
+     * Rendelés részletek modal megnyitása és státusz módosítás
+     */
+    function initOrderDetails() {
+        $(document).on('click', '.js-order-details', function () {
+            var $btn = $(this);
+            var url = $btn.data('url');
+            var $modal = $('#orderDetailsModal');
+            var $content = $modal.find('.js-order-details-content');
+
+            // Alapállapot visszaállítása (spinner)
+            $content.html('<div class="modal-body text-center p-5"><div class="spinner-border text-primary" role="status"><span class="sr-only">Betöltés...</span></div><p class="mt-2">Rendelés adatai betöltése...</p></div>');
+            $modal.modal('show');
+
+            $.ajax({
+                url: url,
+                method: 'GET',
+                success: function (res) {
+                    if (res.success) {
+                        $content.html(res.html);
+                    } else {
+                        $modal.modal('hide');
+                        showToast('error', res.message || 'Hiba történt.');
+                    }
+                },
+                error: function () {
+                    $modal.modal('hide');
+                    showToast('error', 'Hiba történt a részletek betöltésekor.');
+                }
+            });
+        });
+
+        // Státusz módosítás AJAX
+        $(document).on('submit', '.js-order-status-form', function (e) {
+            e.preventDefault();
+            var $form = $(this);
+            var $btn = $form.find('button[type="submit"]');
+            var url = $form.attr('action');
+            var data = $form.serialize();
+
+            $btn.prop('disabled', true).text('Mentés...');
+
+            $.ajax({
+                url: url,
+                method: 'POST',
+                data: data,
+                success: function (res) {
+                    if (res.success) {
+                        showToast('success', res.message);
+                        setTimeout(function () {
+                            window.location.reload();
+                        }, 1000);
+                    } else {
+                        showToast('error', res.message || 'Hiba történt.');
+                        $btn.prop('disabled', false).text('Mentés');
+                    }
+                },
+                error: function (xhr) {
+                    var msg = 'Hiba történt.';
+                    if (xhr.responseJSON && xhr.responseJSON.message) msg = xhr.responseJSON.message;
+                    showToast('error', msg);
+                    $btn.prop('disabled', false).text('Mentés');
+                }
+            });
+        });
+    }
+
+    /**
      * Toast üzenet megjelenítése
      */
     function showToast(type, message) {
@@ -302,6 +486,114 @@ var WebshopAdmin = (function ($) {
         setTimeout(function () { $toast.alert('close'); }, 3000);
     }
 
+    /**
+     * Termék kapcsolatok (kapcsolódó és variáció) datalist kezelése
+     */
+    function initProductRelationPicker(config) {
+        const searchUrl = config.searchUrl;
+        const currentProductId = config.currentProductId;
+
+        function initPicker(type) {
+            const $input = $(`.js-${type}-product-input`);
+            const $idInput = $(`.js-${type}-product-id`);
+            const $btnAdd = $(`.js-add-${type}-product`);
+            const $results = $(`.js-${type}-product-results`);
+            const $list = $(`.js-${type}-products-list`);
+            let searchTimer;
+
+            $input.on('input', function() {
+                const q = $(this).val();
+                clearTimeout(searchTimer);
+                $idInput.val('');
+                $btnAdd.prop('disabled', true);
+
+                if (q.length < 2) {
+                    $results.hide();
+                    return;
+                }
+
+                searchTimer = setTimeout(function() {
+                    $.get(searchUrl, { q: q, exclude_id: currentProductId, is_variation: type === 'variation' ? 1 : 0 }, function(products) {
+                        if (products.length > 0) {
+                            let html = '<ul class="list-group shadow-sm">';
+                            products.forEach(p => {
+                                html += `<li class="list-group-item list-group-item-action p-2 js-search-result" 
+                                            data-id="${p.id}" 
+                                            data-name="${p.name}"
+                                            data-sku="${p.sku || ''}"
+                                            data-category="${p.category_name}"
+                                            data-img="${p.primary_image || ''}">
+                                            <div class="d-flex align-items-center">
+                                                <img src="${p.primary_image || ''}" class="img-fluid mr-2" style="width:30px;height:30px;object-fit:cover">
+                                                <div class="lh-12">
+                                                    <div class="fw-600 fs-14">${p.name}</div>
+                                                    <small class="text-muted">${p.category_name} ${p.sku ? '| ' + p.sku : ''}</small>
+                                                </div>
+                                            </div>
+                                        </li>`;
+                            });
+                            html += '</ul>';
+                            $results.html(html).show();
+                        } else {
+                            $results.hide();
+                        }
+                    });
+                }, 300);
+            });
+
+            $results.on('click', '.js-search-result', function() {
+                const p = $(this).data();
+                $input.val(p.name);
+                $idInput.val(p.id);
+                $btnAdd.prop('disabled', false).data('product', p);
+                $results.hide();
+            });
+
+            $btnAdd.on('click', function() {
+                const p = $(this).data('product');
+                if (!p) return;
+
+                if ($list.find(`[data-id="${p.id}"]`).length > 0) {
+                    showToast('error', 'Ez a termék már szerepel a listában.');
+                    return;
+                }
+
+                const rowHtml = `
+                    <div class="ws-relation-row js-${type}-product-row d-flex align-items-center justify-content-between p-2 mb-1 border rounded bg-light" data-id="${p.id}">
+                        <div class="d-flex align-items-center">
+                            <img src="${p.img}" class="img-fluid mr-2" style="width:30px;height:30px;object-fit:cover">
+                            <div>
+                                <div class="fw-600 lh-1">${p.name}</div>
+                                <small class="text-muted">${p.category} ${p.sku ? '| ' + p.sku : ''}</small>
+                            </div>
+                        </div>
+                        <button type="button" class="btn btn-sm btn-link text-danger js-remove-${type}-product"><i class="fa fa-trash-alt"></i></button>
+                        <input type="hidden" name="${type === 'related' ? 'related_product_ids[]' : 'variation_product_ids[]'}" value="${p.id}">
+                    </div>
+                `;
+                $list.append(rowHtml);
+                $input.val('');
+                $idInput.val('');
+                $btnAdd.prop('disabled', true).removeData('product');
+            });
+
+            $list.on('click', `.js-remove-${type}-product`, function() {
+                if (confirm('Biztosan eltávolítod ezt a kapcsolatot?')) {
+                    $(this).closest(`.js-${type}-product-row`).remove();
+                }
+            });
+
+            $(document).on('click', function(e) {
+                if (!$(e.target).closest(`.js-${type}-product-input, .js-${type}-product-results`).length) {
+                    $results.hide();
+                }
+            });
+        }
+
+        initPicker('related');
+        initPicker('variation');
+    }
+
     return {
         initSortable: initSortable,
         initToggleActive: initToggleActive,
@@ -309,6 +601,9 @@ var WebshopAdmin = (function ($) {
         initDeleteConfirm: initDeleteConfirm,
         initFilterType: initFilterType,
         initGalleryUpload: initGalleryUpload,
+        initOrderDetails: initOrderDetails,
+        initAdminOrderCreate: initAdminOrderCreate,
+        initProductRelationPicker: initProductRelationPicker,
         showToast: showToast
     };
 

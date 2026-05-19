@@ -216,14 +216,34 @@
             <div class="row">
                 <div class="col-lg-6 mb-3">
                     <h3 class="header-box product-info">Kapcsolódó termékek</h3>
-                    <div class="content-box bordered" style="max-height:300px;overflow-y:auto">
-                        @php $relatedIds = $product->relatedProducts->pluck('id')->toArray(); @endphp
-                        @foreach($allProducts as $p)
-                            <div class="custom-control custom-checkbox mb-1">
-                                <input type="checkbox" class="custom-control-input" id="rel{{ $p->id }}" name="related_products[]" value="{{ $p->id }}" @if(in_array($p->id, $relatedIds)) checked @endif>
-                                <label class="custom-control-label" for="rel{{ $p->id }}">{{ $p->name }}</label>
+                    <div class="content-box bordered">
+                        <div class="form-group mb-2">
+                            <label>Termék hozzáadása (név vagy SKU alapján)</label>
+                            <div class="input-group">
+                                <input type="text" class="form-control js-related-product-input" placeholder="Keressen terméket..." autocomplete="off">
+                                <input type="hidden" class="js-related-product-id">
+                                <div class="input-group-append">
+                                    <button type="button" class="btn btn-info js-add-related-product" disabled><i class="fa fa-plus"></i> Hozzáadás</button>
+                                </div>
                             </div>
-                        @endforeach
+                            <div class="ws-search-results js-related-product-results" style="display:none"></div>
+                        </div>
+
+                        <div class="js-related-products-list">
+                            @foreach($product->relatedProducts as $rel)
+                                <div class="ws-relation-row js-related-product-row d-flex align-items-center justify-content-between p-2 mb-1 border rounded bg-light" data-id="{{ $rel->id }}">
+                                    <div class="d-flex align-items-center">
+                                        <img src="{{ $rel->primary_image_thumb ?? $rel->primary_image }}" class="img-fluid mr-2" style="width:30px;height:30px;object-fit:cover">
+                                        <div>
+                                            <div class="fw-600 lh-1">{{ $rel->name }}</div>
+                                            <small class="text-muted">{{ $rel->category->name_singular ?? '' }} @if($rel->sku) | {{ $rel->sku }} @endif</small>
+                                        </div>
+                                    </div>
+                                    <button type="button" class="btn btn-sm btn-link text-danger js-remove-related-product"><i class="fa fa-trash-alt"></i></button>
+                                    <input type="hidden" name="related_product_ids[]" value="{{ $rel->id }}">
+                                </div>
+                            @endforeach
+                        </div>
                     </div>
                 </div>
 
@@ -231,14 +251,34 @@
                 @if(($ws['product_variations_enabled'] ?? 'false') === 'true')
                 <div class="col-lg-6 mb-3">
                     <h3 class="header-box product-info">Variációs termékek</h3>
-                    <div class="content-box bordered" style="max-height:300px;overflow-y:auto">
-                        @php $variationIds = $product->variations->pluck('id')->toArray(); @endphp
-                        @foreach($allProducts as $p)
-                            <div class="custom-control custom-checkbox mb-1">
-                                <input type="checkbox" class="custom-control-input" id="var{{ $p->id }}" name="variations[]" value="{{ $p->id }}" @if(in_array($p->id, $variationIds)) checked @endif>
-                                <label class="custom-control-label" for="var{{ $p->id }}">{{ $p->name }}</label>
+                    <div class="content-box bordered">
+                        <div class="form-group mb-2">
+                            <label>Variáció hozzáadása (név vagy SKU alapján)</label>
+                            <div class="input-group">
+                                <input type="text" class="form-control js-variation-product-input" placeholder="Keressen variációt..." autocomplete="off">
+                                <input type="hidden" class="js-variation-product-id">
+                                <div class="input-group-append">
+                                    <button type="button" class="btn btn-info js-add-variation-product" disabled><i class="fa fa-plus"></i> Hozzáadás</button>
+                                </div>
                             </div>
-                        @endforeach
+                            <div class="ws-search-results js-variation-product-results" style="display:none"></div>
+                        </div>
+
+                        <div class="js-variation-products-list">
+                            @foreach($product->variations as $var)
+                                <div class="ws-relation-row js-variation-product-row d-flex align-items-center justify-content-between p-2 mb-1 border rounded bg-light" data-id="{{ $var->id }}">
+                                    <div class="d-flex align-items-center">
+                                        <img src="{{ $var->primary_image_thumb ?? $var->primary_image }}" class="img-fluid mr-2" style="width:30px;height:30px;object-fit:cover">
+                                        <div>
+                                            <div class="fw-600 lh-1">{{ $var->name }}</div>
+                                            <small class="text-muted">{{ $var->category->name_singular ?? '' }} @if($var->sku) | {{ $var->sku }} @endif</small>
+                                        </div>
+                                    </div>
+                                    <button type="button" class="btn btn-sm btn-link text-danger js-remove-variation-product"><i class="fa fa-trash-alt"></i></button>
+                                    <input type="hidden" name="variation_product_ids[]" value="{{ $var->id }}">
+                                </div>
+                            @endforeach
+                        </div>
                     </div>
                 </div>
                 @endif
@@ -266,5 +306,10 @@
         WebshopAdmin.initSortable('#gallery-sortable', '{{ route("admin.webshop.products.gallery.sort") }}', null);
         WebshopAdmin.initGalleryUpload('.js-gallery-upload', '#gallery-sortable');
         @endif
+
+        WebshopAdmin.initProductRelationPicker({
+            currentProductId: {{ $product->id }},
+            searchUrl: '{{ route("admin.webshop.products.search") }}'
+        });
     </script>
 @endsection

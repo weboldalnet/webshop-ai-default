@@ -5,9 +5,11 @@
                 <i class="fa-solid fa-arrow-right-arrow-left"></i>
             </button>
             <div class="category-row d-flex flex-nowrap">
-                <button type="button" class="btn-category filter-btn d-lg-none d-block js-show-filter-btn">
-                    <i class="fa fa-filter"></i>
-                </button>
+                @isset($visibleFilterBtn)
+                    <button type="button" class="btn-category filter-btn d-lg-none d-block js-show-filter-btn">
+                        <i class="fa fa-filter"></i>
+                    </button>
+                @endisset
                 @foreach($stickyCategories as $cat)
                     <div class="dropdown mr-1 mb-0 js-category-dropdown" tabindex="0">
                         <a href="{{ route('site.webshop.categories.show', $cat) }}"

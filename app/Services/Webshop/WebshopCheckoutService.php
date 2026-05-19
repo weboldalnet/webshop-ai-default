@@ -17,6 +17,20 @@ class WebshopCheckoutService
                 $totalPrice += $item['quantity'] * $item['price'];
             }
 
+            $billingData = null;
+            if (WebshopSettingsService::getBool('site_checkout_billing_enabled')) {
+                if (!empty($data['billing_same_as_shipping'])) {
+                    $billingData = [
+                        'name' => $data['name'],
+                        'zip' => $data['shipping']['zip'] ?? null,
+                        'city' => $data['shipping']['city'] ?? null,
+                        'address' => $data['shipping']['address'] ?? null,
+                    ];
+                } else {
+                    $billingData = $data['billing'] ?? null;
+                }
+            }
+
             $order = WebshopOrder::create([
                 'order_number' => $this->generateOrderNumber(),
                 'status' => WebshopOrder::STATUS_PENDING,
@@ -26,7 +40,7 @@ class WebshopCheckoutService
                 'customer_phone' => $data['phone'] ?? null,
                 'customer_company' => $data['company'] ?? null,
                 'customer_tax_number' => $data['tax_number'] ?? null,
-                'billing_data' => isset($data['billing']) ? json_encode($data['billing']) : null,
+                'billing_data' => $billingData ? json_encode($billingData) : null,
                 'shipping_data' => isset($data['shipping']) ? json_encode($data['shipping']) : null,
                 'total_price' => $totalPrice,
                 'currency' => 'HUF',

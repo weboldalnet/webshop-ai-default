@@ -55,6 +55,8 @@
                     <th class="py-1"><i class="fa fa-image fs-20"></i></th>
                     <th>Név</th>
                     <th>Kategória</th>
+                    @if(($ws['product_variations_enabled'] ?? 'false') === 'true')<th>Variáció</th>@endif
+                    @if(($ws['product_related_enabled'] ?? 'false') === 'true')<th>Kapcs.t</th>@endif
                     @if(($ws['product_price_enabled'] ?? 'false') === 'true')<th>Ár</th>@endif
                     <th>Aktív</th>
                     <th><i class="fa fa-pen"></i></th>
@@ -67,6 +69,24 @@
                         <td class="py-1" style="max-width: 50px"><img src="{{ $prod->primary_image_thumb ?? $prod->primary_image }}" class="img-fluid" style="max-width: 50px; max-height: 50px;"></td>
                         <td class="font-weight-bold">{{ $prod->name }}</td>
                         <td>{{ $prod->category->name_singular ?? '-' }}</td>
+                        @if(($ws['product_variations_enabled'] ?? 'false') === 'true')
+                            <td>
+                                @if($prod->variations_count > 0)
+                                    <span class="badge badge-info fs-14">{{ $prod->variations_count }}</span>
+                                @else
+                                    -
+                                @endif
+                            </td>
+                        @endif
+                        @if(($ws['product_related_enabled'] ?? 'false') === 'true')
+                            <td>
+                                @if($prod->related_products_count > 0)
+                                    <span class="badge badge-info fs-14">{{ $prod->related_products_count }}</span>
+                                @else
+                                    -
+                                @endif
+                            </td>
+                        @endif
                         @if(($ws['product_price_enabled'] ?? 'false') === 'true')
                             <td class="py-1 lh-12">
                                 @if($prod->sale_price)

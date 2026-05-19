@@ -15,12 +15,25 @@ use Weboldalnet\WebshopAiDefault\Services\Webshop\WebshopProductVariationService
 use Weboldalnet\WebshopAiDefault\Services\Webshop\WebshopSettingsService;
 use Weboldalnet\WebshopAiDefault\Services\Webshop\WebshopSlugService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class WebshopProductController extends AdminExtendedController
 {
     public function index(Request $request)
     {
-        $query = WebshopProduct::ordered()->with('category')->withCount('reviews');
+        $ws = WebshopSettingsService::all();
+        $query = WebshopProduct::ordered()->with('category');
+
+        if (($ws['site_product_reviews_enabled'] ?? 'false') === 'true') {
+            $query->withCount('reviews');
+        }
+        if (($ws['product_variations_enabled'] ?? 'false') === 'true') {
+            $query->withCount('variations');
+        }
+        if (($ws['product_related_enabled'] ?? 'false') === 'true') {
+            $query->withCount('relatedProducts');
+        }
+
         if ($request->filled('search')) $query->search($request->input('search'));
         if ($request->filled('category_id')) $query->byCategory($request->input('category_id'));
         if ($request->filled('is_active') && $request->input('is_active') !== '') $query->where('is_active', $request->input('is_active') === '1');
@@ -68,7 +81,6 @@ class WebshopProductController extends AdminExtendedController
             'ws' => $ws,
             'categoryPropertyCatIds' => $categoryPropertyCatIds,
             'allPropertyCategories' => WebshopPropertyCategory::active()->ordered()->with(['properties' => fn($q) => $q->active()->ordered()])->get(),
-            'allProducts' => WebshopProduct::where('id', '!=', $product->id)->ordered()->get(),
         ]);
     }
 
@@ -110,11 +122,12 @@ class WebshopProductController extends AdminExtendedController
         $this->saveProductProperties($product, $request);
 
         if (($ws['product_related_enabled'] ?? 'false') === 'true') {
-            $relatedIds = array_filter($request->input('related_products', []), fn($id) => (int)$id !== $product->id);
+            $relatedIds = array_unique(array_filter($request->input('related_product_ids', []), fn($id) => (int)$id !== $product->id && (int)$id > 0));
             $product->relatedProducts()->sync($relatedIds);
         }
         if (($ws['product_variations_enabled'] ?? 'false') === 'true') {
-            WebshopProductVariationService::syncVariations($product, $request->input('variations', []));
+            $variationIds = array_unique(array_filter($request->input('variation_product_ids', []), fn($id) => (int)$id !== $product->id && (int)$id > 0));
+            WebshopProductVariationService::syncVariations($product, $variationIds);
         }
 
         return redirect()->route('admin.webshop.products.edit', $product)->with('success', 'Termék sikeresen frissítve.');
@@ -140,6 +153,53 @@ class WebshopProductController extends AdminExtendedController
         $order = 1;
         foreach ($request->input('orderedIds', []) as $id) { WebshopProduct::where('id', $id)->update(['sort_order' => $order++]); }
         return response()->json(['success' => true, 'message' => 'Sorrend mentve.']);
+    }
+
+    public function search(Request $request)
+    {
+        $search = $request->input('q');
+        $excludeId = $request->input('exclude_id');
+        $isVariation = $request->input('is_variation');
+
+        $query = WebshopProduct::active();
+
+        if ($search) {
+            $query->where(function ($q) use ($search) {
+                $q->where('name', 'ILIKE', '%' . $search . '%')
+                  ->orWhere('sku', 'ILIKE', '%' . $search . '%');
+            });
+        }
+
+        if ($excludeId) {
+            $query->where('id', '!=', $excludeId);
+
+            if ($isVariation) {
+                $product = WebshopProduct::find($excludeId);
+                if ($product) {
+                    $query->where('category_id', $product->category_id);
+
+                    // Ne legyen variációja már egy másik terméknek
+                    $query->whereNotExists(function ($q) {
+                        $q->select(DB::raw(1))
+                            ->from('webshop_product_variations')
+                            ->whereRaw('webshop_product_variations.product_id = webshop_products.id')
+                            ->orWhereRaw('webshop_product_variations.variation_product_id = webshop_products.id');
+                    });
+                }
+            }
+        }
+
+        $products = $query->with('category')
+            ->limit(20)
+            ->get();
+
+        return response()->json($products->map(fn($p) => [
+            'id' => $p->id,
+            'name' => $p->name,
+            'sku' => $p->sku,
+            'category_name' => $p->category->name_singular ?? '',
+            'primary_image' => $p->primary_image_thumb ?? $p->primary_image,
+        ]));
     }
 
     public function storeGalleryImage(Request $request, WebshopProduct $product)

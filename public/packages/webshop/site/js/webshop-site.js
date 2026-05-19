@@ -22,10 +22,16 @@ const WebshopSite = {
             const btn = $(this);
             const id = btn.data('id');
             const qty = btn.data('with-qty') ? $('.js-quantity-select').val() : 1;
+            // Ha a gomb a related modalban van, ne nyissunk újabb modalt
+            const showRelatedModal = btn.closest('#relatedProductsModal').length === 0;
 
             btn.prop('disabled', true);
 
-            $.post('/webshop/cart/add', { product_id: id, quantity: qty }, function(res) {
+            $.post('/webshop/cart/add', {
+                product_id: id,
+                quantity: qty,
+                show_related_modal: showRelatedModal ? 1 : 0
+            }, function(res) {
                 btn.prop('disabled', false).find('.fa-spinner').remove();
                 if (res.success) {
                     $('.js-cart-count').text(res.count);
@@ -36,7 +42,7 @@ const WebshopSite = {
                         $('body').append('<div id="related-products-modal-container">' + res.related_html + '</div>');
                         $('#relatedProductsModal').modal('show');
                     } else {
-                        alert(res.message);
+                        self.showToast('success', res.message);
                     }
                 }
             });
@@ -88,9 +94,9 @@ const WebshopSite = {
                 if (res.success) {
                     $('.js-compare-count').text(res.count);
                     self.updateCompareDropdown();
-                    alert(res.message);
+                    self.showToast('success', res.message);
                 } else {
-                    alert(res.message);
+                    self.showToast('error', res.message);
                 }
             });
         });
@@ -256,6 +262,24 @@ const WebshopSite = {
                 }
             });
         });
+
+        // Billing collapse kezelés
+        const toggleBillingRequired = (isChecked) => {
+            const collapse = $('.js-billing-collapse');
+            const inputs = collapse.find('.js-billing-required');
+
+            if (isChecked) {
+                collapse.collapse('hide');
+                inputs.prop('required', false);
+            } else {
+                collapse.collapse('show');
+                inputs.prop('required', true);
+            }
+        };
+
+        $(document).on('change', '.js-billing-same-as-shipping', function() {
+            toggleBillingRequired($(this).is(':checked'));
+        });
     },
 
     initOther: function() {
@@ -278,6 +302,18 @@ const WebshopSite = {
                 }
             });
         });
+    },
+
+    showToast: function(type, message) {
+        const alertClass = type === 'success' ? 'alert-success' : 'alert-danger';
+        const icon = type === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle';
+        const $toast = $('<div class="alert ' + alertClass + ' alert-dismissible fade show ws-site-toast" role="alert">' +
+            '<i class="fa ' + icon + ' mr-2"></i> ' + message +
+            '<button type="button" class="close" data-dismiss="alert"><span>&times;</span></button></div>');
+
+        $('.ws-site-toast').remove(); // Csak egy toast legyen egyszerre
+        $('body').append($toast);
+        setTimeout(function () { $toast.alert('close'); }, 5000);
     }
 };
 

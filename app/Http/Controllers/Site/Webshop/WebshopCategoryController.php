@@ -31,7 +31,8 @@ class WebshopCategoryController extends Controller
         }
 
         return view('site.webshop.categories.show', [
-            'category' => $category
+            'category' => $category,
+            'visibleFilterBtn' => true,
         ]);
     }
 

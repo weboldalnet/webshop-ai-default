@@ -14,13 +14,18 @@ class WebshopCartController extends Controller
     {
         $productId = $request->input('product_id');
         $quantity = (int) $request->input('quantity', 1);
+        $showRelatedModal = $request->input('show_related_modal') === '1' || $request->input('show_related_modal') === true;
 
         WebshopCartService::add($productId, $quantity);
 
-        $product = WebshopProduct::find($productId);
+        $product = WebshopProduct::with(['relatedProducts' => fn($q) => $q->active()->with('category')])->find($productId);
         $relatedHtml = '';
-        if (WebshopSettingsService::getBool('site_related_products_modal_enabled') && $product && $product->relatedProducts->isNotEmpty()) {
-            $relatedHtml = view('site.webshop.modals.related-products', ['product' => $product, 'ws' => WebshopSettingsService::all()])->render();
+        if ($showRelatedModal && WebshopSettingsService::getBool('site_related_products_modal_enabled') && $product && $product->relatedProducts->isNotEmpty()) {
+            $relatedHtml = view('site.webshop.modals.related-products', [
+                'product' => $product,
+                'relatedProductsGrouped' => $product->relatedProducts->groupBy('category_id'),
+                'ws' => WebshopSettingsService::all()
+            ])->render();
         }
 
         return response()->json([
@@ -29,6 +34,7 @@ class WebshopCartController extends Controller
             'count' => WebshopCartService::getCount(),
             'total' => WebshopCartService::getTotal(),
             'related_html' => $relatedHtml,
+            'has_related_products' => !empty($relatedHtml),
         ]);
     }
 

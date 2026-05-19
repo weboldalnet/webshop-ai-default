@@ -89,3 +89,30 @@
     opacity: 0.6;
     pointer-events: none;
 }
+
+
+.table-text-left tr td {
+    text-align: left;
+}
+
+/* Search results */
+.ws-search-results {
+    position: absolute;
+    z-index: 1000;
+    width: 100%;
+    max-height: 300px;
+    max-width: 360px;
+    overflow-y: auto;
+    background: #fff;
+}
+.js-search-result {
+    cursor: pointer;
+}
+
+/* Relation rows */
+.ws-relation-row {
+    transition: background-color 0.2s;
+}
+.ws-relation-row:hover {
+    background-color: #e2e6ea !important;
+}

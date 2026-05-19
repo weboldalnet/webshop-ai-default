@@ -250,7 +250,7 @@
     border: none;
     line-height: 1;
     z-index: 90;
-    box-shadow: unset !important; 
+    box-shadow: unset !important;
 }
 
 /* Saját beállítások */
@@ -338,33 +338,36 @@
 /* Variation cards */
 .ws-product-variation-card {
     transition: all 0.2s;
-}
-.ws-product-variation-card:hover {
-    background-color: #f8f9fa;
-    border-color: #5178b6 !important;
-}
-.ws-product-variation-card.active {
-    cursor: default;
+    &:hover {
+        background-color: #f8f9fa;
+        border-color: #5178b6 !important;
+    }
+    &.active {
+        cursor: default;
+    }
 }
 
 /* Related products modal */
-.ws-related-products-scroll::-webkit-scrollbar {
-    width: 6px;
-}
-.ws-related-products-scroll::-webkit-scrollbar-track {
-    background: #f1f1f1;
-}
-.ws-related-products-scroll::-webkit-scrollbar-thumb {
-    background: #ccc;
-    border-radius: 3px;
-}
-.ws-related-products-scroll::-webkit-scrollbar-thumb:hover {
-    background: #bbb;
+.ws-related-products-scroll {
+    &::-webkit-scrollbar {
+        width: 6px;
+        border-radius: 0;
+    }
+    &::-webkit-scrollbar-track {
+        background: #f1f1f1;
+    }
+    &::-webkit-scrollbar-thumb {
+        background: #5178b6;
+        border-radius: 0;
+        &:hover {
+            background: #466CA7;
+        }
+    }
 }
 
 .ws-related-product-item {
     transition: box-shadow 0.2s;
-}
-.ws-related-product-item:hover {
-    box-shadow: 0 0.25rem 0.5rem rgba(0,0,0,0.1) !important;
+    &:hover {
+        box-shadow: 0 0.25rem 0.5rem rgba(0,0,0,0.1) !important;
+    }
 }
