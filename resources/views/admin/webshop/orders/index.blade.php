@@ -6,11 +6,8 @@
         @include('admin.webshop.partials.alerts')
 
         <div class="row">
-            <div class="col-lg-12 d-flex justify-content-between align-items-center mb-3">
+            <div class="col-lg-12 mb-3">
                 <h2 class="header-box m-0"><i class="fa fa-shopping-cart"></i> Rendelések</h2>
-                <a href="{{ route('admin.webshop.orders.create') }}" class="btn btn-success font-weight-bold">
-                    <i class="fa fa-plus-circle mr-1"></i> Új rendelés létrehozása
-                </a>
             </div>
         </div>
 
@@ -69,11 +66,11 @@
                 <tbody>
                 @foreach($orders as $order)
                     <tr>
-                        <td class="font-weight-bold">{{ $order->order_number }}</td>
-                        <td>{{ $order->customer_name }}<br><small class="text-muted">{{ $order->customer_email }}</small></td>
-                        <td><span class="badge badge-{{ $order->status === 'completed' ? 'success' : ($order->status === 'cancelled' ? 'danger' : 'warning') }}">{{ $order->status_label }}</span></td>
+                        <td class="">{{ $order->order_number }}</td>
+                        <td class="lh-1 py-1"><p class="mb-0 fw-600">{{ $order->customer_name }}</p><small class="text-muted">{{ $order->customer_email }}</small></td>
+                        <td><span class="badge fs-16 fw-600 badge-{{ $order->status === 'completed' ? 'success' : ($order->status === 'cancelled' ? 'danger' : 'warning') }}">{{ $order->status_label }}</span></td>
                         @if($pricesVisible)
-                            <td>{{ hufFormat($order->total_price) }}</td>
+                            <td class="fw-600">{{ hufFormat($order->total_price) }}</td>
                         @endif
                         <td>
                             <div class="custom-control custom-switch">
@@ -81,8 +78,8 @@
                                 <label class="custom-control-label" for="completed{{ $order->id }}"></label>
                             </div>
                         </td>
-                        <td>{{ $order->created_at->format('Y.m.d H:i') }}</td>
-                        <td class="ws-nowrap">
+                        <td class="lh-1 fs-14">{!! breakDateOnSpace($order->created_at->format('Y.m.d H:i')) !!}</td>
+                        <td class="ws-nowrap py-1">
                             <button type="button" class="btn btn-sm btn-info js-order-details" data-url="{{ route('admin.webshop.orders.details', $order) }}" title="Részletek"><i class="fa fa-eye"></i></button>
                             <a href="{{ route('admin.webshop.orders.edit', $order) }}" class="btn btn-sm btn-primary" title="Szerkesztés"><i class="fa fa-pen"></i></a>
                             <button type="button" class="btn btn-sm btn-danger js-delete-btn" data-url="{{ route('admin.webshop.orders.destroy', $order) }}" title="Törlés"><i class="fa fa-trash-alt"></i></button>

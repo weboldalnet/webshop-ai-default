@@ -50,8 +50,8 @@
                 </div>
             </div>
             <div class="modal-footer bg-light">
-                <button type="button" class="btn btn-outline-secondary font-weight-bold" data-dismiss="modal">Tovább vásárolok</button>
-                <a href="{{ route('site.webshop.checkout.index') }}" class="btn btn-success font-weight-bold px-4">
+                <button type="button" class="btn btn-outline-secondary fw-600" data-dismiss="modal">Tovább vásárolok</button>
+                <a href="{{ route('site.webshop.checkout.index') }}" class="btn btn-success fw-600 px-4">
                     @if(($ws['site_checkout_mode'] ?? 'order') === 'quote')
                         Ajánlatkérés küldése
                     @else
