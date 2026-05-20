@@ -46,7 +46,7 @@ class WebshopCategoryController extends Controller
         $perPage = $request->input('per_page', 30);
         $products = $query->paginate($perPage);
 
-        $viewMode = $request->input('view_mode', 'card');
+        $viewMode = $request->input('view_mode', WebshopSettingsService::get('site_product_list_default_view', 'card'));
         $ws = WebshopSettingsService::all();
 
         return response()->json([

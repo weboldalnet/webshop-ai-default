@@ -48,10 +48,20 @@ class WebshopAiDefaultServiceProvider extends ServiceProvider
             __DIR__.'/../resources/views/admin/webshop' => resource_path('views/admin/webshop'),
         ], PackageHelper::PACKAGE_PREFIX . '-views');
 
-        // Publikus assetek publisholása
+        // Publikus assetek publisholása - szétbontva CSS és JS fájlokra
         $this->publishes([
             __DIR__.'/../public/packages/webshop' => public_path('packages/webshop'),
         ], PackageHelper::PACKAGE_PREFIX . '-assets');
+
+        $this->publishes([
+            __DIR__.'/../public/packages/webshop/admin/css' => public_path('packages/webshop/admin/css'),
+            __DIR__.'/../public/packages/webshop/site/css' => public_path('packages/webshop/site/css'),
+        ], PackageHelper::PACKAGE_PREFIX . '-assets-css');
+
+        $this->publishes([
+            __DIR__.'/../public/packages/webshop/admin/js' => public_path('packages/webshop/admin/js'),
+            __DIR__.'/../public/packages/webshop/site/js' => public_path('packages/webshop/site/js'),
+        ], PackageHelper::PACKAGE_PREFIX . '-assets-js');
 
         // View Composers a Site oldalhoz
         View::composer(['site.webshop.*', 'site.layouts.*'], function ($view) {

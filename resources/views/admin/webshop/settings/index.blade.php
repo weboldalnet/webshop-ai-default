@@ -86,6 +86,13 @@
                                 <option value="4" @if(($ws['site_category_cards_per_row'] ?? '3') == '4') selected @endif>4 kártya</option>
                             </select>
                         </div>
+                        <div class="form-group">
+                            <label for="site_product_list_default_view">Alapértelmezett terméklista nézet</label>
+                            <select class="form-control" id="site_product_list_default_view" name="site_product_list_default_view">
+                                <option value="card" @if(($ws['site_product_list_default_view'] ?? 'card') == 'card') selected @endif>Kártyás nézet</option>
+                                <option value="table" @if(($ws['site_product_list_default_view'] ?? 'card') == 'table') selected @endif>Táblázatos nézet</option>
+                            </select>
+                        </div>
                     </div>
                 </div>
 
