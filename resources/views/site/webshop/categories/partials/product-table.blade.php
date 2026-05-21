@@ -28,7 +28,7 @@
                 <td style="width: 90px;" class="p-1">
                     <a href="{{ route('site.webshop.products.show', $product) }}">
                         @if($product->primary_image)
-                            <img src="{{ $product->primary_image_thumb ?? $product->primary_image }}" alt="{{ $product->name }}" class="img-fluid" style="max-height: 82px;">
+                            <img src="{{ $product->primary_image_thumb ?? $product->primary_image }}" alt="{{ $product->name }}" class="" style="max-height: 82px;">
                         @else
                             <i class="fa fa-image text-muted"></i>
                         @endif
@@ -52,7 +52,7 @@
                     </td>
                 @endforeach
                 @if(($ws['site_product_prices_visible'] ?? 'true') === 'true')
-                    <td>
+                    <td class="ws-nowrap">
                         @if($product->sale_price)
                             <div class="text-muted small" style="text-decoration: line-through;">{{ hufFormat($product->price) }}</div>
                             <div class="text-danger font-weight-bold">{{ hufFormat($product->sale_price) }}</div>

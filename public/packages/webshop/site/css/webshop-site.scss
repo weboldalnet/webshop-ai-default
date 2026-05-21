@@ -41,10 +41,11 @@
     transition: all 0.2s;
     white-space: nowrap;
     border: none;
+    color: #101F49;
 }
 
 .ws-category-nav .btn-category.active {
-    background-color: #343a40;
+    background-color: #101F49;
     color: #fff;
 }
 
@@ -226,6 +227,7 @@
             transform: unset;
             border-radius: 50%;
             padding: 4px 6px;
+            min-width: 20px;
         }
     }
 
@@ -244,13 +246,18 @@
 
 .ws-cart-button, .ws-compare-button {
     position: relative;
-    padding: 12px 16px;
+    padding: 12px;
     border-radius: 8px;
     font-size: 18px;
     border: none;
     line-height: 1;
     z-index: 90;
     box-shadow: unset !important;
+
+
+    @media (min-width: 992px) {
+        padding: 12px 16px;
+    }
 }
 
 /* Saját beállítások */
@@ -312,7 +319,7 @@
 }
 
 .bg-dark {
-    background-color: #0A132C !important;
+    background-color: #101F49 !important;
 }
 
 .bg-primary {
@@ -321,7 +328,7 @@
 
 .badge-info, .badge-secondary {
     background-color: #e9eded;
-    color: #0A132C;
+    color: #101F49;
 }
 
 /* Site toast message */

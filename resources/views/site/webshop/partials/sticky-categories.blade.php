@@ -6,7 +6,7 @@
             </button>
             <div class="category-row d-flex flex-nowrap">
                 @isset($visibleFilterBtn)
-                    <button type="button" class="btn-category filter-btn d-lg-none d-block js-show-filter-btn">
+                    <button type="button" class="btn-category filter-btn d-lg-none d-block js-show-filter-btn text-white bg-dark">
                         <i class="fa fa-filter"></i>
                     </button>
                 @endisset
