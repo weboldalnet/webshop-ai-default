@@ -8,9 +8,11 @@ return new class extends Migration
     public function up()
     {
         DB::statement("
-            INSERT INTO public.webshop_settings (key, value, type, \"group\") VALUES
-            ('site_product_list_default_view', 'card', 'string', 'site_category')
-            ON CONFLICT (key) DO NOTHING
+            INSERT INTO public.webshop_settings (key, value, type, \"group\")
+            SELECT 'site_product_list_default_view', 'card', 'string', 'site_category'
+            WHERE NOT EXISTS (
+                SELECT 1 FROM public.webshop_settings WHERE key = 'site_product_list_default_view'
+            )
         ");
     }
 
