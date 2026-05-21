@@ -14,6 +14,7 @@ return new class extends Migration
                 SELECT 1 FROM public.webshop_settings WHERE key = 'site_product_list_default_view'
             )
         ");
+
     }
 
     public function down()
