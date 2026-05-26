@@ -13,7 +13,10 @@
 
         <div class="row mt-2 mb-2">
             <div class="col-lg-12 text-center">
-                <a href="{{ route('admin.webshop.products.create') }}" class="btn btn-primary fs-18 font-weight-bold"><i class="fa fa-plus"></i> Új termék</a>
+                <a href="{{ route('admin.webshop.products.create') }}" class="btn btn-primary fs-18 font-weight-bold mr-2"><i class="fa fa-plus"></i> Új termék</a>
+                @if(($ws['site_product_reviews_enabled'] ?? 'false') === 'true')
+                    <a href="{{ route('admin.webshop.products.all-reviews') }}" class="btn btn-outline-info fs-18 font-weight-bold"><i class="fa fa-comments"></i> Vélemények</a>
+                @endif
             </div>
         </div>
 
@@ -68,7 +71,12 @@
                         <td class="ws-drag-handle"><i class="fa fa-grip-vertical text-muted"></i><input type="hidden" class="js-sort-id" value="{{ $prod->id }}"></td>
                         <td class="py-1" style="max-width: 50px"><img src="{{ $prod->primary_image_thumb ?? $prod->primary_image }}" class="img-fluid" style="max-width: 50px; max-height: 50px;"></td>
                         <td class="font-weight-bold">{{ $prod->name }}</td>
-                        <td>{{ $prod->category->name_singular ?? '-' }}</td>
+                        <td>
+                            {{ $prod->category->name_singular ?? '-' }}
+                            @if($prod->category && $prod->category->children->isNotEmpty())
+                                <i class="fa fa-exclamation-triangle text-danger ml-1" title="Ez a kategória más kategóriák szülője, a terméket ajánlott a legalsó szintre áthelyezni." data-toggle="tooltip"></i>
+                            @endif
+                        </td>
                         @if(($ws['product_variations_enabled'] ?? 'false') === 'true')
                             <td>
                                 @if($prod->variations_count > 0)
@@ -126,5 +134,6 @@
         WebshopAdmin.initSortable('#sortable-list', '{{ route("admin.webshop.products.sort") }}');
         WebshopAdmin.initToggleActive();
         WebshopAdmin.initDeleteConfirm();
+        WebshopAdmin.initTooltips();
     </script>
 @endsection

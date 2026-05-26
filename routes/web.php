@@ -4,6 +4,7 @@ use Weboldalnet\WebshopAiDefault\Http\Controllers\Admin\Webshop\WebshopPropertyC
 use Weboldalnet\WebshopAiDefault\Http\Controllers\Admin\Webshop\WebshopPropertyController;
 use Weboldalnet\WebshopAiDefault\Http\Controllers\Admin\Webshop\WebshopCategoryController;
 use Weboldalnet\WebshopAiDefault\Http\Controllers\Admin\Webshop\WebshopProductController;
+use Weboldalnet\WebshopAiDefault\Http\Controllers\Admin\Webshop\WebshopProductLabelController;
 use Weboldalnet\WebshopAiDefault\Http\Controllers\Admin\Webshop\WebshopProductReviewController;
 use Weboldalnet\WebshopAiDefault\Http\Controllers\Admin\Webshop\WebshopOrderController;
 use Weboldalnet\WebshopAiDefault\Http\Controllers\Admin\Webshop\WebshopSettingController;
@@ -96,6 +97,7 @@ Route::middleware('web')->group(function () {
             Route::post('/products/sort', [WebshopProductController::class, 'sort'])->name('products.sort');
 
             // Termék vélemények
+            Route::get('/products/reviews', [WebshopProductReviewController::class, 'allReviews'])->name('products.all-reviews');
             Route::get('/products/{product}/reviews', [WebshopProductReviewController::class, 'index'])->name('products.reviews.index');
             Route::delete('/products/{product}/reviews/{review}', [WebshopProductReviewController::class, 'destroy'])->name('products.reviews.destroy');
             Route::post('/products/{product}/reviews/toggle-active', [WebshopProductReviewController::class, 'toggleActive'])->name('products.reviews.toggle-active');
@@ -106,6 +108,14 @@ Route::middleware('web')->group(function () {
             Route::post('/products/gallery/sort', [WebshopProductController::class, 'sortGallery'])->name('products.gallery.sort');
             Route::post('/products/gallery/toggle-active', [WebshopProductController::class, 'toggleGalleryActive'])->name('products.gallery.toggle-active');
             Route::post('/products/gallery/update-alt', [WebshopProductController::class, 'updateGalleryAlt'])->name('products.gallery.update-alt');
+
+            // Termék címkék
+            Route::get('/labels', [WebshopProductLabelController::class, 'index'])->name('labels.index');
+            Route::get('/labels/create', [WebshopProductLabelController::class, 'create'])->name('labels.create');
+            Route::post('/labels', [WebshopProductLabelController::class, 'store'])->name('labels.store');
+            Route::get('/labels/{label}/edit', [WebshopProductLabelController::class, 'edit'])->name('labels.edit');
+            Route::put('/labels/{label}', [WebshopProductLabelController::class, 'update'])->name('labels.update');
+            Route::delete('/labels/{label}', [WebshopProductLabelController::class, 'destroy'])->name('labels.destroy');
 
             // Rendelések
             Route::get('/orders', [WebshopOrderController::class, 'index'])->name('orders.index');

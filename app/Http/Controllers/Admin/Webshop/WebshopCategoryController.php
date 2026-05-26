@@ -18,7 +18,10 @@ class WebshopCategoryController extends AdminExtendedController
         if ($request->filled('search')) $query->search($request->input('search'));
         if ($request->filled('is_active') && $request->input('is_active') !== '') $query->where('is_active', $request->input('is_active') === '1');
 
-        return view('admin.webshop.categories.index', ['categories' => $query->get()]);
+        return view('admin.webshop.categories.index', [
+            'categories' => $query->get(),
+            'ws' => WebshopSettingsService::all()
+        ]);
     }
 
     public function create()
@@ -38,9 +41,11 @@ class WebshopCategoryController extends AdminExtendedController
             'name_plural' => 'required|string|max:255',
             'og_img' => 'nullable|image|mimes:jpg,jpeg,png|max:5120',
             'icon_file' => 'nullable|file|mimes:svg,png|max:2048',
+            'primary_image_width' => 'nullable|integer|min:1',
+            'primary_image_height' => 'nullable|integer|min:1',
         ]);
 
-        $data = $request->only(['name_singular', 'name_plural', 'description', 'og_title', 'og_description', 'parent_id']);
+        $data = $request->only(['name_singular', 'name_plural', 'description', 'og_title', 'og_description', 'parent_id', 'primary_image_width', 'primary_image_height']);
         $data['show_in_sticky_header'] = $request->has('show_in_sticky_header');
         $data['slug'] = WebshopSlugService::generateUniqueSlug($data['name_singular'], 'public.webshop_categories');
         $data['is_active'] = true;
@@ -85,9 +90,11 @@ class WebshopCategoryController extends AdminExtendedController
             'name_plural' => 'required|string|max:255',
             'og_img' => 'nullable|image|mimes:jpg,jpeg,png|max:5120',
             'icon_file' => 'nullable|file|mimes:svg,png|max:2048',
+            'primary_image_width' => 'nullable|integer|min:1',
+            'primary_image_height' => 'nullable|integer|min:1',
         ]);
 
-        $data = $request->only(['name_singular', 'name_plural', 'description', 'og_title', 'og_description', 'parent_id']);
+        $data = $request->only(['name_singular', 'name_plural', 'description', 'og_title', 'og_description', 'parent_id', 'primary_image_width', 'primary_image_height']);
         $data['show_in_sticky_header'] = $request->has('show_in_sticky_header');
         $data['slug'] = WebshopSlugService::generateUniqueSlug($data['name_singular'], 'public.webshop_categories', $category->id);
         if (empty($data['og_title'])) $data['og_title'] = $data['name_singular'];

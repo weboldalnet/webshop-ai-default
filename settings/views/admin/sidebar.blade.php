@@ -12,6 +12,9 @@
             <a href="/webshop/categories">Kategóriák</a>
             <a href="/webshop/property-categories">Tulajdonságok</a>
             <a href="/webshop/products">Termékek</a>
+            @if(\Weboldalnet\WebshopAiDefault\Services\Webshop\WebshopSettingsService::getBool('admin_product_labels_enabled'))
+                <a href="/webshop/labels">Címkék</a>
+            @endif
 
             @if($user->is_super)
                 <hr class="d-block w-fill my-1 mx-2">

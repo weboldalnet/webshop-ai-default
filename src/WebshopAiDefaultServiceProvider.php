@@ -32,6 +32,11 @@ class WebshopAiDefaultServiceProvider extends ServiceProvider
         // Migrációk betöltése
         $this->loadMigrationsFrom(__DIR__.'/../database/migrations');
 
+        // Config betöltése és publikálása
+        $this->publishes([
+            __DIR__.'/../config/webshop.php' => config_path('webshop.php'),
+        ], PackageHelper::PACKAGE_PREFIX . '-config');
+
         // Publisholható elemek (PackageHelper-ből)
         $publishList = [];
         foreach (PackageHelper::PACKAGE_LIST as $name => $publish) {
@@ -76,6 +81,8 @@ class WebshopAiDefaultServiceProvider extends ServiceProvider
 
     public function register()
     {
+        $this->mergeConfigFrom(__DIR__.'/../config/webshop.php', 'webshop');
+
         $this->commands([
             InstallArticlesCommand::class,
         ]);

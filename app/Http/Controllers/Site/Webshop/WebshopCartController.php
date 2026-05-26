@@ -18,7 +18,12 @@ class WebshopCartController extends Controller
 
         WebshopCartService::add($productId, $quantity);
 
-        $product = WebshopProduct::with(['relatedProducts' => fn($q) => $q->active()->with('category')])->find($productId);
+        $relatedWith = ['category'];
+        if (WebshopSettingsService::getBool('admin_product_label_assignment_enabled')) {
+            $relatedWith[] = 'label';
+        }
+
+        $product = WebshopProduct::with(['relatedProducts' => fn($q) => $q->active()->with($relatedWith)])->find($productId);
         $relatedHtml = '';
         if ($showRelatedModal && WebshopSettingsService::getBool('site_related_products_modal_enabled') && $product && $product->relatedProducts->isNotEmpty()) {
             $relatedHtml = view('site.webshop.modals.related-products', [

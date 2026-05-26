@@ -11,9 +11,17 @@ class WebshopProductReviewController extends AdminExtendedController
 {
     public function index(WebshopProduct $product)
     {
-        $reviews = $product->reviews()->latestFirst()->get();
+        $reviews = $product->reviews()->latestFirst()->paginate(30);
         return view('admin.webshop.product-reviews.index', [
             'product' => $product,
+            'reviews' => $reviews,
+        ]);
+    }
+
+    public function allReviews()
+    {
+        $reviews = WebshopProductReview::with('product')->latestFirst()->paginate(30);
+        return view('admin.webshop.product-reviews.index', [
             'reviews' => $reviews,
         ]);
     }
@@ -21,7 +29,7 @@ class WebshopProductReviewController extends AdminExtendedController
     public function destroy(WebshopProduct $product, WebshopProductReview $review)
     {
         $review->delete();
-        return redirect()->route('admin.webshop.products.reviews.index', $product)->with('success', 'Vélemény sikeresen törölve.');
+        return redirect()->back()->with('success', 'Vélemény sikeresen törölve.');
     }
 
     public function toggleActive(Request $request)

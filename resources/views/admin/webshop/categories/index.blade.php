@@ -39,8 +39,13 @@
                 <thead class="thead-dark">
                 <tr>
                     <th style="width:40px"><i class="fa fa-arrows-alt"></i></th>
+                    @if($ws['category_icon_enabled'] ?? false)
+                        <th>Ikon</th>
+                    @endif
                     <th>Név</th>
-                    <th>Szülő</th>
+                    @if($ws['category_parent_enabled'] ?? false)
+                        <th>Szülő</th>
+                    @endif
                     <th>Aktív</th>
                     <th><i class="fa fa-pen"></i></th>
                 </tr>
@@ -49,8 +54,19 @@
                 @foreach($categories as $cat)
                     <tr>
                         <td class="ws-drag-handle"><i class="fa fa-grip-vertical text-muted"></i><input type="hidden" class="js-sort-id" value="{{ $cat->id }}"></td>
+                        @if($ws['category_icon_enabled'] ?? false)
+                            <td>
+                                @if($cat->icon)
+                                    <img src="{{ $cat->icon }}" alt="ikon" style="max-height: 30px; max-width: 30px;">
+                                @else
+                                    -
+                                @endif
+                            </td>
+                        @endif
                         <td class="font-weight-bold">{{ $cat->name_singular }}</td>
-                        <td>{{ $cat->parent ? $cat->parent->name_singular : '-' }}</td>
+                        @if($ws['category_parent_enabled'] ?? false)
+                            <td>{{ $cat->parent ? $cat->parent->name_singular : '-' }}</td>
+                        @endif
                         <td>
                             <div class="custom-control custom-switch">
                                 <input type="checkbox" class="custom-control-input js-toggle-active" id="active{{ $cat->id }}" data-id="{{ $cat->id }}" data-url="{{ route('admin.webshop.categories.toggle-active') }}" @if($cat->is_active) checked @endif>

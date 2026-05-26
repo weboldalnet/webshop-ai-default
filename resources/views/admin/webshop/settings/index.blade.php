@@ -50,6 +50,11 @@
                             <label class="custom-control-label" for="product_related_enabled">Kapcsolódó termékek engedélyezése</label>
                         </div>
                         <div class="custom-control custom-switch mb-3">
+                            <input type="checkbox" class="custom-control-input" id="admin_product_labels_enabled" name="admin_product_labels_enabled"
+                                   @if(($ws['admin_product_labels_enabled'] ?? 'false') === 'true') checked @endif>
+                            <label class="custom-control-label" for="admin_product_labels_enabled">Termék címkék kezelése engedélyezése</label>
+                        </div>
+                        <div class="custom-control custom-switch mb-3">
                             <input type="checkbox" class="custom-control-input" id="product_price_enabled" name="product_price_enabled"
                                    @if(($ws['product_price_enabled'] ?? 'false') === 'true') checked @endif>
                             <label class="custom-control-label" for="product_price_enabled">Ár és akciós ár engedélyezése</label>

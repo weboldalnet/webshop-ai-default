@@ -130,7 +130,7 @@ var WebshopAdmin = (function ($) {
      */
     function initAdminOrderCreate() {
         const self = this;
-        
+
         // Termék kiválasztása datalist-ből
         $(document).on('input', '.js-admin-order-product-search', function () {
             const val = $(this).val();
@@ -143,7 +143,7 @@ var WebshopAdmin = (function ($) {
                 const id = $option.data('id');
                 const price = $option.data('price');
                 const name = $option.val();
-                
+
                 $('.js-admin-order-product-id').val(id);
                 $('.js-admin-order-product-price').val(price);
             } else {
@@ -201,7 +201,7 @@ var WebshopAdmin = (function ($) {
             $('.js-admin-order-product-id').val('');
             $('.js-admin-order-product-price').val('');
             $('.js-admin-order-product-qty').val(1);
-            
+
             updateGrandTotal();
         });
 
@@ -210,7 +210,7 @@ var WebshopAdmin = (function ($) {
             const $row = $(this).closest('.js-admin-order-item-row');
             const qty = parseInt($(this).val()) || 0;
             const price = parseFloat($row.find('.js-admin-order-item-price').val()) || 0;
-            
+
             $row.find('.js-admin-order-line-total').text(hufFormat(price * qty));
             updateGrandTotal();
         });
@@ -517,8 +517,8 @@ var WebshopAdmin = (function ($) {
                         if (products.length > 0) {
                             let html = '<ul class="list-group shadow-sm">';
                             products.forEach(p => {
-                                html += `<li class="list-group-item list-group-item-action p-2 js-search-result" 
-                                            data-id="${p.id}" 
+                                html += `<li class="list-group-item list-group-item-action p-2 js-search-result"
+                                            data-id="${p.id}"
                                             data-name="${p.name}"
                                             data-sku="${p.sku || ''}"
                                             data-category="${p.category_name}"
@@ -594,6 +594,15 @@ var WebshopAdmin = (function ($) {
         initPicker('variation');
     }
 
+    /**
+     * Tooltip inicializálás
+     */
+    function initTooltips() {
+        if ($.fn.tooltip) {
+            $('[data-toggle="tooltip"]').tooltip();
+        }
+    }
+
     return {
         initSortable: initSortable,
         initToggleActive: initToggleActive,
@@ -604,6 +613,7 @@ var WebshopAdmin = (function ($) {
         initOrderDetails: initOrderDetails,
         initAdminOrderCreate: initAdminOrderCreate,
         initProductRelationPicker: initProductRelationPicker,
+        initTooltips: initTooltips,
         showToast: showToast
     };
 

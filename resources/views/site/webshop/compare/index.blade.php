@@ -46,7 +46,7 @@
                                     @forelse($pProps as $pp)
                                         @if($pp->property)
                                             <div>{{ $pp->property->name }}</div>
-                                        @elseif($pp->number_value !== null)
+                                        @elseif($pp->number_value !== null || $pp->number_value === 0 || $pp->number_value === "0")
                                             <div>{{ (float)$pp->number_value }}{{ $pc->suffix }}</div>
                                         @endif
                                     @empty

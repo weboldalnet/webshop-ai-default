@@ -39,7 +39,11 @@ class WebshopCategoryController extends Controller
     public function products(Request $request, WebshopCategory $category)
     {
         $query = $category->products()->active();
-        
+
+        if (WebshopSettingsService::getBool('admin_product_label_assignment_enabled')) {
+            $query->with('label');
+        }
+
         $filterService = new WebshopProductFilterService();
         $query = $filterService->filter($query, $request->all());
 

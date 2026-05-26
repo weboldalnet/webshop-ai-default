@@ -18,6 +18,8 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * @property string|null $icon
  * @property bool $is_active
  * @property bool $show_in_sticky_header
+ * @property int $primary_image_width
+ * @property int $primary_image_height
  * @property int $sort_order
  * @property-read \Weboldalnet\WebshopAiDefault\Models\WebshopCategory|null $parent
  * @property-read \Illuminate\Database\Eloquent\Collection $children
@@ -34,13 +36,16 @@ class WebshopCategory extends Model
 
     protected $fillable = [
         'parent_id', 'name_singular', 'name_plural', 'slug', 'description',
-        'og_title', 'og_description', 'og_img', 'icon', 'is_active', 'show_in_sticky_header', 'sort_order',
+        'og_title', 'og_description', 'og_img', 'icon', 'is_active', 'show_in_sticky_header',
+        'primary_image_width', 'primary_image_height', 'sort_order',
     ];
 
     protected $casts = [
         'parent_id' => 'integer',
         'is_active' => 'boolean',
         'show_in_sticky_header' => 'boolean',
+        'primary_image_width' => 'integer',
+        'primary_image_height' => 'integer',
         'sort_order' => 'integer',
     ];
 

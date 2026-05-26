@@ -32,6 +32,13 @@
                                             </div>
                                             <div class="ws-related-product-info flex-grow-1 min-w-0 pr-2 lh-12">
                                                 <div class="ws-related-product-title fw-600 fs-14 mb-1 text-truncate" title="{{ $rel->name }}">{{ $rel->name }}</div>
+                                                @if(\Weboldalnet\WebshopAiDefault\Services\Webshop\WebshopSettingsService::getBool('admin_product_label_assignment_enabled') && $rel->label)
+                                                    <div class="mb-1">
+                                                        <span class="badge" style="background-color: {{ $rel->label->bg_color }}; color: {{ $rel->label->text_color }}; font-size: 0.7rem; padding: 0.2em 0.5em;">
+                                                            {{ $rel->label->name }}
+                                                        </span>
+                                                    </div>
+                                                @endif
                                                 @if(($ws['site_product_prices_visible'] ?? 'true') === 'true')
                                                     <div class="ws-related-product-price text-primary font-weight-bold fs-14 mb-2">
                                                         @include('site.webshop.partials.product-price', ['product' => $rel, 'priceSize' => 'small'])

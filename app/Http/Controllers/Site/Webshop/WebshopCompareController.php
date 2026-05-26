@@ -15,17 +15,25 @@ class WebshopCompareController extends Controller
         if (!WebshopSettingsService::getBool('site_product_compare_enabled')) abort(404);
 
         $items = WebshopCompareService::getContent();
-        if (count($items) < 2) {
-            return redirect()->back()->with('error', 'Legalább 2 termék szükséges az összehasonlításhoz.');
+        if (count($items) == 1) {
+            $firstItem = reset($items);
+            $product = WebshopProduct::active()->find($firstItem['product_id']);
+            if ($product && $product->category) {
+                return redirect()->route('site.webshop.categories.show', $product->category->slug);
+            }
         }
 
-        $products = WebshopProduct::active()->whereIn('id', array_keys($items))->with('productProperties.property.propertyCategory')->get();
-        
+        if (count($items) < 2) {
+            return redirect()->route('site.webshop.categories.index')->with('error', 'Legalább 2 termék szükséges az összehasonlításhoz.');
+        }
+
+        $products = WebshopProduct::active()->whereIn('id', array_keys($items))->with('productProperties.propertyCategory')->get();
+
         // Összes tulajdonság kategória kigyűjtése a termékekből
         $propertyCategories = [];
         foreach ($products as $product) {
             foreach ($product->productProperties as $pp) {
-                $pc = $pp->property->propertyCategory ?? null;
+                $pc = $pp->propertyCategory ?? null;
                 if ($pc) {
                     $propertyCategories[$pc->id] = $pc;
                 }

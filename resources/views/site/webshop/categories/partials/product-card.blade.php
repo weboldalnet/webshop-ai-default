@@ -1,4 +1,16 @@
-<div class="card ws-product-card h-100 shadow-sm border-0">
+<div class="card ws-product-card h-100 shadow-sm position-relative">
+    @if(($ws['site_product_prices_visible'] ?? 'true') === 'true' && $product->sale_price && $product->discount_percentage > 0)
+        <div class="ws-product-sale-badge badge badge-danger position-absolute">
+            -{{ $product->discount_percentage }}%
+        </div>
+    @endif
+    @if(\Weboldalnet\WebshopAiDefault\Services\Webshop\WebshopSettingsService::getBool('admin_product_labels_enabled') && $product->label)
+        <div class="ws-product-label-badge badge position-absolute"
+             style="background-color: {{ $product->label->bg_color }}; color: {{ $product->label->text_color }};
+                    top: {{ (($ws['site_product_prices_visible'] ?? 'true') === 'true' && $product->sale_price && $product->discount_percentage > 0) ? '45px' : '10px' }};">
+            {{ $product->label->name }}
+        </div>
+    @endif
     <a href="{{ route('site.webshop.products.show', $product) }}" class="ws-product-card-img text-center bg-light d-flex align-items-center justify-content-center overflow-hidden" style="height: 220px;">
         @if($product->primary_image)
             <img src="{{ $product->primary_image }}" alt="{{ $product->name }}" class="img-fluid" style="max-height: 100%;">

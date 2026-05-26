@@ -30,6 +30,17 @@
                                 @endforeach
                             </select>
                         </div>
+                        @if(\Weboldalnet\WebshopAiDefault\Services\Webshop\WebshopSettingsService::getBool('admin_product_labels_enabled'))
+                            <div class="form-group">
+                                <label for="label_id">Termék címke</label>
+                                <select class="form-control" id="label_id" name="label_id">
+                                    <option value="">-- Nincs címke --</option>
+                                    @foreach($labels as $label)
+                                        <option value="{{ $label->id }}" @if(old('label_id', $product->label_id) == $label->id) selected @endif>{{ $label->name }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                        @endif
                         <div class="form-group">
                             <label for="sku">SKU</label>
                             <input type="text" class="form-control" id="sku" name="sku" value="{{ old('sku', $product->sku) }}">
@@ -56,8 +67,8 @@
                                     'object' => $product,
                                     'label' => 'Elsődleges kép',
                                     'variable' => 'primary_image',
-                                    'imgWidth' => \Weboldalnet\WebshopAiDefault\Helpers\WebshopHelper::PRIMARY_IMG_SIZE['crop']['width'],
-                                    'imgHeight' => \Weboldalnet\WebshopAiDefault\Helpers\WebshopHelper::PRIMARY_IMG_SIZE['crop']['height'],
+                                    'imgWidth' => $product->category->primary_image_width ?? config('webshop.primary_image.width'),
+                                    'imgHeight' => $product->category->primary_image_height ?? config('webshop.primary_image.height'),
                                 ])
                     </div>
 

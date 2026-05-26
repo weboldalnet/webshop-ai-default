@@ -16,7 +16,7 @@
                 <!-- Kép blokk -->
                 <div class="col-lg-4 col-md-6 mb-4">
                     <div class="ws-product-gallery card shadow-sm">
-                        <div class="ws-main-image p-3 text-center gallery">
+                        <div class="ws-main-image p-2 text-center gallery">
                             @if($product->primary_image)
                                 <a href="{{ $product->primary_image }}">
                                     <img src="{{ $product->primary_image }}" id="ws-main-img" alt="{{ $product->name }}" class="img-fluid" style="max-height: 100%;">
@@ -34,7 +34,7 @@
                         @if($product->galleryImages->isNotEmpty())
                             <div class="ws-thumbnails p-2 d-flex flex-wrap border-top">
                                 <div class="ws-thumb p-1" style="width: 25%; cursor: pointer;">
-                                    <img src="{{ $product->primary_image }}" class="img-fluid border rounded js-thumb active" data-src="{{ $product->primary_image }}">
+                                    <img src="{{ $product->primary_image_thumb }}" class="img-fluid border rounded js-thumb active" data-src="{{ $product->primary_image }}">
                                 </div>
                                 @foreach($product->galleryImages as $img)
                                     <div class="ws-thumb p-1" style="width: 25%; cursor: pointer;">
@@ -52,8 +52,8 @@
                         <div class="card-body">
                             <h4 class="font-weight-bold mb-3 border-bottom pb-2">Tulajdonságok</h4>
                             <div class="ws-product-properties">
-                                @foreach($product->productProperties->groupBy('property.property_category_id') as $pcId => $pProps)
-                                    @php $pc = $pProps->first()->property->propertyCategory ?? $pProps->first()->propertyCategory; @endphp
+                                @foreach($product->productProperties->groupBy('property_category_id') as $pcId => $pProps)
+                                    @php $pc = $pProps->first()->propertyCategory; @endphp
                                     @if($pc)
                                         <div class="mb-lg-3 mb-0">
                                             <div class="font-weight-bold text-muted small">{{ $pc->name }}:</div>
@@ -62,7 +62,7 @@
                                                     @if($pp->property)
                                                         <a href="{{ route('site.webshop.categories.show', $product->category) }}?f[{{ $pc->id }}][]={{ $pp->property->id }}" class="badge badge-secondary mr-1">{{ $pp->property->name }}</a>
                                                     @elseif($pp->number_value !== null)
-                                                        <span class="font-weight-bold">{{ (float)$pp->number_value }}{{ $pc->suffix }}</span>
+                                                        <span class="fw-600">{{ (float)$pp->number_value }}{{ $pc->suffix }}</span>
                                                     @endif
                                                 @endforeach
                                             </div>

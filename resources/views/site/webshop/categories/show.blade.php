@@ -55,6 +55,19 @@
                     </div>
                 </div>
             </div>
+
+            @if($category->description)
+                <div class="row mt-5">
+                    <div class="col-lg-12">
+                        <div class="ws-category-description-box p-lg-4 p-3 bg-white border rounded shadow-sm">
+                            <h2 class="h4 font-weight-bold mb-lg-3 mb-2 text-dark">{{ $category->name_singular }}</h2>
+                            <div class="ws-category-description text-muted fs-16">
+                                {!! $category->description !!}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            @endif
         </div>
     </div>
 

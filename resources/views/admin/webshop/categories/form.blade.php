@@ -52,6 +52,30 @@
     </div>
 </div>
 
+<div class="row">
+    <div class="col-lg-6 mb-3">
+        <h3 class="header-box product-info">Termékkép méretek (metszéshez)</h3>
+        <div class="content-box bordered">
+            <button type="button" class="btn btn-sm btn-outline-info mb-3" data-toggle="collapse" data-target="#imageSizesCollapse">
+                <i class="fa-solid fa-arrows-left-right"></i> Méretek beállítása
+            </button>
+            <div class="collapse" id="imageSizesCollapse">
+                <div class="form-row">
+                    <div class="col-md-6 form-group">
+                        <label for="primary_image_width">Szélesség (px)</label>
+                        <input type="number" class="form-control" id="primary_image_width" name="primary_image_width" value="{{ old('primary_image_width', $isEdit ? $category->primary_image_width : config('webshop.primary_image.width')) }}">
+                    </div>
+                    <div class="col-md-6 form-group">
+                        <label for="primary_image_height">Magasság (px)</label>
+                        <input type="number" class="form-control" id="primary_image_height" name="primary_image_height" value="{{ old('primary_image_height', $isEdit ? $category->primary_image_height : config('webshop.primary_image.height')) }}">
+                    </div>
+                </div>
+                <small class="form-text text-muted">A kategóriába tartozó termékek elsődleges képének vágási arányait határozza meg.</small>
+            </div>
+        </div>
+    </div>
+</div>
+
 @if(($ws['category_parent_enabled'] ?? 'false') === 'true')
 <div class="row">
     <div class="col-lg-6 mb-3">

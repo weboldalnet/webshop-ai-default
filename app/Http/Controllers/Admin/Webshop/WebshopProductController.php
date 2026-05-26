@@ -4,9 +4,9 @@ namespace Weboldalnet\WebshopAiDefault\Http\Controllers\Admin\Webshop;
 
 use App\Http\Controllers\Admin\AdminExtendedController;
 use Weboldalnet\WebshopAiDefault\Helpers\ProductHelper;
-use Weboldalnet\WebshopAiDefault\Helpers\WebshopHelper;
 use Weboldalnet\WebshopAiDefault\Models\WebshopCategory;
 use Weboldalnet\WebshopAiDefault\Models\WebshopProduct;
+use Weboldalnet\WebshopAiDefault\Models\WebshopProductLabel;
 use Weboldalnet\WebshopAiDefault\Models\WebshopProductGalleryImage;
 use Weboldalnet\WebshopAiDefault\Models\WebshopProductProperty;
 use Weboldalnet\WebshopAiDefault\Models\WebshopPropertyCategory;
@@ -22,7 +22,11 @@ class WebshopProductController extends AdminExtendedController
     public function index(Request $request)
     {
         $ws = WebshopSettingsService::all();
-        $query = WebshopProduct::ordered()->with('category');
+        $query = WebshopProduct::ordered()->with('category.children');
+
+        if (WebshopSettingsService::getBool('admin_product_labels_enabled')) {
+            $query->with('label');
+        }
 
         if (($ws['site_product_reviews_enabled'] ?? 'false') === 'true') {
             $query->withCount('reviews');
@@ -81,6 +85,7 @@ class WebshopProductController extends AdminExtendedController
             'ws' => $ws,
             'categoryPropertyCatIds' => $categoryPropertyCatIds,
             'allPropertyCategories' => WebshopPropertyCategory::active()->ordered()->with(['properties' => fn($q) => $q->active()->ordered()])->get(),
+            'labels' => WebshopProductLabel::all(),
         ]);
     }
 
@@ -97,8 +102,12 @@ class WebshopProductController extends AdminExtendedController
             return redirect()->back()->withInput()->withErrors(['sale_price' => 'Az akciós ár nem lehet nagyobb, mint az alapár.']);
         }
 
-        $data = $request->only(['name', 'category_id', 'description', 'sku']);
+        $data = $request->only(['name', 'category_id', 'description', 'sku', 'label_id']);
         $data['slug'] = WebshopSlugService::generateUniqueSlug($data['name'], 'public.webshop_products', $product->id);
+
+        if (($ws['admin_product_labels_enabled'] ?? 'false') !== 'true') {
+            unset($data['label_id']);
+        }
 
         if (($ws['product_price_enabled'] ?? 'false') === 'true') { $data['price'] = $request->input('price'); $data['sale_price'] = $request->input('sale_price'); }
         if (($ws['product_stock_enabled'] ?? 'false') === 'true') { $data['stock_enabled'] = $request->has('stock_enabled'); $data['stock_quantity'] = $request->input('stock_quantity'); }
@@ -114,8 +123,7 @@ class WebshopProductController extends AdminExtendedController
             $data['primary_image_thumb'] = WebshopFileService::saveProductImageThumbnail(
                 $request->file('primary_image')['img'],
                 getTransformedString($data['name']).'-'.$product->id,
-                WebshopHelper::PRIMARY_IMG_SIZE['thumb']['width'],
-                WebshopHelper::PRIMARY_IMG_SIZE['thumb']['height']);
+                config('webshop.thumbnail.width', 120), null);
         }
 
         $product->update($data);
@@ -159,7 +167,7 @@ class WebshopProductController extends AdminExtendedController
     {
         $search = $request->input('q');
         $excludeId = $request->input('exclude_id');
-        $isVariation = $request->input('is_variation');
+        $isVariation = (int)$request->input('is_variation');
 
         $query = WebshopProduct::active();
 
@@ -170,23 +178,27 @@ class WebshopProductController extends AdminExtendedController
             });
         }
 
-        if ($excludeId) {
-            $query->where('id', '!=', $excludeId);
+        if ($isVariation === 1 && $excludeId) {
+            $product = WebshopProduct::find($excludeId);
+            if ($product) {
+                // Csak azonos kategóriában lévő termékek
+                $query->where('category_id', $product->category_id);
 
-            if ($isVariation) {
-                $product = WebshopProduct::find($excludeId);
-                if ($product) {
-                    $query->where('category_id', $product->category_id);
+                // Az adott terméket ne dobja fel
+                $query->where('id', '!=', $excludeId);
 
-                    // Ne legyen variációja már egy másik terméknek
-                    $query->whereNotExists(function ($q) {
-                        $q->select(DB::raw(1))
-                            ->from('webshop_product_variations')
-                            ->whereRaw('webshop_product_variations.product_id = webshop_products.id')
-                            ->orWhereRaw('webshop_product_variations.variation_product_id = webshop_products.id');
-                    });
-                }
+                // Olyan terméket ne dobjon fel, ami variációja már egy másik terméknek
+                $query->whereNotExists(function ($q) {
+                    $q->select(DB::raw(1))
+                        ->from('webshop_product_variations')
+                        ->where(function ($sub) {
+                            $sub->whereRaw('webshop_product_variations.product_id = webshop_products.id')
+                                ->orWhereRaw('webshop_product_variations.variation_product_id = webshop_products.id');
+                        });
+                });
             }
+        } elseif ($excludeId) {
+            $query->where('id', '!=', $excludeId);
         }
 
         $products = $query->with('category')

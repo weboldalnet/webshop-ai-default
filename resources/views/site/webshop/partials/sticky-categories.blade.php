@@ -1,3 +1,4 @@
+<?php /** @var \Weboldalnet\WebshopAiDefault\Models\WebshopCategory $cat */ ?>
 <div class="category-container sticky-top bg-white shadow-sm ws-category-nav">
     <div class="container-xl container-fluid">
         <div id="productCategoryList" class="category-box pt-2">
@@ -10,12 +11,15 @@
                         <i class="fa fa-filter"></i>
                     </button>
                 @endisset
-                @foreach($stickyCategories as $cat)
+                @foreach($stickyCategories->where('parent_id', null) as $cat)
                     <div class="dropdown mr-1 mb-0 js-category-dropdown" tabindex="0">
                         <a href="{{ route('site.webshop.categories.show', $cat) }}"
                            class="btn-category @if(isset($category) && ($category->id == $cat->id || $category->parent_id == $cat->id)) active @endif @if($cat->children->isNotEmpty()) dropdown-toggle @endif"
                            @if($cat->children->isNotEmpty()) data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" @endif
                         >
+                            @if($cat->icon)
+                                <img src="{{ $cat->icon }}" alt="{{ $cat->name_singular }}" class="category-icon">
+                            @endif
                             {{ $cat->name_singular }}
                         </a>
                         @if($cat->children->isNotEmpty())

@@ -19,6 +19,7 @@ class WebshopSettingController extends AdminExtendedController
             'category_icon_enabled', 'category_parent_enabled', 'category_related_enabled',
             'category_product_card_properties_enabled', 'product_stock_enabled', 'product_related_enabled',
             'product_price_enabled', 'product_gallery_enabled', 'product_variations_enabled',
+            'admin_product_labels_enabled',
             'site_category_view_switcher_enabled', 'site_related_products_modal_enabled',
             'site_product_reviews_enabled', 'site_product_prices_visible',
             'site_checkout_phone_enabled', 'site_checkout_company_enabled',

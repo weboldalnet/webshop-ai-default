@@ -22,7 +22,25 @@
                     </div>
                 @endforeach
             </div>
+
+            @isset($parentCategory)
+                @if($parentCategory->description)
+                    <div class="row mt-5">
+                        <div class="col-lg-12">
+                            <div class="ws-category-description-box p-lg-4 p-3 bg-white border rounded shadow-sm">
+                                <h2 class="h4 font-weight-bold mb-lg-3 mb-2 text-dark">{{ $parentCategory->name_singular }}</h2>
+                                <div class="ws-category-description text-muted fs-16">
+                                    {!! $parentCategory->description !!}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                @endif
+            @endisset
         </div>
     </div>
 
+    @push('scripts')
+        <script src="/packages/webshop/site/js/webshop-site.js"></script>
+    @endpush
 @endsection

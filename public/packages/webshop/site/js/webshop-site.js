@@ -294,11 +294,13 @@ const WebshopSite = {
 
             $('.js-show-filter-btn').on('click', function () {
                 $('.ws-filter-sidebar').toggleClass('show');
+                $('body').toggleClass('overflow-hidden');
             });
 
             $('.ws-filter-sidebar').on('click', function (e) {
                 if (!$(e.target).closest('.ws-filter-box').length) {
                     $(this).removeClass('show');
+                    $('body').toggleClass('overflow-hidden');
                 }
             });
         });

@@ -16,7 +16,7 @@ class WebshopReviewController extends Controller
         }
 
         $request->validate([
-            'product_id' => 'required|exists:public.webshop_products,id',
+            'product_id' => 'required|exists:webshop_products,id',
             'name' => 'required|string|max:255',
             'rating' => 'required|integer|min:1|max:5',
             'review' => 'required|string|max:1000',

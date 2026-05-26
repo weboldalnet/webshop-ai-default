@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 /**
  * @property int $id
  * @property int $category_id
+ * @property int|null $label_id
  * @property string $name
  * @property string $slug
  * @property string|null $description
@@ -21,6 +22,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * @property bool $is_active
  * @property int $sort_order
  * @property-read \Weboldalnet\WebshopAiDefault\Models\WebshopCategory $category
+ * @property-read \Weboldalnet\WebshopAiDefault\Models\WebshopProductLabel|null $label
  * @property-read \Illuminate\Database\Eloquent\Collection $reviews
  * @mixin \Eloquent
  */
@@ -31,16 +33,17 @@ class WebshopProduct extends Model
     protected $table = 'public.webshop_products';
 
     protected $fillable = [
-        'category_id', 'name', 'slug', 'description', 'primary_image', 'primary_image_thumb', 'sku',
+        'category_id', 'label_id', 'name', 'slug', 'description', 'primary_image', 'primary_image_thumb', 'sku',
         'stock_enabled', 'stock_quantity', 'price', 'sale_price', 'is_active', 'sort_order',
     ];
 
     protected $casts = [
-        'category_id' => 'integer', 'stock_enabled' => 'boolean', 'stock_quantity' => 'integer',
+        'category_id' => 'integer', 'label_id' => 'integer', 'stock_enabled' => 'boolean', 'stock_quantity' => 'integer',
         'price' => 'float', 'sale_price' => 'float', 'is_active' => 'boolean', 'sort_order' => 'integer',
     ];
 
     public function category() { return $this->belongsTo(WebshopCategory::class, 'category_id'); }
+    public function label() { return $this->belongsTo(WebshopProductLabel::class, 'label_id'); }
     public function productProperties() { return $this->hasMany(WebshopProductProperty::class, 'product_id'); }
     public function galleryImages() { return $this->hasMany(WebshopProductGalleryImage::class, 'product_id'); }
     public function reviews() { return $this->hasMany(WebshopProductReview::class, 'product_id'); }
@@ -59,4 +62,13 @@ class WebshopProduct extends Model
     public function scopeOrdered($query) { return $query->orderBy('sort_order'); }
     public function scopeSearch($query, $search) { return $search ? $query->where('name', 'ILIKE', '%'.$search.'%') : $query; }
     public function scopeByCategory($query, $categoryId) { return $categoryId ? $query->where('category_id', $categoryId) : $query; }
+
+    public function getDiscountPercentageAttribute()
+    {
+        if (!$this->price || !$this->sale_price || $this->price <= $this->sale_price) {
+            return 0;
+        }
+
+        return round((($this->price - $this->sale_price) / $this->price) * 100);
+    }
 }

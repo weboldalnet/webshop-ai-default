@@ -3,7 +3,7 @@
 ?>
 <div class="table-responsive">
     <table class="table ws-product-table align-middle">
-        <thead class="thead-light">
+        <thead class="thead-light lh-1">
         <tr>
             <th>Kép</th>
             <th>Terméknév</th>
@@ -19,7 +19,7 @@
             @if(($ws['site_product_prices_visible'] ?? 'true') === 'true')
                 <th>Ár</th>
             @endif
-            <th class="text-right">Akció</th>
+            <th class="text-right"></th>
         </tr>
         </thead>
         <tbody>
@@ -34,8 +34,20 @@
                         @endif
                     </a>
                 </td>
-                <td>
+                <td class="ws-product-table-name">
                     <a href="{{ route('site.webshop.products.show', $product) }}" class="text-dark font-weight-bold">{{ $product->name }}</a>
+                    <div class="d-flex align-items-center">
+                        @if(($ws['site_product_prices_visible'] ?? 'true') === 'true' && $product->sale_price && $product->discount_percentage > 0)
+                            <div class=" badge badge-danger mr-1" style="font-size: 0.7rem; vertical-align: middle;">
+                                -{{ $product->discount_percentage }}%
+                            </div>
+                        @endif
+                        @if(\Weboldalnet\WebshopAiDefault\Services\Webshop\WebshopSettingsService::getBool('admin_product_labels_enabled') && $product->label)
+                            <div  class="badge d-block" style="background-color: {{ $product->label->bg_color }}; color: {{ $product->label->text_color }}; font-size: 0.7rem; vertical-align: middle;">
+                                {{ $product->label->name }}
+                            </div>
+                        @endif
+                    </div>
                 </td>
                 @foreach($cardProps as $pc)
                     <td class="ws-product-table-property">
