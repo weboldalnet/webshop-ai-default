@@ -25,6 +25,7 @@
                                        id="f{{ $prop->id }}"
                                        name="f[{{ $pc->id }}]{{ $pc->filter_type === 'radio' ? '' : '[]' }}"
                                        value="{{ $prop->id }}"
+                                       data-slug="{{ $prop->slug }}"
                                        @if(is_array(request("f.{$pc->id}")) ? in_array($prop->id, request("f.{$pc->id}")) : request("f.{$pc->id}") == $prop->id) checked @endif
                                 >
                                 <label class="custom-control-label" for="f{{ $prop->id }}">{{ $prop->name }}</label>
