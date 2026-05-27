@@ -76,7 +76,10 @@
         <script>
             $(function() {
                 WebshopSite.initProductList('{{ route('site.webshop.categories.products', $category) }}', {
-                    view_mode: '{{ $ws['site_product_list_default_view'] ?? 'card' }}'
+                    category_key: '{{ $category->getRouteKey() }}',
+                    view_mode: '{{ $ws['site_product_list_default_view'] ?? 'card' }}',
+                    sort: '{{ request('sort', 'newest') }}',
+                    per_page: '{{ request('per_page', '30') }}'
                 });
             });
         </script>

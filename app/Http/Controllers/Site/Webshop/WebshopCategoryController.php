@@ -20,11 +20,7 @@ class WebshopCategoryController extends Controller
     public function show(Request $request, $categorySlug)
     {
         [$slug, $filters] = $this->parseBeautyUrl($categorySlug, $request);
-        $category = WebshopCategory::where('slug', $slug)
-            ->when(is_numeric($slug), function($q) use ($slug) {
-                $q->orWhere('id', $slug);
-            })
-            ->firstOrFail();
+        $category = $this->resolveCategory($slug);
 
         if (!$category->is_active) abort(404);
 
@@ -48,11 +44,7 @@ class WebshopCategoryController extends Controller
     public function products(Request $request, $categorySlug)
     {
         [$slug, $filters] = $this->parseBeautyUrl($categorySlug, $request);
-        $category = WebshopCategory::where('slug', $slug)
-            ->when(is_numeric($slug), function($q) use ($slug) {
-                $q->orWhere('id', $slug);
-            })
-            ->firstOrFail();
+        $category = $this->resolveCategory($slug);
         $request->merge($filters);
 
         $query = $category->products()->active();
@@ -77,6 +69,21 @@ class WebshopCategoryController extends Controller
         ]);
     }
 
+    private function resolveCategory($slug)
+    {
+        // Ha van benne -cID (pl: kamerak-c3)
+        if (preg_match('/-c(\d+)$/', $slug, $matches)) {
+            return WebshopCategory::findOrFail($matches[1]);
+        }
+
+        // Egyébként slug vagy ID alapján
+        return WebshopCategory::where('slug', $slug)
+            ->when(is_numeric($slug), function($q) use ($slug) {
+                $q->orWhere('id', $slug);
+            })
+            ->firstOrFail();
+    }
+
     private function parseBeautyUrl($categorySlug, Request $request)
     {
         if (strpos($categorySlug, ';') === false) {
@@ -90,9 +97,9 @@ class WebshopCategoryController extends Controller
         foreach ($parts as $part) {
             if (empty($part)) continue;
 
-            if (substr($part, 0, 1) === 'f') {
-                $propId = substr($part, 1);
-                $filters['f_direct'][] = $propId;
+            // Szűrő tulajdonság (pl: ferfiaknak-f15 vagy csak f15)
+            if (preg_match('/(?:.*-)?f(\d+)$/', $part, $matches)) {
+                $filters['f_direct'][] = $matches[1];
             } elseif (preg_match('/^n(\d+)(min|max)-(.*)$/', $part, $matches)) {
                 $filters['n'][$matches[1]][$matches[2]] = $matches[3];
             } elseif (strpos($part, '-') !== false) {

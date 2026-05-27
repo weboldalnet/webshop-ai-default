@@ -51,6 +51,11 @@ class WebshopCategory extends Model
 
     public function getRouteKeyName() { return 'slug'; }
 
+    public function getRouteKey()
+    {
+        return $this->slug . '-c' . $this->id;
+    }
+
     public function parent() { return $this->belongsTo(self::class, 'parent_id'); }
     public function children() { return $this->hasMany(self::class, 'parent_id'); }
 

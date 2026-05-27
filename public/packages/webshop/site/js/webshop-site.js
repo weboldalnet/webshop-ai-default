@@ -140,12 +140,19 @@ const WebshopSite = {
         const self = this;
         this.currentUrl = apiUrl;
         this.currentPage = 1;
+        this.categoryKey = options.category_key || null;
 
         const defaultSort = options.sort || 'newest';
         const defaultPerPage = options.per_page || '30';
         const defaultViewMode = options.view_mode || 'card';
 
-        // Nézet mód betöltése localStorage-ból
+        // Alapértelmezett állapot beállítása a UI-on
+        $('.js-sort-select').val(defaultSort);
+        $('.js-per-page-select').val(defaultPerPage);
+        $('.js-view-mode').removeClass('active');
+        $(`.js-view-mode[data-mode="${defaultViewMode}"]`).addClass('active');
+
+        // Nézet mód betöltése localStorage-ból (felülírja az alapértelmezettet)
         const savedViewMode = localStorage.getItem('ws_view_mode');
         if (savedViewMode) {
             $('.js-view-mode').removeClass('active');
@@ -162,16 +169,16 @@ const WebshopSite = {
             // Nézet mód mentése
             localStorage.setItem('ws_view_mode', viewMode);
 
-            // Alapértelmezett értékek
-
             let beautyParams = [];
 
             // Szűrők feldolgozása
             formData.forEach(item => {
                 if (item.value) {
                     if (item.name.startsWith('f[')) {
-                        // f[catId][] = propId -> f{propId}
-                        beautyParams.push('f' + item.value);
+                        // f[catId][] = propId -> {slug}-f{propId}
+                        let $input = $(`input[name="${item.name}"][value="${item.value}"]`);
+                        let slug = $input.data('slug') || '';
+                        beautyParams.push((slug ? slug + '-' : '') + 'f' + item.value);
                     } else if (item.name.startsWith('n[')) {
                         // n[catId][min/max] -> n{catId}min-{val}
                         let match = item.name.match(/n\[(\d+)\]\[(min|max)\]/);
@@ -189,6 +196,15 @@ const WebshopSite = {
             if (page > 1) beautyParams.push('page-' + page);
 
             let path = window.location.pathname.split(';')[0];
+            let pathParts = path.split('/');
+            let lastPart = pathParts[pathParts.length - 1];
+
+            // Ha van categoryKey, akkor az utolsó részt lecseréljük rá (ha még nem az)
+            if (self.categoryKey && lastPart !== self.categoryKey) {
+                pathParts[pathParts.length - 1] = self.categoryKey;
+                path = pathParts.join('/');
+            }
+
             let newUrl = path;
             if (beautyParams.length > 0) {
                 newUrl += ';' + beautyParams.join(';');
@@ -197,7 +213,7 @@ const WebshopSite = {
             $('#product-list-container').css('opacity', 0.5);
 
             // AJAX híváshoz a normál formátumot használjuk a kompatibilitás miatt
-            // De csak a nem üreseket küldjük el
+            // Fontos: a view_mode-ot mindig elküldjük, hogy a szerver a megfelelő template-et adja vissza
             let queryData = {};
             formData.forEach(item => {
                 if (item.value) {
@@ -210,9 +226,9 @@ const WebshopSite = {
                     }
                 }
             });
-            if (sort !== defaultSort) queryData.sort = sort;
-            if (perPage !== defaultPerPage) queryData.per_page = perPage;
-            if (viewMode !== defaultViewMode) queryData.view_mode = viewMode;
+            queryData.sort = sort;
+            queryData.per_page = perPage;
+            queryData.view_mode = viewMode;
             if (page > 1) queryData.page = page;
 
             $.get(this.currentUrl, queryData, function(res) {
@@ -248,11 +264,16 @@ const WebshopSite = {
             loadProducts();
         });
 
-        // Kezdő oldalszám kinyerése az URL-ből, ha van
-        const initialBeauty = window.location.pathname.split(';');
-        initialBeauty.forEach(p => {
-            if (p.startsWith('page-')) {
-                self.currentPage = parseInt(p.split('-')[1]);
+        // Kezdő állapot szinkronizálása az URL-ből
+        const initialParams = window.location.pathname.split(';');
+        initialParams.forEach(p => {
+            if (p.startsWith('page-')) self.currentPage = parseInt(p.split('-')[1]);
+            if (p.startsWith('sort-')) $('.js-sort-select').val(p.split('-')[1]);
+            if (p.startsWith('per_page-')) $('.js-per-page-select').val(p.split('-')[1]);
+            if (p.startsWith('view_mode-')) {
+                const vm = p.split('-')[1];
+                $('.js-view-mode').removeClass('active');
+                $(`.js-view-mode[data-mode="${vm}"]`).addClass('active');
             }
         });
 
