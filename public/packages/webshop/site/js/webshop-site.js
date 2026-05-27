@@ -145,6 +145,7 @@ const WebshopSite = {
         const defaultSort = options.sort || 'newest';
         const defaultPerPage = options.per_page || '30';
         const defaultViewMode = options.view_mode || 'card';
+        
 
         // Alapértelmezett állapot beállítása a UI-on
         $('.js-sort-select').val(defaultSort);
