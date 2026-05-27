@@ -259,7 +259,9 @@ const WebshopSite = {
         });
 
         $(document).on('click', '.js-filter-clear', function() {
-            $('#ws-filter-form')[0].reset();
+            const $form = $('#ws-filter-form');
+            $form.find('input[type="checkbox"], input[type="radio"]').prop('checked', false);
+            $form.find('input[type="number"], input[type="text"]').val('');
             self.currentPage = 1;
             loadProducts();
         });

@@ -74,14 +74,16 @@
                     </td>
                 @endif
                 <td class="text-right ws-nowrap">
-                    @if(($ws['site_product_compare_enabled'] ?? 'false') === 'true')
-                        <button type="button" class="btn btn-sm btn-outline-info js-add-to-compare" data-id="{{ $product->id }}" title="Összehasonlítás">
-                            <i class="fa fa-scale-balanced"></i>
+                    <div class="d-flex flex-column align-items-end">
+                        <button type="button" class="btn btn-sm btn-primary js-add-to-cart" data-id="{{ $product->id }}">
+                            <i class="fa fa-shopping-cart"></i> Kosárba
                         </button>
-                    @endif
-                    <button type="button" class="btn btn-sm btn-primary js-add-to-cart" data-id="{{ $product->id }}">
-                        <i class="fa fa-shopping-cart"></i> Kosárba
-                    </button>
+                        @if(($ws['site_product_compare_enabled'] ?? 'false') === 'true')
+                            <button type="button" class="btn mt-1 btn-sm btn-outline-info js-add-to-compare" data-id="{{ $product->id }}" title="Összehasonlítás">
+                                <i class="fa fa-scale-balanced"></i>
+                            </button>
+                        @endif
+                    </div>
                 </td>
             </tr>
         @endforeach
