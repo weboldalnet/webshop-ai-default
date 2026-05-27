@@ -61,14 +61,45 @@ class WebshopProductController extends AdminExtendedController
     {
         $request->validate(['name' => 'required|string|max:255', 'category_id' => 'required|integer']);
 
-        $product = WebshopProduct::create([
+        $data = [
             'name' => $request->input('name'),
             'category_id' => $request->input('category_id'),
             'description' => $request->input('description'),
             'slug' => WebshopSlugService::generateUniqueSlug($request->input('name'), 'public.webshop_products'),
             'is_active' => true,
             'sort_order' => (WebshopProduct::max('sort_order') ?? 0) + 1,
-        ]);
+        ];
+
+        $product = WebshopProduct::create($data);
+
+        if ($request->hasFile('primary_image')) {
+            $mode = WebshopSettingsService::get('admin_product_primary_image_mode', 'cropper');
+
+            if ($mode !== 'cropper') {
+                $category = WebshopCategory::find($data['category_id']);
+                $width = $category->primary_image_width ?? config('webshop.primary_image.width', 500);
+                $height = $category->primary_image_height ?? config('webshop.primary_image.height', 500);
+
+                $imagePath = WebshopFileService::saveProductImage(
+                    $request->file('primary_image'),
+                    getTransformedString($data['name']) . '-' . $product->id,
+                    $width,
+                    $height
+                );
+
+                $thumbPath = WebshopFileService::saveProductImageThumbnail(
+                    $request->file('primary_image'),
+                    getTransformedString($data['name']) . '-' . $product->id,
+                    config('webshop.thumbnail.width', 120),
+                    config('webshop.thumbnail.height')
+                );
+
+                $product->update([
+                    'primary_image' => $imagePath,
+                    'primary_image_thumb' => $thumbPath,
+                ]);
+            }
+        }
 
         return redirect()->route('admin.webshop.products.edit', $product)->with('success', 'Termék sikeresen létrehozva. Most már kitöltheted az összes adatot.');
     }
@@ -112,18 +143,33 @@ class WebshopProductController extends AdminExtendedController
         if (($ws['product_price_enabled'] ?? 'false') === 'true') { $data['price'] = $request->input('price'); $data['sale_price'] = $request->input('sale_price'); }
         if (($ws['product_stock_enabled'] ?? 'false') === 'true') { $data['stock_enabled'] = $request->has('stock_enabled'); $data['stock_quantity'] = $request->input('stock_quantity'); }
         if ($request->hasFile('primary_image')) {
-            $sizes = $request->input('primary_image');
+            $mode = WebshopSettingsService::get('admin_product_primary_image_mode', 'cropper');
+
+            $imageFile = $mode === 'cropper' ? $request->file('primary_image')['img'] : $request->file('primary_image');
+
+            if ($mode === 'cropper') {
+                $sizes = $request->input('primary_image');
+                $width = $sizes['width'];
+                $height = $sizes['height'];
+            } else {
+                $category = WebshopCategory::find($data['category_id']);
+                $width = $category->primary_image_width ?? config('webshop.primary_image.width', 500);
+                $height = $category->primary_image_height ?? config('webshop.primary_image.height', 500);
+            }
+
             $data['primary_image'] = WebshopFileService::saveProductImage(
-                $request->file('primary_image')['img'],
+                $imageFile,
                 getTransformedString($data['name']).'-'.$product->id,
-                $sizes['width'],
-                $sizes['height']
+                $width,
+                $height
             );
 
             $data['primary_image_thumb'] = WebshopFileService::saveProductImageThumbnail(
-                $request->file('primary_image')['img'],
+                $imageFile,
                 getTransformedString($data['name']).'-'.$product->id,
-                config('webshop.thumbnail.width', 120), null);
+                config('webshop.thumbnail.width', 120),
+                config('webshop.thumbnail.height')
+            );
         }
 
         $product->update($data);

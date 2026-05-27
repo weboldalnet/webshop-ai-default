@@ -320,6 +320,8 @@ var WebshopAdmin = (function ($) {
                     success: function (res) {
                         if (res.success) {
                             $container.append(res.html);
+                            // Ha van custom file input inicializálva az új elemen (pl. alt módosítóhoz vagy jövőbeli bővítéshez)
+                            // De itt leginkább a feltöltő labelt kell visszaállítani a végén
                         } else {
                             showToast('error', res.message || 'Hiba történt a feltöltés során.');
                         }
@@ -331,7 +333,9 @@ var WebshopAdmin = (function ($) {
                     },
                     complete: function () {
                         uploadSequence(index + 1);
-                        $input.next('label').text('Képek feltöltve!');
+                        if (index + 1 >= files.length) {
+                             $input.next('label').text('Képek feltöltve!');
+                        }
                     }
                 });
             };
@@ -603,6 +607,24 @@ var WebshopAdmin = (function ($) {
         }
     }
 
+    /**
+     * Custom file input label frissítés
+     */
+    function initCustomFileInput() {
+        $(document).on('change', '.js-custom-file-input', function () {
+            var files = $(this)[0].files;
+            var labelText = 'Kép kiválasztása';
+
+            if (files.length === 1) {
+                labelText = files[0].name;
+            } else if (files.length > 1) {
+                labelText = files.length + ' kép kiválasztva';
+            }
+
+            $(this).next('.custom-file-label').addClass('selected').html(labelText);
+        });
+    }
+
     return {
         initSortable: initSortable,
         initToggleActive: initToggleActive,
@@ -614,6 +636,7 @@ var WebshopAdmin = (function ($) {
         initAdminOrderCreate: initAdminOrderCreate,
         initProductRelationPicker: initProductRelationPicker,
         initTooltips: initTooltips,
+        initCustomFileInput: initCustomFileInput,
         showToast: showToast
     };
 

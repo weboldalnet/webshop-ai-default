@@ -29,6 +29,7 @@ class WebshopSettingController extends AdminExtendedController
 
         $valueKeys = [
             'site_category_cards_per_row', 'site_checkout_mode', 'site_product_list_default_view',
+            'admin_product_primary_image_mode',
         ];
 
         $settings = [];

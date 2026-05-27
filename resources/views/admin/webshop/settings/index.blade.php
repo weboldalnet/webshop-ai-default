@@ -69,6 +69,14 @@
                                    @if(($ws['product_variations_enabled'] ?? 'false') === 'true') checked @endif>
                             <label class="custom-control-label" for="product_variations_enabled">Variációs termékek engedélyezése</label>
                         </div>
+                        <div class="form-group">
+                            <label for="admin_product_primary_image_mode">Termék elsődleges kép feltöltési módja</label>
+                            <select class="form-control" id="admin_product_primary_image_mode" name="admin_product_primary_image_mode">
+                                <option value="cropper" @if(($ws['admin_product_primary_image_mode'] ?? 'cropper') == 'cropper') selected @endif>Képmetsző (Cropper)</option>
+                                <option value="simple" @if(($ws['admin_product_primary_image_mode'] ?? 'cropper') == 'simple') selected @endif>Egyszerű képfeltöltés</option>
+                                <option value="simple_white" @if(($ws['admin_product_primary_image_mode'] ?? 'cropper') == 'simple_white') selected @endif>Egyszerű képfeltöltés fehér háttérrel</option>
+                            </select>
+                        </div>
                     </div>
                 </div>
             </div>

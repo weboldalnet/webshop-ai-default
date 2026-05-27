@@ -18,11 +18,11 @@
                                 </div>
                             @endif
                         </div>
-                        <div class="ws-product-variation-info">
+                        <div class="ws-product-variation-info lh-12">
                             <div class="ws-product-variation-title fw-600 fs-16">{{ $var->name }}</div>
                             @if(($ws['site_product_prices_visible'] ?? 'true') === 'true')
-                                <div class="ws-product-variation-price text-primary font-weight-bold small">
-                                    @include('site.webshop.partials.product-price', ['product' => $var, 'priceSize' => 'fs-14'])
+                                <div class="ws-product-variation-price text-primary fw-600 small">
+                                    @include('site.webshop.partials.product-price', ['product' => $var, 'priceSize' => 'fs-16'])
                                 </div>
                             @endif
                         </div>

@@ -56,20 +56,34 @@
                 <div class="col-lg-6 mb-3">
                     <h3 class="header-box product-info">Elsődleges kép</h3>
                     <div class="content-box bordered">
-{{--                        @if($product->primary_image)--}}
-{{--                            <div class="mb-2"><img src="{{ $product->primary_image }}" class="img-fluid ws-img-preview"></div>--}}
-{{--                        @endif--}}
-{{--                        <div class="form-group">--}}
-{{--                            <input type="file" class="form-control-file" id="primary_image" name="primary_image" accept=".jpg,.jpeg,.png,.webp">--}}
-{{--                        </div>--}}
-
-                        @include('admin.elements.commons.img-crop-object-input', [
-                                    'object' => $product,
-                                    'label' => 'Elsődleges kép',
-                                    'variable' => 'primary_image',
-                                    'imgWidth' => $product->category->primary_image_width ?? config('webshop.primary_image.width'),
-                                    'imgHeight' => $product->category->primary_image_height ?? config('webshop.primary_image.height'),
-                                ])
+                        @if(\Weboldalnet\WebshopAiDefault\Services\Webshop\WebshopSettingsService::get('admin_product_primary_image_mode', 'cropper') === 'cropper')
+                            @include('admin.elements.commons.img-crop-object-input', [
+                                        'object' => $product,
+                                        'label' => 'Elsődleges kép',
+                                        'variable' => 'primary_image',
+                                        'imgWidth' => $product->category->primary_image_width ?? config('webshop.primary_image.width'),
+                                        'imgHeight' => $product->category->primary_image_height ?? config('webshop.primary_image.height'),
+                                    ])
+                        @else
+                            @if($product->primary_image)
+                                <div class="mb-2"><img src="{{ $product->primary_image }}" class="img-fluid ws-img-preview mx-auto d-block" style="max-height: 200px;"></div>
+                            @endif
+                            <div class="form-group">
+                                <label for="primary_image">Kép feltöltése</label>
+                                <div class="input-group">
+                                    <div class="input-group-prepend">
+                                        <span class="input-group-text"><i class="fa-regular fa-file-image fs-18"></i></span>
+                                    </div>
+                                    <div class="custom-file">
+                                        <input type="file" class="custom-file-input js-custom-file-input" id="primary_image" name="primary_image" accept="image/*">
+                                        <label class="custom-file-label text-muted" for="primary_image">Kép kiválasztása</label>
+                                    </div>
+                                </div>
+                                <div class="lh-12 mt-1">
+                                    <span class="text-muted">Javasolt méret: {{ $product->category->primary_image_width ?? config('webshop.primary_image.width') }} x {{ $product->category->primary_image_height ?? config('webshop.primary_image.height') }}</span>
+                                </div>
+                            </div>
+                        @endif
                     </div>
 
                     {{-- Árak --}}
@@ -201,7 +215,7 @@
                                 </div>
                                 <div class="custom-file">
                                     <input type="file"
-                                           class="custom-file-input js-gallery-upload"
+                                           class="custom-file-input js-gallery-upload js-custom-file-input"
                                            data-url="{{ route('admin.webshop.products.gallery.store', $product) }}"
                                            accept=".jpg,.jpeg,.png,.webp"
                                            multiple
@@ -296,9 +310,11 @@
             </div>
             @endif
 
-            <div class="text-center mt-3">
-                <button type="submit" class="btn btn-primary fs-18 font-weight-bold"><i class="fa fa-save"></i> Mentés</button>
-                <a href="{{ route('admin.webshop.products.index') }}" class="btn btn-secondary">Vissza</a>
+            <div class="admin-save-box" style="left: 0">
+                <div class="admin-save-btn-container mx-auto">
+                    <button type="submit" class="btn btn-primary fs-18 font-weight-bold"><i class="fa fa-save"></i> Mentés</button>
+                    <a href="{{ route('admin.webshop.products.index') }}" class="btn btn-secondary">Vissza</a>
+                </div>
             </div>
         </form>
     </div>

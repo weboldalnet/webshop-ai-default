@@ -23,8 +23,8 @@ Route::middleware('web')->group(function () {
         ->name('site.webshop.')
         ->group(function () {
             Route::get('/', [SiteCategoryController::class, 'index'])->name('categories.index');
-            Route::get('/kategoria/{category:slug}', [SiteCategoryController::class, 'show'])->name('categories.show');
-            Route::get('/kategoria/{category:slug}/products', [SiteCategoryController::class, 'products'])->name('categories.products');
+            Route::get('/kategoria/{categorySlug}/products', [SiteCategoryController::class, 'products'])->name('categories.products')->where('categorySlug', '.*');
+            Route::get('/kategoria/{categorySlug}', [SiteCategoryController::class, 'show'])->name('categories.show')->where('categorySlug', '.*');
             Route::get('/termek/{product:slug}', [SiteProductController::class, 'show'])->name('products.show');
 
             // Kosár

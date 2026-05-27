@@ -7,6 +7,6 @@ return [
     ],
     'thumbnail' => [
         'width' => 120,
-        'height' => 120,
+        'height' => null,
     ],
 ];

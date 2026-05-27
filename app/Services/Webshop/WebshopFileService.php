@@ -10,11 +10,31 @@ class WebshopFileService
 {
     public static function saveProductImage(UploadedFile $file, string $name, $width, $height): string
     {
+        $mode = WebshopSettingsService::get('admin_product_primary_image_mode', 'cropper');
+
+        if ($mode === 'simple') {
+            return WebshopImageService::saveSimpleImage($file, 'webshop/products', $name, $width, $height);
+        }
+
+        if ($mode === 'simple_white') {
+            return WebshopImageService::saveSimpleImage($file, 'webshop/products', $name, $width, $height, true);
+        }
+
         return ImageService::saveCustomImage($file, 'webshop/products', $name, $width, $height);
     }
 
     public static function saveProductImageThumbnail(UploadedFile $file, string $name, $width, $height): string
     {
+        $mode = WebshopSettingsService::get('admin_product_primary_image_mode', 'cropper');
+
+        if ($mode === 'simple') {
+            return WebshopImageService::saveSimpleImage($file, 'webshop/products', ($name . '-thumb'), $width, $height);
+        }
+
+        if ($mode === 'simple_white') {
+            return WebshopImageService::saveSimpleImage($file, 'webshop/products', ($name . '-thumb'), $width, $height, true);
+        }
+
         return ImageService::saveCustomImage($file, 'webshop/products', ($name . '-thumb'), $width, $height);
     }
 
