@@ -29,17 +29,17 @@
                                 @endif
 
                                 <select class="form-control form-control-sm w-auto mr-2 js-sort-select">
-                                    <option value="newest">Legújabbak elöl</option>
-                                    <option value="price_asc">Ár szerint növekvő</option>
-                                    <option value="price_desc">Ár szerint csökkenő</option>
-                                    <option value="name_asc">Név szerint (A-Z)</option>
-                                    <option value="name_desc">Név szerint (Z-A)</option>
+                                    <option value="newest" @if(request('sort') == 'newest') selected @endif>Legújabbak elöl</option>
+                                    <option value="price_asc" @if(request('sort') == 'price_asc') selected @endif>Ár szerint növekvő</option>
+                                    <option value="price_desc" @if(request('sort') == 'price_desc') selected @endif>Ár szerint csökkenő</option>
+                                    <option value="name_asc" @if(request('sort') == 'name_asc') selected @endif>Név szerint (A-Z)</option>
+                                    <option value="name_desc" @if(request('sort') == 'name_desc') selected @endif>Név szerint (Z-A)</option>
                                 </select>
 
                                 <select class="form-control form-control-sm w-auto js-per-page-select px-1">
-                                    <option value="30">30/oldal</option>
-                                    <option value="60">60/oldal</option>
-                                    <option value="90">90/oldal</option>
+                                    <option value="30" @if(request('per_page') == '30') selected @endif>30/oldal</option>
+                                    <option value="60" @if(request('per_page') == '60') selected @endif>60/oldal</option>
+                                    <option value="90" @if(request('per_page') == '90') selected @endif>90/oldal</option>
                                 </select>
                             </div>
                         </div>
@@ -75,7 +75,9 @@
         <script src="/packages/webshop/site/js/webshop-site.js"></script>
         <script>
             $(function() {
-                WebshopSite.initProductList('{{ route('site.webshop.categories.products', $category) }}');
+                WebshopSite.initProductList('{{ route('site.webshop.categories.products', $category) }}', {
+                    view_mode: '{{ $ws['site_product_list_default_view'] ?? 'card' }}'
+                });
             });
         </script>
     @endpush

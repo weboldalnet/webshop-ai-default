@@ -17,9 +17,18 @@ class WebshopCategoryController extends Controller
         return view('site.webshop.categories.index', compact('categories'));
     }
 
-    public function show(WebshopCategory $category)
+    public function show(Request $request, $categorySlug)
     {
+        [$slug, $filters] = $this->parseBeautyUrl($categorySlug, $request);
+        $category = WebshopCategory::where('slug', $slug)
+            ->when(is_numeric($slug), function($q) use ($slug) {
+                $q->orWhere('id', $slug);
+            })
+            ->firstOrFail();
+
         if (!$category->is_active) abort(404);
+
+        $request->merge($filters);
 
         $children = $category->children()->active()->ordered()->get();
 
@@ -36,8 +45,16 @@ class WebshopCategoryController extends Controller
         ]);
     }
 
-    public function products(Request $request, WebshopCategory $category)
+    public function products(Request $request, $categorySlug)
     {
+        [$slug, $filters] = $this->parseBeautyUrl($categorySlug, $request);
+        $category = WebshopCategory::where('slug', $slug)
+            ->when(is_numeric($slug), function($q) use ($slug) {
+                $q->orWhere('id', $slug);
+            })
+            ->firstOrFail();
+        $request->merge($filters);
+
         $query = $category->products()->active();
 
         if (WebshopSettingsService::getBool('admin_product_label_assignment_enabled')) {
@@ -58,5 +75,46 @@ class WebshopCategoryController extends Controller
             'html' => view('site.webshop.categories.partials.product-list', compact('products', 'viewMode', 'ws'))->render(),
             'pagination' => view('site.webshop.categories.partials.pagination', compact('products'))->render(),
         ]);
+    }
+
+    private function parseBeautyUrl($categorySlug, Request $request)
+    {
+        if (strpos($categorySlug, ';') === false) {
+            return [$categorySlug, $request->all()];
+        }
+
+        $parts = explode(';', $categorySlug);
+        $realSlug = array_shift($parts);
+        $filters = [];
+
+        foreach ($parts as $part) {
+            if (empty($part)) continue;
+
+            if (substr($part, 0, 1) === 'f') {
+                $propId = substr($part, 1);
+                $filters['f_direct'][] = $propId;
+            } elseif (preg_match('/^n(\d+)(min|max)-(.*)$/', $part, $matches)) {
+                $filters['n'][$matches[1]][$matches[2]] = $matches[3];
+            } elseif (strpos($part, '-') !== false) {
+                $parts2 = explode('-', $part, 2);
+                $key = $parts2[0];
+                $value = $parts2[1] ?? '';
+                $filters[$key] = $value;
+                if ($key === 'page') {
+                    $request->merge(['page' => $value]);
+                }
+            }
+        }
+
+        // Visszaalakítás standard formátumra a kompatibilitás miatt
+        if (isset($filters['f_direct'])) {
+            $dbProperties = \Weboldalnet\WebshopAiDefault\Models\WebshopProperty::whereIn('id', $filters['f_direct'])->get();
+            foreach ($dbProperties as $dbProp) {
+                $filters['f'][$dbProp->property_category_id][] = (string)$dbProp->id;
+            }
+            unset($filters['f_direct']);
+        }
+
+        return [$realSlug, $filters];
     }
 }

@@ -136,31 +136,96 @@ const WebshopSite = {
         });
     },
 
-    initProductList: function(apiUrl) {
+    initProductList: function(apiUrl, options = {}) {
         const self = this;
         this.currentUrl = apiUrl;
+        this.currentPage = 1;
+
+        const defaultSort = options.sort || 'newest';
+        const defaultPerPage = options.per_page || '30';
+        const defaultViewMode = options.view_mode || 'card';
+
+        // Nézet mód betöltése localStorage-ból
+        const savedViewMode = localStorage.getItem('ws_view_mode');
+        if (savedViewMode) {
+            $('.js-view-mode').removeClass('active');
+            $(`.js-view-mode[data-mode="${savedViewMode}"]`).addClass('active');
+        }
 
         const loadProducts = () => {
-            const formData = $('#ws-filter-form').serialize();
+            const formData = $('#ws-filter-form').serializeArray();
             const sort = $('.js-sort-select').val();
             const perPage = $('.js-per-page-select').val();
-            const viewMode = $('.js-view-mode.active').data('mode') || 'card';
+            const viewMode = $('.js-view-mode.active').data('mode') || defaultViewMode;
+            const page = self.currentPage || 1;
 
-            const params = formData + '&sort=' + sort + '&per_page=' + perPage + '&view_mode=' + viewMode;
+            // Nézet mód mentése
+            localStorage.setItem('ws_view_mode', viewMode);
+
+            // Alapértelmezett értékek
+
+            let beautyParams = [];
+
+            // Szűrők feldolgozása
+            formData.forEach(item => {
+                if (item.value) {
+                    if (item.name.startsWith('f[')) {
+                        // f[catId][] = propId -> f{propId}
+                        beautyParams.push('f' + item.value);
+                    } else if (item.name.startsWith('n[')) {
+                        // n[catId][min/max] -> n{catId}min-{val}
+                        let match = item.name.match(/n\[(\d+)\]\[(min|max)\]/);
+                        if (match) {
+                            beautyParams.push('n' + match[1] + match[2] + '-' + item.value);
+                        }
+                    }
+                }
+            });
+
+            // Egyéb paraméterek, csak ha nem alapértelmezettek
+            if (sort && sort !== defaultSort) beautyParams.push('sort-' + sort);
+            if (perPage && perPage !== defaultPerPage) beautyParams.push('per_page-' + perPage);
+            if (viewMode && viewMode !== defaultViewMode) beautyParams.push('view_mode-' + viewMode);
+            if (page > 1) beautyParams.push('page-' + page);
+
+            let path = window.location.pathname.split(';')[0];
+            let newUrl = path;
+            if (beautyParams.length > 0) {
+                newUrl += ';' + beautyParams.join(';');
+            }
 
             $('#product-list-container').css('opacity', 0.5);
 
-            $.get(this.currentUrl, params, function(res) {
+            // AJAX híváshoz a normál formátumot használjuk a kompatibilitás miatt
+            // De csak a nem üreseket küldjük el
+            let queryData = {};
+            formData.forEach(item => {
+                if (item.value) {
+                    if (item.name.endsWith('[]')) {
+                        let name = item.name;
+                        if (!queryData[name]) queryData[name] = [];
+                        queryData[name].push(item.value);
+                    } else {
+                        queryData[item.name] = item.value;
+                    }
+                }
+            });
+            if (sort !== defaultSort) queryData.sort = sort;
+            if (perPage !== defaultPerPage) queryData.per_page = perPage;
+            if (viewMode !== defaultViewMode) queryData.view_mode = viewMode;
+            if (page > 1) queryData.page = page;
+
+            $.get(this.currentUrl, queryData, function(res) {
                 $('#product-list-container').html(res.html).css('opacity', 1);
                 $('#pagination-container').html(res.pagination);
 
                 // History API update
-                const newUrl = window.location.pathname + '?' + params;
                 window.history.pushState({path: newUrl}, '', newUrl);
             });
         };
 
         $(document).on('change', '.js-filter-input, .js-sort-select, .js-per-page-select', function() {
+            self.currentPage = 1; // Szűréskor vissza az első oldalra
             loadProducts();
         });
 
@@ -172,15 +237,23 @@ const WebshopSite = {
 
         $(document).on('click', '.js-pagination-link', function(e) {
             e.preventDefault();
-            const page = $(this).data('page');
-            self.currentUrl = apiUrl + '?page=' + page;
+            self.currentPage = $(this).data('page');
             loadProducts();
             $('html, body').animate({ scrollTop: $(".ws-toolbar").offset().top - 100 }, 500);
         });
 
         $(document).on('click', '.js-filter-clear', function() {
             $('#ws-filter-form')[0].reset();
+            self.currentPage = 1;
             loadProducts();
+        });
+
+        // Kezdő oldalszám kinyerése az URL-ből, ha van
+        const initialBeauty = window.location.pathname.split(';');
+        initialBeauty.forEach(p => {
+            if (p.startsWith('page-')) {
+                self.currentPage = parseInt(p.split('-')[1]);
+            }
         });
 
         loadProducts(); // Initial load

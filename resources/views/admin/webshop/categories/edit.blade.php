@@ -8,9 +8,12 @@
         <form method="POST" action="{{ route('admin.webshop.categories.update', $category) }}" enctype="multipart/form-data">
             @csrf @method('PUT')
             @include('admin.webshop.categories.form')
-            <div class="text-center mt-3">
-                <button type="submit" class="btn btn-primary fs-18 font-weight-bold"><i class="fa fa-save"></i> Mentés</button>
-                <a href="{{ route('admin.webshop.categories.index') }}" class="btn btn-secondary">Vissza</a>
+
+            <div class="admin-save-box" style="left: 0">
+                <div class="admin-save-btn-container mx-auto">
+                    <button type="submit" class="btn btn-primary fs-18 font-weight-bold"><i class="fa fa-save"></i> Mentés</button>
+                    <a href="{{ route('admin.webshop.categories.index') }}" class="btn btn-secondary">Vissza</a>
+                </div>
             </div>
         </form>
     </div>
