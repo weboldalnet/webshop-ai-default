@@ -56,6 +56,19 @@ class WebshopCategory extends Model
         return $this->slug . '-c' . $this->id;
     }
 
+    public function resolveRouteBinding($value, $field = null)
+    {
+        if (preg_match('/-c(\d+)$/', $value, $matches)) {
+            return $this->where('id', $matches[1])->first() ?? abort(404);
+        }
+
+        return $this->where($field ?? $this->getRouteKeyName(), $value)
+            ->when(!$field && is_numeric($value), function($query) use ($value) {
+                $query->orWhere('id', $value);
+            })
+            ->first() ?? abort(404);
+    }
+
     public function parent() { return $this->belongsTo(self::class, 'parent_id'); }
     public function children() { return $this->hasMany(self::class, 'parent_id'); }
 

@@ -71,17 +71,7 @@ class WebshopCategoryController extends Controller
 
     private function resolveCategory($slug)
     {
-        // Ha van benne -cID (pl: kamerak-c3)
-        if (preg_match('/-c(\d+)$/', $slug, $matches)) {
-            return WebshopCategory::findOrFail($matches[1]);
-        }
-
-        // Egyébként slug vagy ID alapján
-        return WebshopCategory::where('slug', $slug)
-            ->when(is_numeric($slug), function($q) use ($slug) {
-                $q->orWhere('id', $slug);
-            })
-            ->firstOrFail();
+        return (new WebshopCategory())->resolveRouteBinding($slug);
     }
 
     private function parseBeautyUrl($categorySlug, Request $request)
