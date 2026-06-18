@@ -146,6 +146,15 @@ class WebshopCheckoutController extends Controller
                     ->with('warning', 'A rendelés létrejött, de a fizetés indítása sikertelen volt. Kérjük, próbálja újra.');
             }
 
+            // Email küldése
+            if ($order->customer_email) {
+                try {
+                    Mail::to($order->customer_email)->send(new WebshopOrderMail($order));
+                } catch (\Exception $e) {
+                    Log::error('Rendelés visszaigazoló email hiba: ' . $e->getMessage());
+                }
+            }
+
             return redirect()->route('site.webshop.checkout.success', $order)->with('success', 'Rendelés sikeresen leadva.');
         } catch (\Throwable $e) {
             Log::error('Checkout hiba: ' . $e->getMessage());
@@ -155,15 +164,6 @@ class WebshopCheckoutController extends Controller
 
     public function success(WebshopOrder $order)
     {
-        // Email küldése
-        if ($order->customer_email) {
-            try {
-                Mail::to($order->customer_email)->send(new WebshopOrderMail($order));
-            } catch (\Exception $e) {
-                Log::error('Rendelés visszaigazoló email hiba: ' . $e->getMessage());
-            }
-        }
-
         $customContent = WebshopContentService::getContent('thank_you', $order);
         $showPrices = WebshopSettingsService::getBool('site_show_prices', true);
 

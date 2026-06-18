@@ -32,52 +32,59 @@
                             <div class="mt-4 mb-5 text-left mx-auto" style="max-width:800px;">
                                 <h4 class="font-weight-bold border-bottom pb-2 mb-3">Termékek</h4>
                                 <div class="table-responsive">
-                                    <table class="table table-sm">
+                                    <table class="table ">
                                         <thead>
-                                            <tr>
-                                                <th></th>
-                                                <th>Termék</th>
-                                                @if($showPrices && $order->total_price > 0)
-                                                    <th class="text-right">Egységár</th>
-                                                @endif
-                                                <th class="text-center">Mennyiség</th>
-                                                @if($showPrices && $order->total_price > 0)
-                                                    <th class="text-right">Sorösszeg</th>
-                                                @endif
-                                            </tr>
+                                        <tr>
+                                            <th></th>
+                                            <th>Termék</th>
+                                            @if($showPrices && $order->total_price > 0)
+                                                <th class="text-right">Egységár</th>
+                                            @endif
+                                            <th class="text-center">Mennyiség</th>
+                                            @if($showPrices && $order->total_price > 0)
+                                                <th class="text-right">Sorösszeg</th>
+                                            @endif
+                                        </tr>
                                         </thead>
                                         <tbody>
-                                            @foreach($order->items as $item)
-                                                <tr>
-                                                    <td class="" style="width: 100px;">
-                                                        @if($item->product && $item->product->primary_image_thumb)
-                                                            <img src="{{ $item->product->primary_image_thumb }}" class="img-fluid mr-2"
-                                                                 style=" width: 80px;">
-                                                        @endif
-                                                    </td>
-                                                    <td class="align-middle">
-                                                        <span class="fw-600">{{ $item->product_name }}</span>
-                                                    </td>
-                                                    @if($showPrices && $order->total_price > 0)
-                                                        <td class="text-right align-middle">{{ number_format($item->unit_price, 0, '.', ' ') }} {{ $order->currency }}</td>
+                                        @foreach($order->items as $item)
+                                            <tr>
+                                                <td class="py-1" style="width: 100px;">
+                                                    @if($item->product && $item->product->primary_image_thumb)
+                                                        <img src="{{ $item->product->primary_image_thumb }}" class=""
+                                                             style=" width: 80px;">
                                                     @endif
-                                                    <td class="text-center align-middle">{{ $item->quantity }} db</td>
-                                                    @if($showPrices && $order->total_price > 0)
-                                                        <td class="text-right align-middle">{{ number_format($item->total_price, 0, '.', ' ') }} {{ $order->currency }}</td>
-                                                    @endif
-                                                </tr>
-                                            @endforeach
+                                                </td>
+                                                <td class="align-middle">
+                                                    <span class="fw-600">{{ $item->product_name }}</span>
+
+                                                </td>
+                                                @if($showPrices && $order->total_price > 0)
+                                                    <td class="text-right align-middle ws-nowrap">{{ number_format($item->unit_price, 0, '.', ' ') }} {{ $order->currency }}</td>
+                                                @endif
+                                                <td class="text-center align-middle">{{ $item->quantity }} db</td>
+                                                @if($showPrices && $order->total_price > 0)
+                                                    <td class="text-right align-middle ws-nowrap fw-600">{{ number_format($item->total_price, 0, '.', ' ') }} {{ $order->currency }}</td>
+                                                @endif
+                                            </tr>
+                                        @endforeach
                                         </tbody>
                                         @if($showPrices && $order->total_price > 0)
-                                            <tfoot>
-                                                <tr class="font-weight-bold fs-18">
-                                                    <td colspan="{{ $showPrices ? 4 : 3 }}" class="text-right">Összesen:</td>
-                                                    <td class="text-right text-primary">{{ number_format($order->total_price, 0, '.', ' ') }} {{ $order->currency }}</td>
-                                                </tr>
+                                            <tfoot class="">
+                                            <tr class="font-weight-bold fs-18 d-none d-lg-table-row">
+                                                <td colspan="{{ $showPrices ? 4 : 3 }}" class="text-right">Összesen:</td>
+                                                <td class="text-right text-primary ws-nowrap">{{ number_format($order->total_price, 0, '.', ' ') }} {{ $order->currency }}</td>
+                                            </tr>
                                             </tfoot>
                                         @endif
                                     </table>
                                 </div>
+
+                                @if($showPrices && $order->total_price > 0)
+                                    <div class="font-weight-bold fs-20 mt-3 d-lg-none d-block">
+                                        <span>Összesen: </span> <span class="text-primary ws-nowrap">{{ number_format($order->total_price, 0, '.', ' ') }} {{ $order->currency }}</span>
+                                    </div>
+                                @endif
                             </div>
 
                             <a href="{{ route('site.webshop.categories.index') }}" class="btn btn-primary btn-lg px-5 font-weight-bold">

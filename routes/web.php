@@ -8,6 +8,7 @@ use Weboldalnet\WebshopAiDefault\Http\Controllers\Admin\Webshop\WebshopProductLa
 use Weboldalnet\WebshopAiDefault\Http\Controllers\Admin\Webshop\WebshopProductReviewController;
 use Weboldalnet\WebshopAiDefault\Http\Controllers\Admin\Webshop\WebshopOrderController;
 use Weboldalnet\WebshopAiDefault\Http\Controllers\Admin\Webshop\WebshopSettingController;
+use Weboldalnet\WebshopAiDefault\Http\Controllers\Admin\Webshop\WebshopExtraSettingController;
 use Weboldalnet\WebshopAiDefault\Http\Controllers\Site\Webshop\WebshopCategoryController as SiteCategoryController;
 use Weboldalnet\WebshopAiDefault\Http\Controllers\Site\Webshop\WebshopProductController as SiteProductController;
 use Weboldalnet\WebshopAiDefault\Http\Controllers\Site\Webshop\WebshopCartController;
@@ -147,21 +148,21 @@ Route::middleware('web')->group(function () {
 
             // Extra Beállítások (Webshop beállítások menüpont)
             Route::prefix('extra-settings')->name('extra-settings.')->group(function () {
-                Route::get('/', [\Weboldalnet\WebshopAiDefault\Http\Controllers\Admin\Webshop\WebshopExtraSettingController::class, 'index'])->name('index');
+                Route::get('/', [WebshopExtraSettingController::class, 'index'])->name('index');
 
                 // Email és Köszönjük oldal szerkesztése
-                Route::get('/custom-contents', [\Weboldalnet\WebshopAiDefault\Http\Controllers\Admin\Webshop\WebshopExtraSettingController::class, 'customContents'])->name('custom-contents.index');
-                Route::post('/custom-contents', [\Weboldalnet\WebshopAiDefault\Http\Controllers\Admin\Webshop\WebshopExtraSettingController::class, 'storeCustomContent'])->name('custom-contents.store');
+                Route::get('/custom-contents', [WebshopExtraSettingController::class, 'customContents'])->name('custom-contents.index');
+                Route::post('/custom-contents', [WebshopExtraSettingController::class, 'storeCustomContent'])->name('custom-contents.store');
 
                 // Checkout Dokumentumok
-                Route::get('/documents', [\Weboldalnet\WebshopAiDefault\Http\Controllers\Admin\Webshop\WebshopExtraSettingController::class, 'documents'])->name('documents.index');
-                Route::post('/documents', [\Weboldalnet\WebshopAiDefault\Http\Controllers\Admin\Webshop\WebshopExtraSettingController::class, 'storeDocument'])->name('documents.store');
+                Route::get('/documents', [WebshopExtraSettingController::class, 'documents'])->name('documents.index');
+                Route::post('/documents', [WebshopExtraSettingController::class, 'storeDocument'])->name('documents.store');
 
                 // Mérési scriptek
-                Route::get('/scripts', [\Weboldalnet\WebshopAiDefault\Http\Controllers\Admin\Webshop\WebshopExtraSettingController::class, 'scripts'])->name('scripts.index');
-                Route::post('/scripts', [\Weboldalnet\WebshopAiDefault\Http\Controllers\Admin\Webshop\WebshopExtraSettingController::class, 'storeScript'])->name('scripts.store');
-                Route::put('/scripts/{script}', [\Weboldalnet\WebshopAiDefault\Http\Controllers\Admin\Webshop\WebshopExtraSettingController::class, 'updateScript'])->name('scripts.update');
-                Route::delete('/scripts/{script}', [\Weboldalnet\WebshopAiDefault\Http\Controllers\Admin\Webshop\WebshopExtraSettingController::class, 'destroyScript'])->name('scripts.destroy');
+                Route::get('/scripts', [WebshopExtraSettingController::class, 'scripts'])->name('scripts.index');
+                Route::post('/scripts', [WebshopExtraSettingController::class, 'storeScript'])->name('scripts.store');
+                Route::put('/scripts/{script}', [WebshopExtraSettingController::class, 'updateScript'])->name('scripts.update');
+                Route::delete('/scripts/{script}', [WebshopExtraSettingController::class, 'destroyScript'])->name('scripts.destroy');
             });
         });
 });
