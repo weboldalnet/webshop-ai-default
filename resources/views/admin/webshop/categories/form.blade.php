@@ -170,7 +170,7 @@
 
                             {{-- Alapértelmezett 1-es szélességű képmetsző --}}
                             <div class="mb-4">
-                                @if($category->list_image_cropped_path)
+                                @if($isEdit && $category->list_image_cropped_path)
                                     <img src="{{ $category->list_image_cropped_path }}" class="img-fluid mb-2 mx-auto" style="max-height: 150px">
                                 @endif
                                 @include('admin.elements.commons.img-crop-object-input', [
@@ -187,7 +187,7 @@
                             {{-- Szélesebb képmetszők (csak akkor jelennek meg, ha card_width_units > 1) --}}
                             @for($i = 2; $i <= 4; $i++)
                                 <div class="js-wide-crop js-wide-crop-{{ $i }}" style="display:none">
-                                    @if($category->list_image_cropped_path_wide)
+                                    @if($isEdit && $category->list_image_cropped_path_wide)
                                         <img src="{{ $category->list_image_cropped_path_wide }}" class="img-fluid mb-2" style="max-height: 150px">
                                     @endif
                                     @include('admin.elements.commons.img-crop-object-input', [
