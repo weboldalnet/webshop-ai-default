@@ -33,6 +33,22 @@
                                    @if(($ws['category_product_card_properties_enabled'] ?? 'false') === 'true') checked @endif>
                             <label class="custom-control-label" for="category_product_card_properties_enabled">Termékkártyán megjelenő tulajdonság kategóriák engedélyezése</label>
                         </div>
+                        <hr>
+                        <div class="custom-control custom-switch mb-3">
+                            <input type="checkbox" class="custom-control-input" id="category_sizing_enabled" name="category_sizing_enabled"
+                                   @if(($ws['category_sizing_enabled'] ?? 'false') === 'true') checked @endif>
+                            <label class="custom-control-label" for="category_sizing_enabled">Termék kategória méretezése</label>
+                        </div>
+                        <div class="custom-control custom-switch mb-3">
+                            <input type="checkbox" class="custom-control-input" id="category_list_image_enabled" name="category_list_image_enabled"
+                                   @if(($ws['category_list_image_enabled'] ?? 'false') === 'true') checked @endif>
+                            <label class="custom-control-label" for="category_list_image_enabled">Termék kategória listakép</label>
+                        </div>
+                        <div class="custom-control custom-switch mb-3">
+                            <input type="checkbox" class="custom-control-input" id="category_merchant_feed_enabled" name="category_merchant_feed_enabled"
+                                   @if(($ws['category_merchant_feed_enabled'] ?? 'false') === 'true') checked @endif>
+                            <label class="custom-control-label" for="category_merchant_feed_enabled">Google és Facebook merchant feed</label>
+                        </div>
                     </div>
                 </div>
 
@@ -69,6 +85,33 @@
                                    @if(($ws['product_variations_enabled'] ?? 'false') === 'true') checked @endif>
                             <label class="custom-control-label" for="product_variations_enabled">Variációs termékek engedélyezése</label>
                         </div>
+                        <hr>
+                        <div class="custom-control custom-switch mb-3">
+                            <input type="checkbox" class="custom-control-input" id="product_extra_gallery_enabled" name="product_extra_gallery_enabled"
+                                   @if(($ws['product_extra_gallery_enabled'] ?? 'false') === 'true') checked @endif>
+                            <label class="custom-control-label" for="product_extra_gallery_enabled">Extra látvány galéria</label>
+                        </div>
+                        <div class="custom-control custom-switch mb-3">
+                            <input type="checkbox" class="custom-control-input" id="product_document_upload_enabled" name="product_document_upload_enabled"
+                                   @if(($ws['product_document_upload_enabled'] ?? 'false') === 'true') checked @endif>
+                            <label class="custom-control-label" for="product_document_upload_enabled">Dokumentum feltöltés</label>
+                        </div>
+                        <div class="custom-control custom-switch mb-3">
+                            <input type="checkbox" class="custom-control-input" id="product_secondary_name_enabled" name="product_secondary_name_enabled"
+                                   @if(($ws['product_secondary_name_enabled'] ?? 'false') === 'true') checked @endif>
+                            <label class="custom-control-label" for="product_secondary_name_enabled">Termék másodlagos név</label>
+                        </div>
+                        <div class="custom-control custom-switch mb-3">
+                            <input type="checkbox" class="custom-control-input" id="product_short_desc_instead_of_properties_enabled" name="product_short_desc_instead_of_properties_enabled"
+                                   @if(($ws['product_short_desc_instead_of_properties_enabled'] ?? 'false') === 'true') checked @endif>
+                            <label class="custom-control-label" for="product_short_desc_instead_of_properties_enabled">Rövid leírás tulajdonságok helyett</label>
+                        </div>
+                        <div class="custom-control custom-switch mb-3">
+                            <input type="checkbox" class="custom-control-input" id="product_crm_id_enabled" name="product_crm_id_enabled"
+                                   @if(($ws['product_crm_id_enabled'] ?? 'false') === 'true') checked @endif>
+                            <label class="custom-control-label" for="product_crm_id_enabled">CRM azonosító megadása</label>
+                        </div>
+
                         <div class="form-group">
                             <label for="admin_product_primary_image_mode">Termék elsődleges kép feltöltési módja</label>
                             <select class="form-control" id="admin_product_primary_image_mode" name="admin_product_primary_image_mode">
@@ -87,6 +130,11 @@
                 <div class="col-lg-6 mb-3">
                     <h2 class="header-box product-info">Site Kategória beállítások</h2>
                     <div class="content-box bordered">
+                        <div class="custom-control custom-switch mb-3">
+                            <input type="checkbox" class="custom-control-input" id="site_home_page_editor_enabled" name="site_home_page_editor_enabled"
+                                   @if(($ws['site_home_page_editor_enabled'] ?? 'false') === 'true') checked @endif>
+                            <label class="custom-control-label" for="site_home_page_editor_enabled">Főoldal szerkesztő</label>
+                        </div>
                         <div class="custom-control custom-switch mb-3">
                             <input type="checkbox" class="custom-control-input" id="site_category_view_switcher_enabled" name="site_category_view_switcher_enabled"
                                    @if(($ws['site_category_view_switcher_enabled'] ?? 'false') === 'true') checked @endif>
@@ -142,6 +190,75 @@
                                 <option value="quote" @if(($ws['site_checkout_mode'] ?? 'order') == 'quote') selected @endif>Ajánlatkérés</option>
                             </select>
                         </div>
+
+                        {{-- Rendelés leadása módban megjelenő extra beállítások --}}
+                        <div id="checkout-order-settings" @if(($ws['site_checkout_mode'] ?? 'order') != 'order') style="display:none;" @endif>
+                            <hr class="my-3">
+
+                            {{-- Fizetési lehetőségek --}}
+                            <div class="custom-control custom-switch mb-2">
+                                <input type="checkbox" class="custom-control-input" id="site_checkout_payment_options_enabled" name="site_checkout_payment_options_enabled"
+                                       @if(($ws['site_checkout_payment_options_enabled'] ?? 'false') === 'true') checked @endif>
+                                <label class="custom-control-label fw-600" for="site_checkout_payment_options_enabled"><strong>Fizetési lehetőségek</strong></label>
+                            </div>
+                            <div id="checkout-payment-options-settings" @if(($ws['site_checkout_payment_options_enabled'] ?? 'false') !== 'true') style="display:none;" @endif>
+                                <p class="text-muted small mb-2">Válaszd ki, mely fizetési módok jelenjenek meg a site oldalon:</p>
+                                <div class="pl-3">
+                                    <div class="custom-control custom-checkbox mb-2">
+                                        <input type="checkbox" class="custom-control-input" id="site_checkout_payment_online_enabled" name="site_checkout_payment_online_enabled"
+                                               @if(($ws['site_checkout_payment_online_enabled'] ?? 'false') === 'true') checked @endif>
+                                        <label class="custom-control-label" for="site_checkout_payment_online_enabled">Online fizetés</label>
+                                    </div>
+                                    <div class="custom-control custom-checkbox mb-2">
+                                        <input type="checkbox" class="custom-control-input" id="site_checkout_payment_cod_enabled" name="site_checkout_payment_cod_enabled"
+                                               @if(($ws['site_checkout_payment_cod_enabled'] ?? 'false') === 'true') checked @endif>
+                                        <label class="custom-control-label" for="site_checkout_payment_cod_enabled">Utánvét</label>
+                                    </div>
+                                    <div class="custom-control custom-checkbox mb-2">
+                                        <input type="checkbox" class="custom-control-input" id="site_checkout_payment_bank_transfer_enabled" name="site_checkout_payment_bank_transfer_enabled"
+                                               @if(($ws['site_checkout_payment_bank_transfer_enabled'] ?? 'false') === 'true') checked @endif>
+                                        <label class="custom-control-label" for="site_checkout_payment_bank_transfer_enabled">Előre utalással</label>
+                                    </div>
+                                    <div class="custom-control custom-checkbox mb-2">
+                                        <input type="checkbox" class="custom-control-input" id="site_checkout_payment_on_site_enabled" name="site_checkout_payment_on_site_enabled"
+                                               @if(($ws['site_checkout_payment_on_site_enabled'] ?? 'false') === 'true') checked @endif>
+                                        <label class="custom-control-label" for="site_checkout_payment_on_site_enabled">Fizetés a helyszínen <small class="text-muted">(személyes átvételnél jelenik meg)</small></label>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <hr class="my-3">
+
+                            {{-- Szállítási lehetőségek --}}
+                            <div class="custom-control custom-switch mb-2">
+                                <input type="checkbox" class="custom-control-input" id="site_checkout_shipping_options_enabled" name="site_checkout_shipping_options_enabled"
+                                       @if(($ws['site_checkout_shipping_options_enabled'] ?? 'false') === 'true') checked @endif>
+                                <label class="custom-control-label fw-600" for="site_checkout_shipping_options_enabled"><strong>Szállítási lehetőségek</strong></label>
+                            </div>
+                            <div id="checkout-shipping-options-settings" @if(($ws['site_checkout_shipping_options_enabled'] ?? 'false') !== 'true') style="display:none;" @endif>
+                                <p class="text-muted small mb-2">Válaszd ki, mely szállítási módok jelenjenek meg a site oldalon:</p>
+                                <div class="pl-3">
+                                    <div class="custom-control custom-checkbox mb-2">
+                                        <input type="checkbox" class="custom-control-input" id="site_checkout_shipping_home_delivery_enabled" name="site_checkout_shipping_home_delivery_enabled"
+                                               @if(($ws['site_checkout_shipping_home_delivery_enabled'] ?? 'false') === 'true') checked @endif>
+                                        <label class="custom-control-label" for="site_checkout_shipping_home_delivery_enabled">Házhoz szállítás</label>
+                                    </div>
+                                    <div class="custom-control custom-checkbox mb-2">
+                                        <input type="checkbox" class="custom-control-input" id="site_checkout_shipping_parcel_locker_enabled" name="site_checkout_shipping_parcel_locker_enabled"
+                                               @if(($ws['site_checkout_shipping_parcel_locker_enabled'] ?? 'false') === 'true') checked @endif>
+                                        <label class="custom-control-label" for="site_checkout_shipping_parcel_locker_enabled">Csomagpont automata</label>
+                                    </div>
+                                    <div class="custom-control custom-checkbox mb-2">
+                                        <input type="checkbox" class="custom-control-input" id="site_checkout_shipping_pickup_enabled" name="site_checkout_shipping_pickup_enabled"
+                                               @if(($ws['site_checkout_shipping_pickup_enabled'] ?? 'false') === 'true') checked @endif>
+                                        <label class="custom-control-label" for="site_checkout_shipping_pickup_enabled">Személyes átvétel</label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <hr class="my-3">
+                        <p class="text-muted small mb-2">Kötelező és opcionális checkout mezők:</p>
                         <div class="row">
                             <div class="col-md-6">
                                 <div class="custom-control custom-checkbox mb-2">
@@ -194,4 +311,34 @@
         </form>
     </div>
     <link rel="stylesheet" href="/packages/webshop/admin/css/webshop-admin.css">
+    <script>
+        (function() {
+            function toggleCheckoutOrderSettings() {
+                var mode = document.getElementById('site_checkout_mode').value;
+                var block = document.getElementById('checkout-order-settings');
+                if (block) block.style.display = (mode === 'order') ? '' : 'none';
+            }
+            function togglePaymentOptionsSettings() {
+                var cb = document.getElementById('site_checkout_payment_options_enabled');
+                var block = document.getElementById('checkout-payment-options-settings');
+                if (block) block.style.display = cb && cb.checked ? '' : 'none';
+            }
+            function toggleShippingOptionsSettings() {
+                var cb = document.getElementById('site_checkout_shipping_options_enabled');
+                var block = document.getElementById('checkout-shipping-options-settings');
+                if (block) block.style.display = cb && cb.checked ? '' : 'none';
+            }
+
+            document.addEventListener('DOMContentLoaded', function() {
+                var modeSelect = document.getElementById('site_checkout_mode');
+                if (modeSelect) modeSelect.addEventListener('change', toggleCheckoutOrderSettings);
+
+                var payOptCb = document.getElementById('site_checkout_payment_options_enabled');
+                if (payOptCb) payOptCb.addEventListener('change', togglePaymentOptionsSettings);
+
+                var shipOptCb = document.getElementById('site_checkout_shipping_options_enabled');
+                if (shipOptCb) shipOptCb.addEventListener('change', toggleShippingOptionsSettings);
+            });
+        })();
+    </script>
 @endsection

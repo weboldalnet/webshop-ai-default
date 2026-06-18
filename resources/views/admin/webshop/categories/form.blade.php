@@ -1,4 +1,5 @@
 @php
+    /** @var \Weboldalnet\WebshopAiDefault\Models\WebshopCategory $category */
     $isEdit = isset($category) && $category;
     $selectedPropCats = $isEdit ? $category->propertyCategories->pluck('id')->toArray() : [];
     $showOnCardIds = $isEdit ? $category->propertyCategories->where('pivot.show_on_product_card', true)->pluck('id')->toArray() : [];
@@ -50,9 +51,7 @@
             </div>
         </div>
     </div>
-</div>
 
-<div class="row">
     <div class="col-lg-6 mb-3">
         <h3 class="header-box product-info">Termékkép méretek (metszéshez)</h3>
         <div class="content-box bordered">
@@ -74,43 +73,161 @@
             </div>
         </div>
     </div>
-</div>
 
-@if(($ws['category_parent_enabled'] ?? 'false') === 'true')
-<div class="row">
-    <div class="col-lg-6 mb-3">
-        <h3 class="header-box product-info">Szülő kategória</h3>
-        <div class="content-box bordered">
-            <div class="form-group">
-                <label for="parent_id">Szülő kategória</label>
-                <select class="form-control" id="parent_id" name="parent_id">
-                    <option value="">-- Nincs --</option>
-                    @foreach($allCategories as $cat)
-                        <option value="{{ $cat->id }}" @if(old('parent_id', $isEdit ? $category->parent_id : '') == $cat->id) selected @endif>{{ $cat->hierarchical_name }}</option>
-                    @endforeach
-                </select>
+    @if(($ws['category_parent_enabled'] ?? 'false') === 'true')
+        <div class="col-lg-6 mb-3">
+            <h3 class="header-box product-info">Szülő kategória</h3>
+            <div class="content-box bordered">
+                <div class="form-group">
+                    <label for="parent_id">Szülő kategória</label>
+                    <select class="form-control" id="parent_id" name="parent_id">
+                        <option value="">-- Nincs --</option>
+                        @foreach($allCategories as $cat)
+                            <option value="{{ $cat->id }}" @if(old('parent_id', $isEdit ? $category->parent_id : '') == $cat->id) selected @endif>{{ $cat->hierarchical_name }}</option>
+                        @endforeach
+                    </select>
+                </div>
             </div>
         </div>
-    </div>
-</div>
-@endif
+    @endif
 
-@if(($ws['category_icon_enabled'] ?? 'false') === 'true')
-<div class="row">
-    <div class="col-lg-6 mb-3">
-        <h3 class="header-box product-info">Ikon</h3>
-        <div class="content-box bordered">
-            @if($isEdit && $category->icon)
-                <div class="mb-2"><img src="{{ $category->icon }}" style="max-height:60px"></div>
-            @endif
-            <div class="form-group">
-                <label for="icon_file">Ikon (SVG/PNG)</label>
-                <input type="file" class="form-control-file" id="icon_file" name="icon_file" accept=".svg,.png">
+    @if(($ws['category_icon_enabled'] ?? 'false') === 'true')
+        <div class="col-lg-6 mb-3">
+            <h3 class="header-box product-info">Ikon</h3>
+            <div class="content-box bordered">
+                @if($isEdit && $category->icon)
+                    <div class="mb-2"><img src="{{ $category->icon }}" style="max-height:60px"></div>
+                @endif
+                <div class="form-group">
+                    <label for="icon_file">Ikon (SVG/PNG)</label>
+                    <input type="file" class="form-control-file" id="icon_file" name="icon_file" accept=".svg,.png">
+                </div>
             </div>
         </div>
-    </div>
+    @endif
+
+
+    @if(($ws['category_sizing_enabled'] ?? 'false') === 'true')
+        <div class="col-lg-6 mb-3">
+            <h3 class="header-box product-info">Kategória kártya mérete</h3>
+            <div class="content-box bordered">
+                <div class="form-group">
+                    <label for="card_width_units">Kártya szélessége (egység)</label>
+                    <select class="form-control" id="card_width_units" name="card_width_units">
+                        @for($i=1; $i<=4; $i++)
+                            <option value="{{ $i }}" @if(old('card_width_units', $isEdit ? $category->card_width_units : 1) == $i) selected @endif>{{ $i }} egység</option>
+                        @endfor
+                    </select>
+                    <small class="form-text text-muted">A kategória listaoldalon ennyi egység széles lesz a kategória kártyája.</small>
+                </div>
+            </div>
+        </div>
+    @endif
+
+    @if(($ws['category_list_image_enabled'] ?? 'false') === 'true')
+        <div class="col-lg-6 mb-3">
+            <h3 class="header-box product-info">Kategória listakép</h3>
+            <div class="content-box bordered">
+                <div class="row">
+                    <div class="col-lg-12">
+                        <div class="form-group">
+                            <label for="list_image_mode">Kategória kép kiválasztása</label>
+                            <select class="form-control js-category-image-mode" id="list_image_mode" name="list_image_mode">
+                                @if(($ws['category_icon_enabled'] ?? 'false') === 'true')
+                                    <option value="icon" @if(old('list_image_mode', $isEdit ? $category->list_image_mode : 'cropped_upload') == 'icon') selected @endif>Az ikon jelenik meg</option>
+                                @endif
+                                <option value="product_image" @if(old('list_image_mode', $isEdit ? $category->list_image_mode : 'cropped_upload') == 'product_image') selected @endif>A kategóriához tartozó termékkép jelenik meg</option>
+                                <option value="upload" @if(old('list_image_mode', $isEdit ? $category->list_image_mode : 'cropped_upload') == 'upload') selected @endif>Képfeltöltés</option>
+                                <option value="cropped_upload" @if(old('list_image_mode', $isEdit ? $category->list_image_mode : 'cropped_upload') == 'cropped_upload') selected @endif>Képfeltöltés képmetszővel</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group js-mode-product_image" style="display:none">
+                            <label for="list_image_product_id">Válaszd ki a terméket</label>
+                            <input type="text" class="form-control js-cat-product-search" list="cat-products-list" placeholder="Keress a kategória termékei között..." value="{{ $isEdit && $category->listImageProduct ? $category->listImageProduct->name : '' }}">
+                            <datalist id="cat-products-list">
+                                @if($isEdit)
+                                    @foreach($category->products as $p)
+                                        <option value="{{ $p->name }}" data-id="{{ $p->id }}"></option>
+                                    @endforeach
+                                @endif
+                            </datalist>
+                            <input type="hidden" name="list_image_product_id" class="js-cat-product-id" value="{{ old('list_image_product_id', $isEdit ? $category->list_image_product_id : '') }}">
+                        </div>
+
+                        <div class="form-group js-mode-upload" style="display:none">
+                            @if($isEdit && $category->list_image_path)
+                                <div class="mb-2"><img src="{{ $category->list_image_path }}" class="img-fluid" style="max-height: 150px"></div>
+                            @endif
+                            <label for="list_image_upload">Kép feltöltése</label>
+                            <input type="file" class="form-control-file" id="list_image_upload" name="list_image_upload" accept="image/*">
+                        </div>
+
+                        <div class="form-group js-mode-cropped_upload" style="display:none">
+                            @php
+                                $cropSizes = config('webshop.category_list_image_crop_sizes');
+                            @endphp
+
+                            {{-- Alapértelmezett 1-es szélességű képmetsző --}}
+                            <div class="mb-4">
+                                @if($category->list_image_cropped_path)
+                                    <img src="{{ $category->list_image_cropped_path }}" class="img-fluid mb-2 mx-auto" style="max-height: 150px">
+                                @endif
+                                @include('admin.elements.commons.img-crop-object-input', [
+                                    'object' => $category,
+                                    'label' => 'Vágott kép feltöltése (1 egység szélesség)',
+                                    'variable' => 'list_image_cropped_upload',
+                                    'fieldName' => 'list_image_cropped_upload',
+                                    'pathVariable' => 'list_image_cropped_path',
+                                    'imgWidth' => $cropSizes[1]['width'] ?? 400,
+                                    'imgHeight' => $cropSizes[1]['height'] ?? 300,
+                                ])
+                            </div>
+
+                            {{-- Szélesebb képmetszők (csak akkor jelennek meg, ha card_width_units > 1) --}}
+                            @for($i = 2; $i <= 4; $i++)
+                                <div class="js-wide-crop js-wide-crop-{{ $i }}" style="display:none">
+                                    @if($category->list_image_cropped_path_wide)
+                                        <img src="{{ $category->list_image_cropped_path_wide }}" class="img-fluid mb-2" style="max-height: 150px">
+                                    @endif
+                                    @include('admin.elements.commons.img-crop-object-input', [
+                                        'object' => $category,
+                                        'label' => 'Vágott kép feltöltése (' . $i . ' egység szélesség)',
+                                        'variable' => 'list_image_cropped_upload_wide',
+                                        'fieldName' => 'list_image_cropped_upload_wide',
+                                        'pathVariable' => 'list_image_cropped_path_wide',
+                                        'imgWidth' => $cropSizes[$i]['width'] ?? (400 * $i),
+                                        'imgHeight' => $cropSizes[$i]['height'] ?? 300,
+                                    ])
+                                </div>
+                            @endfor
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    @endif
+
+    @if(($ws['category_merchant_feed_enabled'] ?? 'false') === 'true')
+        <div class="col-lg-6 mb-3">
+            <h3 class="header-box product-info">Merchant Feed</h3>
+            <div class="content-box bordered">
+                <div class="form-group">
+                    <label for="google_merchant_id">Google Merchant ID</label>
+                    <input type="text" class="form-control" id="google_merchant_id" name="google_merchant_id" value="{{ old('google_merchant_id', $isEdit ? $category->google_merchant_id : '') }}">
+                </div>
+                <div class="form-group">
+                    <label for="facebook_merchant_id">Facebook Merchant ID</label>
+                    <input type="text" class="form-control" id="facebook_merchant_id" name="facebook_merchant_id" value="{{ old('facebook_merchant_id', $isEdit ? $category->facebook_merchant_id : '') }}">
+                </div>
+            </div>
+        </div>
+    @endif
+
+
 </div>
-@endif
+
+
 
 <div class="row">
     <div class="col-lg-6 mb-3">
@@ -150,3 +267,45 @@
     </div>
     @endif
 </div>
+
+@if(($ws['category_list_image_enabled'] ?? 'false') === 'true')
+    <script>
+        $(document).ready(function() {
+            function updateImageMode() {
+                var mode = $('.js-category-image-mode').val();
+                $('.js-mode-product_image, .js-mode-upload, .js-mode-cropped_upload').hide();
+                $('.js-mode-' + mode).show();
+                updateWideCropVisibility();
+            }
+
+            function updateWideCropVisibility() {
+                var units = $('#card_width_units').val();
+                var mode = $('.js-category-image-mode').val();
+
+                $('.js-wide-crop').hide().find('input, select, textarea').prop('disabled', true);
+
+                if (mode === 'cropped_upload' && units > 1) {
+                    $('.js-wide-crop-' + units).show().find('input, select, textarea').prop('disabled', false);
+                }
+            }
+
+            $('.js-category-image-mode').on('change', updateImageMode);
+            $('#card_width_units').on('change', updateWideCropVisibility);
+
+            updateImageMode();
+
+            $(document).on('input', '.js-cat-product-search', function () {
+                var val = $(this).val();
+                var $list = $('#cat-products-list');
+                var $option = $list.find('option').filter(function() {
+                    return $(this).val() === val;
+                });
+                if ($option.length) {
+                    $('.js-cat-product-id').val($option.data('id'));
+                } else {
+                    $('.js-cat-product-id').val('');
+                }
+            });
+        });
+    </script>
+@endif

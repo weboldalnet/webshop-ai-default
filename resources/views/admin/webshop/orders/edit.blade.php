@@ -132,6 +132,115 @@
                 </div>
             </div>
 
+            <!-- Commerce blokkok (Fizetés / Számla / Szállítás) -->
+            @if($order->payment_method || $order->payment_status !== 'unpaid' || $order->shipping_method)
+            <div class="row mt-2">
+                <!-- Fizetés blokk -->
+                <div class="col-lg-4 mb-4">
+                    <h3 class="header-box product-info mb-3"><i class="fa fa-credit-card mr-1"></i> Fizetés</h3>
+                    <div class="content-box bordered h-100">
+                        <dl class="row mb-1">
+                            @if($order->payment_method)
+                                <dt class="col-6 small text-muted">Fizetési mód:</dt>
+                                <dd class="col-6 small">{{ $order->payment_method }}</dd>
+                            @endif
+                            <dt class="col-6 small text-muted">Fizetési státusz:</dt>
+                            <dd class="col-6 small">
+                                @php $ps = $order->payment_status; @endphp
+                                <span class="badge badge-{{ $ps === 'paid' ? 'success' : ($ps === 'failed' ? 'danger' : ($ps === 'cancelled' ? 'warning' : 'secondary')) }}">
+                                    {{ $order->payment_status_label }}
+                                </span>
+                            </dd>
+                            @if($order->paid_at)
+                                <dt class="col-6 small text-muted">Fizetve:</dt>
+                                <dd class="col-6 small">{{ $order->paid_at->format('Y.m.d H:i') }}</dd>
+                            @endif
+                            @if($order->commerce_payment_transaction_id)
+                                <dt class="col-6 small text-muted">Tranzakció ID:</dt>
+                                <dd class="col-6 small">#{{ $order->commerce_payment_transaction_id }}</dd>
+                            @endif
+                        </dl>
+                        @if(in_array($order->payment_status, ['unpaid', 'pending', 'failed']))
+                            <form method="POST" action="{{ route('admin.webshop.orders.mark-paid', $order) }}" class="mt-2">
+                                @csrf @method('PATCH')
+                                <button type="submit" class="btn btn-sm btn-success w-100" onclick="return confirm('Biztosan manuálisan fizetettre állítja?')">
+                                    <i class="fa fa-check mr-1"></i> Manuálisan fizetve
+                                </button>
+                            </form>
+                        @endif
+                    </div>
+                </div>
+
+                <!-- Számla blokk -->
+                <div class="col-lg-4 mb-4">
+                    <h3 class="header-box product-info mb-3"><i class="fa fa-file-invoice mr-1"></i> Számla</h3>
+                    <div class="content-box bordered h-100">
+                        <dl class="row mb-1">
+                            <dt class="col-6 small text-muted">Számla státusz:</dt>
+                            <dd class="col-6 small">
+                                @php $is = $order->invoice_status; @endphp
+                                <span class="badge badge-{{ $is === 'invoiced' ? 'success' : ($is === 'failed' ? 'danger' : 'secondary') }}">
+                                    {{ $order->invoice_status_label }}
+                                </span>
+                            </dd>
+                            @if($order->invoiced_at)
+                                <dt class="col-6 small text-muted">Számlázva:</dt>
+                                <dd class="col-6 small">{{ $order->invoiced_at->format('Y.m.d H:i') }}</dd>
+                            @endif
+                            @if($order->commerce_invoice_document_id)
+                                <dt class="col-6 small text-muted">Bizonylat ID:</dt>
+                                <dd class="col-6 small">#{{ $order->commerce_invoice_document_id }}</dd>
+                            @endif
+                        </dl>
+                        @if(in_array($order->invoice_status, ['not_required', 'failed', 'pending']))
+                            <form method="POST" action="{{ route('admin.webshop.orders.create-invoice', $order) }}" class="mt-2">
+                                @csrf @method('POST')
+                                <button type="submit" class="btn btn-sm btn-outline-primary w-100" onclick="return confirm('Számlát kíván készíteni ehhez a rendeléshez?')">
+                                    <i class="fa fa-file-invoice mr-1"></i> Számla készítése
+                                </button>
+                            </form>
+                        @endif
+                    </div>
+                </div>
+
+                <!-- Szállítás blokk -->
+                <div class="col-lg-4 mb-4">
+                    <h3 class="header-box product-info mb-3"><i class="fa fa-truck mr-1"></i> Szállítás</h3>
+                    <div class="content-box bordered h-100">
+                        <dl class="row mb-1">
+                            @if($order->shipping_method)
+                                <dt class="col-6 small text-muted">Szállítási mód:</dt>
+                                <dd class="col-6 small">{{ $order->shipping_method }}</dd>
+                            @endif
+                            <dt class="col-6 small text-muted">Szállítás státusz:</dt>
+                            <dd class="col-6 small">
+                                @php $ss = $order->shipping_status; @endphp
+                                <span class="badge badge-{{ in_array($ss, ['shipped','delivered']) ? 'success' : ($ss === 'failed' ? 'danger' : 'secondary') }}">
+                                    {{ $order->shipping_status_label }}
+                                </span>
+                            </dd>
+                            @if($order->shipped_at)
+                                <dt class="col-6 small text-muted">Kiszállítva:</dt>
+                                <dd class="col-6 small">{{ $order->shipped_at->format('Y.m.d H:i') }}</dd>
+                            @endif
+                            @if($order->commerce_shipment_id)
+                                <dt class="col-6 small text-muted">Szállítmány ID:</dt>
+                                <dd class="col-6 small">#{{ $order->commerce_shipment_id }}</dd>
+                            @endif
+                        </dl>
+                        @if(in_array($order->shipping_status, ['not_required', 'pending', 'failed']))
+                            <form method="POST" action="{{ route('admin.webshop.orders.create-shipment', $order) }}" class="mt-2">
+                                @csrf @method('POST')
+                                <button type="submit" class="btn btn-sm btn-outline-info w-100" onclick="return confirm('Szállítmányt kíván létrehozni?')">
+                                    <i class="fa fa-shipping-fast mr-1"></i> Szállítmány létrehozása
+                                </button>
+                            </form>
+                        @endif
+                    </div>
+                </div>
+            </div>
+            @endif
+
             <!-- Rendelési tételek (Read-only) -->
             <h3 class="header-box product-info mb-3">Rendelési tételek</h3>
             <div class="content-box bordered mb-4">

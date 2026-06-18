@@ -4,6 +4,7 @@ namespace Weboldalnet\WebshopAiDefault\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Weboldalnet\WebshopAiDefault\Services\Webshop\WebshopSettingsService;
 
 /**
  * @property int $id
@@ -20,6 +21,14 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * @property bool $show_in_sticky_header
  * @property int $primary_image_width
  * @property int $primary_image_height
+ * @property int $card_width_units
+ * @property string|null $list_image_mode
+ * @property int|null $list_image_product_id
+ * @property string|null $list_image_path
+ * @property string|null $list_image_cropped_path
+ * @property string|null $list_image_cropped_path_wide
+ * @property string|null $google_merchant_id
+ * @property string|null $facebook_merchant_id
  * @property int $sort_order
  * @property-read \Weboldalnet\WebshopAiDefault\Models\WebshopCategory|null $parent
  * @property-read \Illuminate\Database\Eloquent\Collection $children
@@ -38,6 +47,8 @@ class WebshopCategory extends Model
         'parent_id', 'name_singular', 'name_plural', 'slug', 'description',
         'og_title', 'og_description', 'og_img', 'icon', 'is_active', 'show_in_sticky_header',
         'primary_image_width', 'primary_image_height', 'sort_order',
+        'card_width_units', 'list_image_mode', 'list_image_product_id', 'list_image_path', 'list_image_cropped_path', 'list_image_cropped_path_wide',
+        'google_merchant_id', 'facebook_merchant_id',
     ];
 
     protected $casts = [
@@ -47,6 +58,8 @@ class WebshopCategory extends Model
         'primary_image_width' => 'integer',
         'primary_image_height' => 'integer',
         'sort_order' => 'integer',
+        'card_width_units' => 'integer',
+        'list_image_product_id' => 'integer',
     ];
 
     public function getRouteKeyName() { return 'slug'; }
@@ -84,6 +97,56 @@ class WebshopCategory extends Model
     }
 
     public function products() { return $this->hasMany(WebshopProduct::class, 'category_id'); }
+    public function listImageProduct() { return $this->belongsTo(WebshopProduct::class, 'list_image_product_id'); }
+
+    public function getCardColumnClass(): string
+    {
+        if (!WebshopSettingsService::getBool('category_sizing_enabled')) {
+            return 'col-lg-3';
+        }
+
+        return match ((int)$this->card_width_units) {
+            2 => 'col-lg-6',
+            3 => 'col-lg-9',
+            4 => 'col-lg-12',
+            default => 'col-lg-3',
+        };
+    }
+
+    public function getListImageUrl(): ?string
+    {
+        $iconEnabled = WebshopSettingsService::getBool('category_icon_enabled');
+        $listImageEnabled = WebshopSettingsService::getBool('category_list_image_enabled');
+
+        if (!$listImageEnabled) {
+            return $iconEnabled ? $this->icon : null;
+        }
+
+        switch ($this->list_image_mode) {
+            case 'product_image':
+                return $this->listImageProduct->primary_image ?? ($iconEnabled ? $this->icon : null);
+            case 'upload':
+                return $this->list_image_path ?? ($iconEnabled ? $this->icon : null);
+            case 'cropped_upload':
+                return $this->list_image_cropped_path ?? $this->list_image_path ?? ($iconEnabled ? $this->icon : null);
+            case 'icon':
+            default:
+                return $iconEnabled ? $this->icon : null;
+        }
+    }
+
+    public function getListImageWideUrl(): ?string
+    {
+        if (!WebshopSettingsService::getBool('category_list_image_enabled')) {
+            return null;
+        }
+
+        if ($this->list_image_mode === 'cropped_upload' && (int)$this->card_width_units > 1) {
+            return $this->list_image_cropped_path_wide ?? $this->getListImageUrl();
+        }
+
+        return $this->getListImageUrl();
+    }
 
     public function scopeActive($query) { return $query->where('is_active', true); }
     public function scopeStickyHeader($query) { return $query->where('show_in_sticky_header', true); }

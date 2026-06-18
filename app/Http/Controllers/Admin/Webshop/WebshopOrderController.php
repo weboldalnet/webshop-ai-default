@@ -6,8 +6,12 @@ use App\Http\Controllers\Admin\AdminExtendedController;
 use Weboldalnet\WebshopAiDefault\Models\WebshopOrder;
 use Weboldalnet\WebshopAiDefault\Models\WebshopProduct;
 use Weboldalnet\WebshopAiDefault\Models\WebshopOrderItem;
+use Weboldalnet\WebshopAiDefault\Jobs\Commerce\CreateInvoiceForOrder;
+use Weboldalnet\WebshopAiDefault\Jobs\Commerce\CreateShipmentForOrder;
+use Weboldalnet\WebshopAiDefault\Services\Webshop\Commerce\WebshopCommerceService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 
 class WebshopOrderController extends AdminExtendedController
@@ -109,10 +113,23 @@ class WebshopOrderController extends AdminExtendedController
         if ($request->filled('date_to')) $query->where('created_at', '<=', $request->input('date_to') . ' 23:59:59');
 
         $pricesVisible = \Weboldalnet\WebshopAiDefault\Services\Webshop\WebshopSettingsService::getBool('site_product_prices_visible', true);
+        $paymentOptionsEnabled = \Weboldalnet\WebshopAiDefault\Services\Webshop\WebshopSettingsService::getBool('site_checkout_payment_options_enabled', false);
+        $shippingOptionsEnabled = \Weboldalnet\WebshopAiDefault\Services\Webshop\WebshopSettingsService::getBool('site_checkout_shipping_options_enabled', false);
+
+        $paymentMethodLabels = WebshopCommerceService::getAllPaymentMethodLabels();
+        $shippingMethodLabels = WebshopCommerceService::getAllShippingMethodLabels();
+        $paymentStatusLabels = WebshopCommerceService::getAllPaymentStatusLabels();
+        $shippingStatusLabels = WebshopCommerceService::getAllShippingStatusLabels();
 
         return view('admin.webshop.orders.index', [
             'orders' => $query->get(),
-            'pricesVisible' => $pricesVisible
+            'pricesVisible' => $pricesVisible,
+            'paymentOptionsEnabled' => $paymentOptionsEnabled,
+            'shippingOptionsEnabled' => $shippingOptionsEnabled,
+            'paymentMethodLabels' => $paymentMethodLabels,
+            'shippingMethodLabels' => $shippingMethodLabels,
+            'paymentStatusLabels' => $paymentStatusLabels,
+            'shippingStatusLabels' => $shippingStatusLabels,
         ]);
     }
 
@@ -120,7 +137,7 @@ class WebshopOrderController extends AdminExtendedController
     {
         $order->load('items');
         $pricesVisible = \Weboldalnet\WebshopAiDefault\Services\Webshop\WebshopSettingsService::getBool('site_product_prices_visible', true);
-        
+
         $billingData = $order->billing_data ? json_decode($order->billing_data, true) : null;
         $shippingData = $order->shipping_data ? json_decode($order->shipping_data, true) : null;
 
@@ -162,7 +179,7 @@ class WebshopOrderController extends AdminExtendedController
         ]);
 
         $data = $request->only([
-            'status', 'type', 'customer_name', 'customer_email', 'customer_phone', 
+            'status', 'type', 'customer_name', 'customer_email', 'customer_phone',
             'customer_company', 'customer_tax_number', 'admin_note', 'note'
         ]);
 
@@ -176,7 +193,7 @@ class WebshopOrderController extends AdminExtendedController
 
         $isCompleted = $request->has('is_completed') || $request->input('status') === WebshopOrder::STATUS_COMPLETED;
         $data['is_completed'] = $isCompleted;
-        
+
         if ($isCompleted && !$order->is_completed) {
             $data['completed_at'] = now();
         } elseif (!$isCompleted) {
@@ -201,7 +218,7 @@ class WebshopOrderController extends AdminExtendedController
         ]);
 
         $data = $request->only(['status', 'admin_note']);
-        
+
         // Ha a státusz completed, akkor legyen is_completed = true, egyébként false
         if ($data['status'] === WebshopOrder::STATUS_COMPLETED) {
             $data['is_completed'] = true;
@@ -225,10 +242,10 @@ class WebshopOrderController extends AdminExtendedController
     {
         $order = WebshopOrder::findOrFail($request->input('id'));
         $isCompleted = $request->input('is_completed') === 'true' || $request->input('is_completed') === true;
-        
+
         $order->is_completed = $isCompleted;
         $order->completed_at = $isCompleted ? now() : null;
-        
+
         // Státusz frissítése is
         if ($isCompleted) {
             $order->status = WebshopOrder::STATUS_COMPLETED;
@@ -236,8 +253,63 @@ class WebshopOrderController extends AdminExtendedController
             // Ha visszavonják, legyen feldolgozás alatt
             $order->status = WebshopOrder::STATUS_PROCESSING;
         }
-        
+
         $order->save();
         return response()->json(['success' => true, 'message' => 'Rendelés státusza és teljesítése frissítve.']);
+    }
+
+    /**
+     * Admin: manuálisan fizetettre állítja a rendelést (pl. banki átutalásnál).
+     */
+    public function markPaid(WebshopOrder $order)
+    {
+        if ($order->isPaid()) {
+            return redirect()->route('admin.webshop.orders.edit', $order)->with('info', 'A rendelés már fizetett.');
+        }
+
+        DB::transaction(function () use ($order) {
+            $order->markPaid();
+            $order->update(['status' => WebshopOrder::STATUS_PROCESSING]);
+        });
+
+        return redirect()->route('admin.webshop.orders.edit', $order)->with('success', 'Rendelés manuálisan fizetettre állítva.');
+    }
+
+    /**
+     * Admin: számlakészítés indítása egy rendeléshez.
+     */
+    public function createInvoice(WebshopOrder $order)
+    {
+        if ($order->isInvoiced()) {
+            return redirect()->route('admin.webshop.orders.edit', $order)->with('info', 'A rendeléshez már van számla.');
+        }
+
+        try {
+            $order->markInvoicePending();
+            dispatch(new CreateInvoiceForOrder($order->id));
+            return redirect()->route('admin.webshop.orders.edit', $order)->with('success', 'Számlakészítés elindítva.');
+        } catch (\Throwable $e) {
+            Log::error('Admin createInvoice hiba: ' . $e->getMessage(), ['order_id' => $order->id]);
+            return redirect()->route('admin.webshop.orders.edit', $order)->with('error', 'Hiba a számlakészítés indításakor: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Admin: szállítmány létrehozása indítása egy rendeléshez.
+     */
+    public function createShipment(WebshopOrder $order)
+    {
+        if ($order->isShipped()) {
+            return redirect()->route('admin.webshop.orders.edit', $order)->with('info', 'A rendeléshez már van szállítmány.');
+        }
+
+        try {
+            $order->markShippingPending();
+            dispatch(new CreateShipmentForOrder($order->id));
+            return redirect()->route('admin.webshop.orders.edit', $order)->with('success', 'Szállítmány létrehozása elindítva.');
+        } catch (\Throwable $e) {
+            Log::error('Admin createShipment hiba: ' . $e->getMessage(), ['order_id' => $order->id]);
+            return redirect()->route('admin.webshop.orders.edit', $order)->with('error', 'Hiba a szállítmány indításakor: ' . $e->getMessage());
+        }
     }
 }

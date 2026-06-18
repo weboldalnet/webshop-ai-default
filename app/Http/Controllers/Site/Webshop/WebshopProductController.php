@@ -12,10 +12,25 @@ class WebshopProductController extends Controller
     {
         if (!$product->is_active) abort(404);
 
-        $relations = ['category', 'galleryImages', 'relatedProducts', 'variations', 'productProperties.property'];
+        $relations = ['category', 'relatedProducts', 'variations', 'productProperties.property'];
+        
+        if (WebshopSettingsService::getBool('product_extra_gallery_enabled')) {
+            $relations[] = 'defaultGalleryImages';
+            $relations[] = 'secondaryGalleryImages';
+        } else {
+            $relations[] = 'defaultGalleryImages';
+        }
+
+        if (WebshopSettingsService::getBool('product_document_upload_enabled')) {
+            $relations['productDocuments'] = function($q) {
+                $q->where('is_active', true)->orderBy('sort_order');
+            };
+        }
+
         if (WebshopSettingsService::getBool('admin_product_label_assignment_enabled')) {
             $relations[] = 'label';
         }
+
         $product->load($relations);
 
         $similarQuery = WebshopProduct::active()

@@ -33,7 +33,8 @@ class WebshopProduct extends Model
     protected $table = 'public.webshop_products';
 
     protected $fillable = [
-        'category_id', 'label_id', 'name', 'slug', 'description', 'primary_image', 'primary_image_thumb', 'sku',
+        'category_id', 'label_id', 'name', 'slug', 'description', 'short_desc', 'secondary_name', 'crm_identifier',
+        'primary_image', 'primary_image_thumb', 'sku',
         'stock_enabled', 'stock_quantity', 'price', 'sale_price', 'is_active', 'sort_order',
     ];
 
@@ -46,6 +47,9 @@ class WebshopProduct extends Model
     public function label() { return $this->belongsTo(WebshopProductLabel::class, 'label_id'); }
     public function productProperties() { return $this->hasMany(WebshopProductProperty::class, 'product_id'); }
     public function galleryImages() { return $this->hasMany(WebshopProductGalleryImage::class, 'product_id'); }
+    public function defaultGalleryImages() { return $this->hasMany(WebshopProductGalleryImage::class, 'product_id')->where('gallery_type', 'default'); }
+    public function secondaryGalleryImages() { return $this->hasMany(WebshopProductGalleryImage::class, 'product_id')->where('gallery_type', 'secondary'); }
+    public function productDocuments() { return $this->hasMany(WebshopProductDocument::class, 'product_id'); }
     public function reviews() { return $this->hasMany(WebshopProductReview::class, 'product_id'); }
 
     public function relatedProducts()

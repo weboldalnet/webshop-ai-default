@@ -45,7 +45,7 @@ class WebshopCategoryController extends AdminExtendedController
             'primary_image_height' => 'nullable|integer|min:1',
         ]);
 
-        $data = $request->only(['name_singular', 'name_plural', 'description', 'og_title', 'og_description', 'parent_id', 'primary_image_width', 'primary_image_height']);
+        $data = $request->only(['name_singular', 'name_plural', 'description', 'og_title', 'og_description', 'parent_id', 'primary_image_width', 'primary_image_height', 'card_width_units', 'list_image_mode', 'list_image_product_id', 'google_merchant_id', 'facebook_merchant_id', 'list_image_cropped_path', 'list_image_cropped_path_wide']);
         $data['show_in_sticky_header'] = $request->has('show_in_sticky_header');
         $data['slug'] = WebshopSlugService::generateUniqueSlug($data['name_singular'], 'public.webshop_categories');
         $data['is_active'] = true;
@@ -59,6 +59,31 @@ class WebshopCategoryController extends AdminExtendedController
         }
         if ($request->hasFile('icon_file') && WebshopSettingsService::getBool('category_icon_enabled')) {
             $data['icon'] = WebshopFileService::saveCategoryIcon($request->file('icon_file'), getTransformedString($data['name_singular']));
+        }
+
+        if (WebshopSettingsService::getBool('category_list_image_enabled')) {
+            if ($request->hasFile('list_image_upload')) {
+                $file = $request->file('list_image_upload');
+                $filename = getTransformedString($data['name_singular']) . '-list-' . time() . '.' . $file->getClientOriginalExtension();
+                $path = $file->storeAs('webshop/categories/list', $filename, 'public');
+                $data['list_image_path'] = '/storage/' . $path;
+            }
+
+            if ($request->hasFile('list_image_cropped_upload')) {
+                $file = $request->file('list_image_cropped_upload');
+                $imageFile = is_array($file) ? $file['img'] : $file;
+                $filename = getTransformedString($data['name_singular']) . '-list-cropped-' . time() . '.' . $imageFile->getClientOriginalExtension();
+                $path = $imageFile->storeAs('webshop/categories/list', $filename, 'public');
+                $data['list_image_cropped_path'] = '/storage/' . $path;
+            }
+
+            if ($request->hasFile('list_image_cropped_upload_wide')) {
+                $file = $request->file('list_image_cropped_upload_wide');
+                $imageFile = is_array($file) ? $file['img'] : $file;
+                $filename = getTransformedString($data['name_singular']) . '-list-cropped-wide-' . time() . '.' . $imageFile->getClientOriginalExtension();
+                $path = $imageFile->storeAs('webshop/categories/list', $filename, 'public');
+                $data['list_image_cropped_path_wide'] = '/storage/' . $path;
+            }
         }
 
         $category = WebshopCategory::create($data);
@@ -94,7 +119,7 @@ class WebshopCategoryController extends AdminExtendedController
             'primary_image_height' => 'nullable|integer|min:1',
         ]);
 
-        $data = $request->only(['name_singular', 'name_plural', 'description', 'og_title', 'og_description', 'parent_id', 'primary_image_width', 'primary_image_height']);
+        $data = $request->only(['name_singular', 'name_plural', 'description', 'og_title', 'og_description', 'parent_id', 'primary_image_width', 'primary_image_height', 'card_width_units', 'list_image_mode', 'list_image_product_id', 'google_merchant_id', 'facebook_merchant_id', 'list_image_cropped_path', 'list_image_cropped_path_wide']);
         $data['show_in_sticky_header'] = $request->has('show_in_sticky_header');
         $data['slug'] = WebshopSlugService::generateUniqueSlug($data['name_singular'], 'public.webshop_categories', $category->id);
         if (empty($data['og_title'])) $data['og_title'] = $data['name_singular'];
@@ -106,6 +131,31 @@ class WebshopCategoryController extends AdminExtendedController
         }
         if ($request->hasFile('icon_file') && WebshopSettingsService::getBool('category_icon_enabled')) {
             $data['icon'] = WebshopFileService::saveCategoryIcon($request->file('icon_file'), getTransformedString($data['name_singular']));
+        }
+
+        if (WebshopSettingsService::getBool('category_list_image_enabled')) {
+            if ($request->hasFile('list_image_upload')) {
+                $file = $request->file('list_image_upload');
+                $filename = getTransformedString($data['name_singular']) . '-list-' . time() . '.' . $file->getClientOriginalExtension();
+                $path = $file->storeAs('webshop/categories/list', $filename, 'public');
+                $data['list_image_path'] = '/storage/' . $path;
+            }
+
+            if ($request->hasFile('list_image_cropped_upload')) {
+                $file = $request->file('list_image_cropped_upload');
+                $imageFile = is_array($file) ? $file['img'] : $file;
+                $filename = getTransformedString($data['name_singular']) . '-list-cropped-' . time() . '.' . $imageFile->getClientOriginalExtension();
+                $path = $imageFile->storeAs('webshop/categories/list', $filename, 'public');
+                $data['list_image_cropped_path'] = '/storage/' . $path;
+            }
+
+            if ($request->hasFile('list_image_cropped_upload_wide')) {
+                $file = $request->file('list_image_cropped_upload_wide');
+                $imageFile = is_array($file) ? $file['img'] : $file;
+                $filename = getTransformedString($data['name_singular']) . '-list-cropped-wide-' . time() . '.' . $imageFile->getClientOriginalExtension();
+                $path = $imageFile->storeAs('webshop/categories/list', $filename, 'public');
+                $data['list_image_cropped_path_wide'] = '/storage/' . $path;
+            }
         }
 
         $category->update($data);

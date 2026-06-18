@@ -25,6 +25,26 @@ class WebshopSettingController extends AdminExtendedController
             'site_checkout_phone_enabled', 'site_checkout_company_enabled',
             'site_checkout_tax_number_enabled', 'site_checkout_billing_enabled',
             'site_checkout_shipping_enabled', 'site_product_compare_enabled',
+            // Checkout fizetési és szállítási lehetőségek
+            'site_checkout_payment_options_enabled',
+            'site_checkout_payment_online_enabled',
+            'site_checkout_payment_cod_enabled',
+            'site_checkout_payment_bank_transfer_enabled',
+            'site_checkout_payment_on_site_enabled',
+            'site_checkout_shipping_options_enabled',
+            'site_checkout_shipping_home_delivery_enabled',
+            'site_checkout_shipping_parcel_locker_enabled',
+            'site_checkout_shipping_pickup_enabled',
+            // Új beállítások
+            'site_home_page_editor_enabled',
+            'product_extra_gallery_enabled',
+            'product_document_upload_enabled',
+            'product_secondary_name_enabled',
+            'product_short_desc_instead_of_properties_enabled',
+            'product_crm_id_enabled',
+            'category_sizing_enabled',
+            'category_list_image_enabled',
+            'category_merchant_feed_enabled',
         ];
 
         $valueKeys = [

@@ -6,6 +6,7 @@
 
     <div class="ws-page-container ws-categories-index">
         <div class="container-xl container-fluid pb-5">
+            @php($isHomeEditor = \Weboldalnet\WebshopAiDefault\Services\Webshop\WebshopSettingsService::getBool('site_home_page_editor_enabled'))
             @isset($parentCategory)
                 @include('site.webshop.partials.breadcrumb', ['category' => $parentCategory ?? null])
             @endisset
@@ -17,7 +18,7 @@
 
             <div class="row">
                 @foreach($categories as $cat)
-                    <div class="col-lg-3 col-md-4 col-sm-6 mb-4">
+                    <div class="{{ $cat->getCardColumnClass() }} col-md-4 col-sm-6 mb-4">
                         @include('site.webshop.categories.partials.category-card', ['cat' => $cat])
                     </div>
                 @endforeach
@@ -42,5 +43,9 @@
 
     @push('scripts')
         <script src="/packages/webshop/site/js/webshop-site.js"></script>
+        @php($__scripts = \Weboldalnet\WebshopAiDefault\Models\WebshopTrackingScript::byPage('product_list')->active()->ordered()->get())
+        @foreach($__scripts as $__s)
+            {!! $__s->script !!}
+        @endforeach
     @endpush
 @endsection

@@ -44,6 +44,10 @@ Route::middleware('web')->group(function () {
             Route::post('/checkout', [WebshopCheckoutController::class, 'store'])->name('checkout.store');
             Route::get('/checkout/success/{order}', [WebshopCheckoutController::class, 'success'])->name('checkout.success');
 
+            // Payment result és retry
+            Route::get('/payment/{order}/result', [WebshopCheckoutController::class, 'paymentResult'])->name('payment.result');
+            Route::post('/payment/{order}/retry', [WebshopCheckoutController::class, 'retryPayment'])->name('payment.retry');
+
             // Vélemények
             Route::post('/reviews', [WebshopReviewController::class, 'store'])->name('reviews.store');
         });
@@ -109,6 +113,12 @@ Route::middleware('web')->group(function () {
             Route::post('/products/gallery/toggle-active', [WebshopProductController::class, 'toggleGalleryActive'])->name('products.gallery.toggle-active');
             Route::post('/products/gallery/update-alt', [WebshopProductController::class, 'updateGalleryAlt'])->name('products.gallery.update-alt');
 
+            // Termék dokumentumok
+            Route::post('/products/{product}/documents', [WebshopProductController::class, 'storeDocument'])->name('products.documents.store');
+            Route::delete('/products/{product}/documents/{document}', [WebshopProductController::class, 'destroyDocument'])->name('products.documents.destroy');
+            Route::post('/products/documents/sort', [WebshopProductController::class, 'sortDocuments'])->name('products.documents.sort');
+            Route::post('/products/documents/toggle-active', [WebshopProductController::class, 'toggleDocumentActive'])->name('products.documents.toggle-active');
+
             // Termék címkék
             Route::get('/labels', [WebshopProductLabelController::class, 'index'])->name('labels.index');
             Route::get('/labels/create', [WebshopProductLabelController::class, 'create'])->name('labels.create');
@@ -127,9 +137,31 @@ Route::middleware('web')->group(function () {
             Route::patch('/orders/{order}/status', [WebshopOrderController::class, 'updateStatus'])->name('orders.update-status');
             Route::delete('/orders/{order}', [WebshopOrderController::class, 'destroy'])->name('orders.destroy');
             Route::post('/orders/toggle-completed', [WebshopOrderController::class, 'toggleCompleted'])->name('orders.toggle-completed');
+            Route::patch('/orders/{order}/mark-paid', [WebshopOrderController::class, 'markPaid'])->name('orders.mark-paid');
+            Route::post('/orders/{order}/create-invoice', [WebshopOrderController::class, 'createInvoice'])->name('orders.create-invoice');
+            Route::post('/orders/{order}/create-shipment', [WebshopOrderController::class, 'createShipment'])->name('orders.create-shipment');
 
             // Beállítások
             Route::get('/settings', [WebshopSettingController::class, 'index'])->name('settings.index');
             Route::post('/settings', [WebshopSettingController::class, 'update'])->name('settings.update');
+
+            // Extra Beállítások (Webshop beállítások menüpont)
+            Route::prefix('extra-settings')->name('extra-settings.')->group(function () {
+                Route::get('/', [\Weboldalnet\WebshopAiDefault\Http\Controllers\Admin\Webshop\WebshopExtraSettingController::class, 'index'])->name('index');
+
+                // Email és Köszönjük oldal szerkesztése
+                Route::get('/custom-contents', [\Weboldalnet\WebshopAiDefault\Http\Controllers\Admin\Webshop\WebshopExtraSettingController::class, 'customContents'])->name('custom-contents.index');
+                Route::post('/custom-contents', [\Weboldalnet\WebshopAiDefault\Http\Controllers\Admin\Webshop\WebshopExtraSettingController::class, 'storeCustomContent'])->name('custom-contents.store');
+
+                // Checkout Dokumentumok
+                Route::get('/documents', [\Weboldalnet\WebshopAiDefault\Http\Controllers\Admin\Webshop\WebshopExtraSettingController::class, 'documents'])->name('documents.index');
+                Route::post('/documents', [\Weboldalnet\WebshopAiDefault\Http\Controllers\Admin\Webshop\WebshopExtraSettingController::class, 'storeDocument'])->name('documents.store');
+
+                // Mérési scriptek
+                Route::get('/scripts', [\Weboldalnet\WebshopAiDefault\Http\Controllers\Admin\Webshop\WebshopExtraSettingController::class, 'scripts'])->name('scripts.index');
+                Route::post('/scripts', [\Weboldalnet\WebshopAiDefault\Http\Controllers\Admin\Webshop\WebshopExtraSettingController::class, 'storeScript'])->name('scripts.store');
+                Route::put('/scripts/{script}', [\Weboldalnet\WebshopAiDefault\Http\Controllers\Admin\Webshop\WebshopExtraSettingController::class, 'updateScript'])->name('scripts.update');
+                Route::delete('/scripts/{script}', [\Weboldalnet\WebshopAiDefault\Http\Controllers\Admin\Webshop\WebshopExtraSettingController::class, 'destroyScript'])->name('scripts.destroy');
+            });
         });
 });

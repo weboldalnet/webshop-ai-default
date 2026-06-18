@@ -2,6 +2,8 @@
 @section('title', $product->name . ' szerkesztése')
 
 @section('content')
+    @include('admin.commons.tinymce-img-upload', ['tinyHeight' => 300])
+
     @php
         $existingProps = $product->productProperties->groupBy('property_category_id');
     @endphp
@@ -41,13 +43,25 @@
                                 </select>
                             </div>
                         @endif
+                        @if(($ws['product_secondary_name_enabled'] ?? 'false') === 'true')
+                            <div class="form-group">
+                                <label for="secondary_name">Másodlagos név</label>
+                                <input type="text" class="form-control" id="secondary_name" name="secondary_name" value="{{ old('secondary_name', $product->secondary_name) }}">
+                            </div>
+                        @endif
                         <div class="form-group">
-                            <label for="sku">SKU</label>
+                            <label for="sku">SKU (Article number)</label>
                             <input type="text" class="form-control" id="sku" name="sku" value="{{ old('sku', $product->sku) }}">
                         </div>
+                        @if(($ws['product_crm_id_enabled'] ?? 'false') === 'true')
+                            <div class="form-group">
+                                <label for="crm_identifier">CRM azonosító</label>
+                                <input type="text" class="form-control" id="crm_identifier" name="crm_identifier" value="{{ old('crm_identifier', $product->crm_identifier) }}">
+                            </div>
+                        @endif
                         <div class="form-group">
-                            <label for="description">Leírás</label>
-                            <textarea class="form-control js-tinymce" id="description" name="description" rows="6">{{ old('description', $product->description) }}</textarea>
+                            <label for="short_desc">Rövid leírás</label>
+                            <textarea class="form-control" id="short_desc" name="short_desc" rows="6">{{ old('short_desc', $product->short_desc) }}</textarea>
                         </div>
                     </div>
                 </div>
@@ -134,6 +148,19 @@
                         </div>
                     @endif
                 </div>
+                
+                <div class="col-lg-12 mb-3">
+                    <h3 class="header-box product-info">Leírás</h3>
+                    <div class="content-box bordered">
+                        <div class="form-group">
+                            <textarea class="form-control js-tinymce"
+                                      id="description"
+                                      name="description" rows="6"
+                            >{!! old('description', $product->description) !!}</textarea>
+                        </div>
+                    </div>
+                </div>
+
             </div>
 
             {{-- Tulajdonságok --}}
@@ -197,8 +224,8 @@
                 <div class="col-lg-12 mb-3">
                     <h3 class="header-box product-info">Galéria</h3>
                     <div class="content-box bordered">
-                        <div id="gallery-sortable" class="row mb-3">
-                            @foreach($product->galleryImages->sortBy('sort_order') as $img)
+                        <div id="gallery-sortable" class="row mb-3 js-gallery-sortable" data-url="{{ route('admin.webshop.products.gallery.sort') }}">
+                            @foreach($product->defaultGalleryImages->sortBy('sort_order') as $img)
                                 @include('admin.webshop.products.partials.gallery-item', ['product' => $product, 'img' => $img])
                             @endforeach
                         </div>
@@ -206,9 +233,6 @@
 
                         <h5 class="fw-600">Új képek feltöltése</h5>
                         <div class="js-gallery-upload-container mw-400">
-{{--                            <input type="file" class="form-control-file mr-2 mb-1 js-gallery-upload"--}}
-{{--                                   data-url="{{ route('admin.webshop.products.gallery.store', $product) }}"--}}
-{{--                                   accept=".jpg,.jpeg,.png,.webp" multiple>--}}
                             <div class="input-group mb-1">
                                 <div class="input-group-prepend">
                                     <span class="input-group-text"><i class="fa-regular fa-images fs-18"></i></span>
@@ -217,6 +241,7 @@
                                     <input type="file"
                                            class="custom-file-input js-gallery-upload js-custom-file-input"
                                            data-url="{{ route('admin.webshop.products.gallery.store', $product) }}"
+                                           data-type="default"
                                            accept=".jpg,.jpeg,.png,.webp"
                                            multiple
                                     >
@@ -229,6 +254,131 @@
                             </button>
                             <div class="js-gallery-upload-status ml-2" style="display:none">
                                 <span class="spinner-border spinner-border-sm text-primary"></span> Feltöltés... (<span class="js-gallery-upload-count">0</span>/<span class="js-gallery-upload-total">0</span>)
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            @endif
+
+            {{-- Másodlagos Galéria --}}
+            @if(($ws['product_extra_gallery_enabled'] ?? 'false') === 'true' && ($ws['product_gallery_enabled'] ?? 'false') === 'true')
+            <div class="row">
+                <div class="col-lg-12 mb-3">
+                    <h3 class="header-box product-info">Másodlagos Galéria</h3>
+                    <div class="content-box bordered">
+                        <div id="secondary-gallery-sortable" class="row mb-3 js-gallery-sortable" data-url="{{ route('admin.webshop.products.gallery.sort') }}">
+                            @foreach($product->secondaryGalleryImages->sortBy('sort_order') as $img)
+                                @include('admin.webshop.products.partials.gallery-item', ['product' => $product, 'img' => $img])
+                            @endforeach
+                        </div>
+                        <hr>
+
+                        <h5 class="fw-600">Új képek feltöltése a másodlagos galériába</h5>
+                        <div class="js-gallery-upload-container mw-400">
+                            <div class="input-group mb-1">
+                                <div class="input-group-prepend">
+                                    <span class="input-group-text"><i class="fa-regular fa-images fs-18"></i></span>
+                                </div>
+                                <div class="custom-file">
+                                    <input type="file"
+                                           class="custom-file-input js-gallery-upload js-custom-file-input"
+                                           data-url="{{ route('admin.webshop.products.gallery.store', $product) }}"
+                                           data-type="secondary"
+                                           accept=".jpg,.jpeg,.png,.webp"
+                                           multiple
+                                    >
+                                    <label class="custom-file-label text-muted">Kép kiválasztása</label>
+                                </div>
+                            </div>
+
+                            <button type="button" class="btn btn-sm btn-success fs-16 js-gallery-upload-start mb-1" style="display:none">
+                                <i class="fa fa-upload"></i> Kijelölt képek feltöltése
+                            </button>
+                            <div class="js-gallery-upload-status ml-2" style="display:none">
+                                <span class="spinner-border spinner-border-sm text-primary"></span> Feltöltés... (<span class="js-gallery-upload-count">0</span>/<span class="js-gallery-upload-total">0</span>)
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            @endif
+
+            {{-- Dokumentumok --}}
+            @if(($ws['product_document_upload_enabled'] ?? 'false') === 'true')
+            <div class="row">
+                <div class="col-lg-12 mb-3">
+                    <h3 class="header-box product-info">Dokumentumok</h3>
+                    <div class="content-box bordered">
+                        <div class="js-document-sortable" data-url="{{ route('admin.webshop.products.documents.sort') }}">
+                            <table class="table table-sm table-bordered">
+                                <thead>
+                                    <tr>
+                                        <th style="width: 40px"></th>
+                                        <th>Név</th>
+                                        <th>Típus</th>
+                                        <th>Elérés</th>
+                                        <th style="width: 100px">Aktív</th>
+                                        <th style="width: 50px"></th>
+                                    </tr>
+                                </thead>
+                                <tbody class="js-sortable-container">
+                                    @forelse($product->productDocuments->sortBy('sort_order') as $doc)
+                                        <tr data-id="{{ $doc->id }}">
+                                            <td class="text-center ws-drag-handle"><i class="fa fa-grip-vertical"></i></td>
+                                            <td>{{ $doc->name }}</td>
+                                            <td>{{ $doc->type === 'link' ? 'Link' : 'Fájl' }}</td>
+                                            <td>
+                                                @if($doc->type === 'link')
+                                                    <a href="{{ $doc->url }}" target="_blank">{{ $doc->url }}</a>
+                                                @else
+                                                    <a href="{{ $doc->file_path }}" target="_blank">Fájl megnyitása</a>
+                                                @endif
+                                            </td>
+                                            <td>
+                                                <div class="custom-control custom-switch text-center">
+                                                    <input type="checkbox" class="custom-control-input js-toggle-active" id="doc{{ $doc->id }}" data-id="{{ $doc->id }}" data-url="{{ route('admin.webshop.products.documents.toggle-active') }}" @if($doc->is_active) checked @endif>
+                                                    <label class="custom-control-label" for="doc{{ $doc->id }}"></label>
+                                                </div>
+                                            </td>
+                                            <td class="text-center">
+                                                <button type="button" class="btn btn-sm btn-danger js-delete-document" data-id="{{ $doc->id }}" data-url="{{ route('admin.webshop.products.documents.destroy', [$product, $doc]) }}">
+                                                    <i class="fa fa-trash-alt"></i>
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    @empty
+                                        <tr class="js-empty-row"><td colspan="6" class="text-center text-muted">Nincsenek dokumentumok.</td></tr>
+                                    @endforelse
+                                </tbody>
+                            </table>
+                        </div>
+                        <hr>
+                        <h5 class="fw-600">Új dokumentum hozzáadása</h5>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label>Dokumentum neve</label>
+                                    <input type="text" class="form-control form-control-sm js-new-doc-name" placeholder="Pl: Használati utasítás">
+                                </div>
+                                <div class="form-group">
+                                    <label>Típus</label>
+                                    <select class="form-control form-control-sm js-new-doc-type">
+                                        <option value="link">Külső link</option>
+                                        <option value="file">Fájl feltöltés</option>
+                                    </select>
+                                </div>
+                                <div class="form-group js-doc-url-group">
+                                    <label>URL</label>
+                                    <input type="url" class="form-control form-control-sm js-new-doc-url" placeholder="https://...">
+                                </div>
+                                <div class="form-group js-doc-file-group" style="display:none">
+                                    <label>Fájl</label>
+                                    <input type="file" class="form-control-file js-new-doc-file">
+                                </div>
+                                <button type="button" class="btn btn-sm btn-primary js-save-document" data-url="{{ route('admin.webshop.products.documents.store', $product) }}">
+                                    <i class="fa fa-plus"></i> Dokumentum mentése
+                                </button>
                             </div>
                         </div>
                     </div>
@@ -330,8 +480,19 @@
     <script>
         WebshopAdmin.initToggleActive();
         @if(($ws['product_gallery_enabled'] ?? 'false') === 'true')
-        WebshopAdmin.initSortable('#gallery-sortable', '{{ route("admin.webshop.products.gallery.sort") }}', null);
-        WebshopAdmin.initGalleryUpload('.js-gallery-upload', '#gallery-sortable');
+        $('.js-gallery-sortable').each(function() {
+            WebshopAdmin.initSortable('#' + $(this).attr('id'), $(this).data('url'), null);
+        });
+
+        $('.js-gallery-upload').each(function() {
+            var containerId = '#' + $(this).closest('.content-box').find('.js-gallery-sortable').attr('id');
+            WebshopAdmin.initGalleryUpload(this, containerId);
+        });
+        @endif
+
+        @if(($ws['product_document_upload_enabled'] ?? 'false') === 'true')
+        WebshopAdmin.initSortable('.js-document-sortable .js-sortable-container', '{{ route("admin.webshop.products.documents.sort") }}', null);
+        WebshopAdmin.initDocumentActions();
         @endif
 
         WebshopAdmin.initProductRelationPicker({

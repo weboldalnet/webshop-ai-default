@@ -34,8 +34,17 @@
                         @endif
                     </a>
                 </td>
-                <td class="ws-product-table-name">
-                    <a href="{{ route('site.webshop.products.show', $product) }}" class="text-dark font-weight-bold">{{ $product->name }}</a>
+                <td class="ws-product-table-name py-1 align-middle">
+                    @if(($ws['product_secondary_name_enabled'] ?? 'false') === 'true' && $product->secondary_name)
+                        <a href="{{ route('site.webshop.products.show', $product) }}" class="sec-title text-dark font-weight-bold">
+                            {{ $product->name }}
+                        </a>
+                        <div class="ws-product-card-sec-title fs-14 text-muted lh-12 mb-1">{{ $product->secondary_name }}</div>
+                    @else
+                        <a href="{{ route('site.webshop.products.show', $product) }}" class="text-dark font-weight-bold">
+                            {{ $product->name }}
+                        </a>
+                    @endif
                     <div class="d-flex align-items-center">
                         @if(($ws['site_product_prices_visible'] ?? 'true') === 'true' && $product->sale_price && $product->discount_percentage > 0)
                             <div class=" badge badge-danger mr-1" style="font-size: 0.7rem; vertical-align: middle;">

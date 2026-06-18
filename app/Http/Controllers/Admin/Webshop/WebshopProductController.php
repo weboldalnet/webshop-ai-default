@@ -8,6 +8,7 @@ use Weboldalnet\WebshopAiDefault\Models\WebshopCategory;
 use Weboldalnet\WebshopAiDefault\Models\WebshopProduct;
 use Weboldalnet\WebshopAiDefault\Models\WebshopProductLabel;
 use Weboldalnet\WebshopAiDefault\Models\WebshopProductGalleryImage;
+use Weboldalnet\WebshopAiDefault\Models\WebshopProductDocument;
 use Weboldalnet\WebshopAiDefault\Models\WebshopProductProperty;
 use Weboldalnet\WebshopAiDefault\Models\WebshopPropertyCategory;
 use Weboldalnet\WebshopAiDefault\Services\Webshop\WebshopFileService;
@@ -65,6 +66,9 @@ class WebshopProductController extends AdminExtendedController
             'name' => $request->input('name'),
             'category_id' => $request->input('category_id'),
             'description' => $request->input('description'),
+            'short_desc' => $request->input('short_desc'),
+            'secondary_name' => $request->input('secondary_name'),
+            'crm_identifier' => $request->input('crm_identifier'),
             'slug' => WebshopSlugService::generateUniqueSlug($request->input('name'), 'public.webshop_products'),
             'is_active' => true,
             'sort_order' => (WebshopProduct::max('sort_order') ?? 0) + 1,
@@ -133,7 +137,7 @@ class WebshopProductController extends AdminExtendedController
             return redirect()->back()->withInput()->withErrors(['sale_price' => 'Az akciós ár nem lehet nagyobb, mint az alapár.']);
         }
 
-        $data = $request->only(['name', 'category_id', 'description', 'sku', 'label_id']);
+        $data = $request->only(['name', 'category_id', 'description', 'short_desc', 'secondary_name', 'crm_identifier', 'sku', 'label_id']);
         $data['slug'] = WebshopSlugService::generateUniqueSlug($data['name'], 'public.webshop_products', $product->id);
 
         if (($ws['admin_product_labels_enabled'] ?? 'false') !== 'true') {
@@ -265,13 +269,17 @@ class WebshopProductController extends AdminExtendedController
         $request->validate(['gallery_image' => 'required|image|mimes:jpg,jpeg,png,webp|max:5120', 'alt' => 'nullable|string|max:255']);
         $image = WebshopFileService::saveGalleryImage($request->file('gallery_image'), getTransformedString($product->name).'-gallery-'.$product->id);
         $imageThumb = WebshopFileService::saveGalleryImageThumbnail($request->file('gallery_image'), getTransformedString($product->name).'-gallery-thumb-'.$product->id);
+
+        $type = $request->input('gallery_type', 'default');
+
         $galleryItem = WebshopProductGalleryImage::create([
             'product_id' => $product->id,
             'image' => $image,
             'image_thumb' => $imageThumb,
             'alt' => $request->input('alt'),
-            'sort_order' => ($product->galleryImages()->max('sort_order') ?? 0) + 1,
-            'is_active' => true
+            'sort_order' => ($product->galleryImages()->where('gallery_type', $type)->max('sort_order') ?? 0) + 1,
+            'is_active' => true,
+            'gallery_type' => $type
         ]);
 
         if ($request->ajax()) {
@@ -319,6 +327,64 @@ class WebshopProductController extends AdminExtendedController
         $img->alt = $request->input('alt');
         $img->save();
         return response()->json(['success' => true, 'message' => 'Alt szöveg frissítve.']);
+    }
+
+    public function storeDocument(Request $request, WebshopProduct $product)
+    {
+        $request->validate([
+            'doc_name' => 'required|string|max:255',
+            'doc_type' => 'required|in:link,file',
+            'doc_url' => 'nullable|required_if:doc_type,link',
+            'doc_file' => 'nullable|required_if:doc_type,file|file|max:10240'
+        ]);
+
+        $data = [
+            'product_id' => $product->id,
+            'name' => $request->input('doc_name'),
+            'type' => $request->input('doc_type'),
+            'sort_order' => ($product->productDocuments()->max('sort_order') ?? 0) + 1,
+            'is_active' => true
+        ];
+
+        if ($request->input('doc_type') === 'link') {
+            $data['url'] = $request->input('doc_url');
+        } else {
+            $file = $request->file('doc_file');
+            $filename = getTransformedString($data['name']) . '-' . time() . '.' . $file->getClientOriginalExtension();
+            $path = $file->storeAs('webshop/products/documents', $filename, 'public');
+            $data['file_path'] = '/storage/' . $path;
+        }
+
+        WebshopProductDocument::create($data);
+        
+        if ($request->ajax()) {
+            return response()->json(['success' => true, 'message' => 'Dokumentum sikeresen hozzáadva.']);
+        }
+
+        return redirect()->back()->with('success', 'Dokumentum sikeresen hozzáadva.');
+    }
+
+    public function destroyDocument(WebshopProduct $product, WebshopProductDocument $document)
+    {
+        $document->delete();
+        return response()->json(['success' => true]);
+    }
+
+    public function sortDocuments(Request $request)
+    {
+        $order = 1;
+        foreach ($request->input('orderedIds', []) as $id) {
+            WebshopProductDocument::where('id', $id)->update(['sort_order' => $order++]);
+        }
+        return response()->json(['success' => true]);
+    }
+
+    public function toggleDocumentActive(Request $request)
+    {
+        $doc = WebshopProductDocument::findOrFail($request->input('id'));
+        $doc->is_active = $request->input('is_active') === 'true' || $request->input('is_active') === true;
+        $doc->save();
+        return response()->json(['success' => true]);
     }
 
     private function saveProductProperties(WebshopProduct $product, Request $request): void

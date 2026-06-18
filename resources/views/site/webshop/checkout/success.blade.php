@@ -6,15 +6,80 @@
         <div class="container-xl container-fluid pb-5 mt-5 text-center">
             <div class="row justify-content-center">
                 <div class="col-lg-8">
-                    <div class="card shadow-sm border-0 py-5">
+                    <div class="card shadow-sm border border-grey py-5">
                         <div class="card-body">
                             <div class="mb-4">
-                                <i class="fa fa-check-circle fa-5x text-success"></i>
+                                <i class="fa fa-check-circle fs-30 text-success"></i>
                             </div>
-                            <h1 class="font-weight-bold mb-3">Köszönjük a rendelését!</h1>
+                            @if($customContent && $customContent->title)
+                                <h1 class="font-weight-bold mb-3">{{ $customContent->title }}</h1>
+                            @else
+                                <h1 class="font-weight-bold mb-3">Köszönjük a rendelését!</h1>
+                            @endif
+
+                            @if($customContent && $customContent->content)
+                                <div class="mb-4 fs-18">
+                                    {!! $customContent->content !!}
+                                </div>
+                            @endif
+
                             <p class="lead mb-4">A rendelés azonosítója: <span class="font-weight-bold text-primary">{{ $order->order_number }}</span></p>
-                            <p class="text-muted mb-5">Hamarosan felvesszük Önnel a kapcsolatot a megadott elérhetőségeken.</p>
-                            
+
+                            @if(!$customContent || !$customContent->content)
+                                <p class="text-muted mb-5">Hamarosan felvesszük Önnel a kapcsolatot a megadott elérhetőségeken.</p>
+                            @endif
+
+                            <div class="mt-4 mb-5 text-left mx-auto" style="max-width:800px;">
+                                <h4 class="font-weight-bold border-bottom pb-2 mb-3">Termékek</h4>
+                                <div class="table-responsive">
+                                    <table class="table table-sm">
+                                        <thead>
+                                            <tr>
+                                                <th></th>
+                                                <th>Termék</th>
+                                                @if($showPrices && $order->total_price > 0)
+                                                    <th class="text-right">Egységár</th>
+                                                @endif
+                                                <th class="text-center">Mennyiség</th>
+                                                @if($showPrices && $order->total_price > 0)
+                                                    <th class="text-right">Sorösszeg</th>
+                                                @endif
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            @foreach($order->items as $item)
+                                                <tr>
+                                                    <td class="" style="width: 100px;">
+                                                        @if($item->product && $item->product->primary_image_thumb)
+                                                            <img src="{{ $item->product->primary_image_thumb }}" class="img-fluid mr-2"
+                                                                 style=" width: 80px;">
+                                                        @endif
+                                                    </td>
+                                                    <td class="align-middle">
+                                                        <span class="fw-600">{{ $item->product_name }}</span>
+                                                    </td>
+                                                    @if($showPrices && $order->total_price > 0)
+                                                        <td class="text-right align-middle">{{ number_format($item->unit_price, 0, '.', ' ') }} {{ $order->currency }}</td>
+                                                    @endif
+                                                    <td class="text-center align-middle">{{ $item->quantity }} db</td>
+                                                    @if($showPrices && $order->total_price > 0)
+                                                        <td class="text-right align-middle">{{ number_format($item->total_price, 0, '.', ' ') }} {{ $order->currency }}</td>
+                                                    @endif
+                                                </tr>
+                                            @endforeach
+                                        </tbody>
+                                        @if($showPrices && $order->total_price > 0)
+                                            <tfoot>
+                                                <tr class="font-weight-bold fs-18">
+                                                    <td colspan="{{ $showPrices ? 4 : 3 }}" class="text-right">Összesen:</td>
+                                                    <td class="text-right text-primary">{{ number_format($order->total_price, 0, '.', ' ') }} {{ $order->currency }}</td>
+                                                </tr>
+                                            </tfoot>
+                                        @endif
+                                    </table>
+                                </div>
+                            </div>
+
                             <a href="{{ route('site.webshop.categories.index') }}" class="btn btn-primary btn-lg px-5 font-weight-bold">
                                 Vissza a főoldalra
                             </a>
@@ -24,4 +89,10 @@
             </div>
         </div>
     </div>
+    @push('scripts')
+        @php($__scripts = \Weboldalnet\WebshopAiDefault\Models\WebshopTrackingScript::byPage('thank_you')->active()->ordered()->get())
+        @foreach($__scripts as $__s)
+            {!! $__s->script !!}
+        @endforeach
+    @endpush
 @endsection

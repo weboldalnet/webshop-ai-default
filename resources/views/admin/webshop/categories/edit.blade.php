@@ -18,4 +18,7 @@
         </form>
     </div>
     <link rel="stylesheet" href="/packages/webshop/admin/css/webshop-admin.css">
+
+
+    @include('admin.commons.img-cropper')
 @endsection

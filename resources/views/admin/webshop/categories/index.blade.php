@@ -39,9 +39,7 @@
                 <thead class="thead-dark">
                 <tr>
                     <th style="width:40px"><i class="fa fa-arrows-alt"></i></th>
-                    @if($ws['category_icon_enabled'] ?? false)
-                        <th>Ikon</th>
-                    @endif
+                    <th>Kép</th>
                     <th>Név</th>
                     @if($ws['category_parent_enabled'] ?? false)
                         <th>Szülő</th>
@@ -54,15 +52,13 @@
                 @foreach($categories as $cat)
                     <tr>
                         <td class="ws-drag-handle"><i class="fa fa-grip-vertical text-muted"></i><input type="hidden" class="js-sort-id" value="{{ $cat->id }}"></td>
-                        @if($ws['category_icon_enabled'] ?? false)
-                            <td>
-                                @if($cat->icon)
-                                    <img src="{{ $cat->icon }}" alt="ikon" style="max-height: 30px; max-width: 30px;">
-                                @else
-                                    -
-                                @endif
-                            </td>
-                        @endif
+                        <td>
+                            @if($cat->getListImageUrl())
+                                <img src="{{ $cat->getListImageUrl() }}" alt="kép" style="max-height: 40px; max-width: 40px; border-radius: 4px;">
+                            @else
+                                -
+                            @endif
+                        </td>
                         <td class="font-weight-bold">{{ $cat->name_singular }}</td>
                         @if($ws['category_parent_enabled'] ?? false)
                             <td>{{ $cat->parent ? $cat->parent->name_singular : '-' }}</td>

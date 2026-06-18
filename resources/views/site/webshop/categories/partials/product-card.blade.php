@@ -19,29 +19,48 @@
         @endif
     </a>
     <div class="card-body d-flex py-3 flex-column">
-        <h5 class="ws-product-card-title font-weight-bold">
-            <a href="{{ route('site.webshop.products.show', $product) }}" class="text-dark text-decoration-none">{{ $product->name }}</a>
-        </h5>
+        @if(($ws['product_secondary_name_enabled'] ?? 'false') === 'true' && $product->secondary_name)
+            <h5 class="ws-product-card-title sec-title font-weight-bold mb-0">
+                <a href="{{ route('site.webshop.products.show', $product) }}"
+                   class="text-dark text-decoration-none">
+                    {{ $product->name }}
+                </a>
+            </h5>
+            <div class="ws-product-card-sec-title fs-14 text-muted">{{ $product->secondary_name }}</div>
+        @else
+            <h5 class="ws-product-card-title font-weight-bold">
+                <a href="{{ route('site.webshop.products.show', $product) }}"
+                   class="text-dark text-decoration-none">
+                    {{ $product->name }}
+                </a>
+            </h5>
+        @endif
 
         <div class="ws-product-card-badges mb-2">
-            @php
-                $cardProps = $product->category->propertyCategories()
-                    ->wherePivot('show_on_product_card', true)
-                    ->orderByPivot('sort_order')
-                    ->get();
-            @endphp
-            @foreach($cardProps as $pc)
+            @if(($ws['product_short_desc_instead_of_properties_enabled'] ?? 'false') === 'true' && $product->short_desc)
+                <div class="fs-14 text-muted mb-1 lh-12">
+                    {{ \Illuminate\Support\Str::limit($product->short_desc, 100) }}
+                </div>
+            @else
                 @php
-                    $pProps = $product->productProperties()->where('property_category_id', $pc->id)->get();
+                    $cardProps = $product->category->propertyCategories()
+                        ->wherePivot('show_on_product_card', true)
+                        ->orderByPivot('sort_order')
+                        ->get();
                 @endphp
-                @foreach($pProps as $pp)
-                    @if($pp->property)
-                        <span class="badge badge-secondary mb-1" title="{{ $pc->name }}">{{ $pp->property->name }}</span>
-                    @elseif($pp->number_value !== null)
-                        <span class="badge badge-info mb-1" title="{{ $pc->name }}">{{ (float)$pp->number_value }}{{ $pc->suffix }}</span>
-                    @endif
+                @foreach($cardProps as $pc)
+                    @php
+                        $pProps = $product->productProperties()->where('property_category_id', $pc->id)->get();
+                    @endphp
+                    @foreach($pProps as $pp)
+                        @if($pp->property)
+                            <span class="badge badge-secondary mb-1" title="{{ $pc->name }}">{{ $pp->property->name }}</span>
+                        @elseif($pp->number_value !== null)
+                            <span class="badge badge-info mb-1" title="{{ $pc->name }}">{{ (float)$pp->number_value }}{{ $pc->suffix }}</span>
+                        @endif
+                    @endforeach
                 @endforeach
-            @endforeach
+            @endif
         </div>
 
         <div class="mt-auto pt-2 border-top d-flex flex-wrap justify-content-between align-items-end">

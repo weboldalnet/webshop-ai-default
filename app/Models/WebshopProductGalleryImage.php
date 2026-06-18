@@ -21,7 +21,7 @@ class WebshopProductGalleryImage extends Model
 
     protected $table = 'public.webshop_product_gallery_images';
 
-    protected $fillable = ['product_id', 'image', 'image_thumb', 'alt', 'sort_order', 'is_active'];
+    protected $fillable = ['product_id', 'image', 'image_thumb', 'alt', 'sort_order', 'is_active', 'gallery_type'];
 
     protected $casts = ['product_id' => 'integer', 'sort_order' => 'integer', 'is_active' => 'boolean'];
 

@@ -52,11 +52,17 @@
             <table class="table table-hover">
                 <thead class="thead-dark">
                 <tr>
-                    <th>Rendelésszám</th>
-                    <th>Vevő</th>
+                    <th class="text-left">Rendelésszám</th>
+                    <th class="text-left">Vevő</th>
                     <th>Státusz</th>
                     @if($pricesVisible)
                         <th>Összeg</th>
+                    @endif
+                    @if($paymentOptionsEnabled)
+                        <th>Fizetés</th>
+                    @endif
+                    @if($shippingOptionsEnabled)
+                        <th>Szállítás</th>
                     @endif
                     <th>Teljesített</th>
                     <th>Dátum</th>
@@ -66,11 +72,69 @@
                 <tbody>
                 @foreach($orders as $order)
                     <tr>
-                        <td class="">{{ $order->order_number }}</td>
-                        <td class="lh-1 py-1"><p class="mb-0 fw-600">{{ $order->customer_name }}</p><small class="text-muted">{{ $order->customer_email }}</small></td>
+                        <td class="text-left fs-14">{{ $order->order_number }}</td>
+                        <td class="lh-1 py-1 text-left"><p class="mb-0 fw-600">{{ $order->customer_name }}</p><small class="text-muted">{{ $order->customer_email }}</small></td>
                         <td><span class="badge fs-16 fw-600 badge-{{ $order->status === 'completed' ? 'success' : ($order->status === 'cancelled' ? 'danger' : 'warning') }}">{{ $order->status_label }}</span></td>
                         @if($pricesVisible)
                             <td class="fw-600">{{ hufFormat($order->total_price) }}</td>
+                        @endif
+                        @if($paymentOptionsEnabled)
+                            <td class="fs-14 py-1">
+                                @if($order->payment_status)
+                                    <span class="badge fw-600 badge-{{ $order->payment_status === 'paid' ? 'success' : ($order->payment_status === 'failed' ? 'danger' : ($order->payment_status === 'cancelled' ? 'secondary' : 'warning')) }}">
+                                        {{ $paymentStatusLabels[$order->payment_status] ?? $order->payment_status }}
+                                    </span>
+                                @else
+                                    <span class="text-muted">—</span>
+                                @endif
+                                @if($order->payment_method)
+                                    @php
+                                        $paymentLabel = $paymentMethodLabels[$order->payment_method] ?? $order->payment_method;
+                                        $paymentSubProvider = null;
+                                        if ($order->commerce_payment_transaction_id && isset($paymentMethodLabels)) {
+                                            try {
+                                                $tx = $order->paymentTransaction;
+                                                if ($tx && $tx->provider && $tx->provider !== $order->payment_method) {
+                                                    $paymentSubProvider = $paymentMethodLabels[$tx->provider] ?? $tx->provider;
+                                                }
+                                            } catch (\Throwable $e) {}
+                                        }
+                                    @endphp
+                                    <br><span class="text-muted">{{ $paymentLabel }}</span>
+                                    @if($paymentSubProvider)
+                                        <br><span class="text-muted fw-600">{{ $paymentSubProvider }}</span>
+                                    @endif
+                                @endif
+                            </td>
+                        @endif
+                        @if($shippingOptionsEnabled)
+                            <td class="fs-14 py-1">
+                                @if($order->shipping_status)
+                                    <span class="badge fw-600 badge-{{ $order->shipping_status === 'shipped' || $order->shipping_status === 'delivered' ? 'success' : ($order->shipping_status === 'failed' ? 'danger' : 'warning') }}">
+                                        {{ $shippingStatusLabels[$order->shipping_status] ?? $order->shipping_status }}
+                                    </span>
+                                @else
+                                    <span class="text-muted">—</span>
+                                @endif
+                                @if($order->shipping_method)
+                                    @php
+                                        $shippingLabel = $shippingMethodLabels[$order->shipping_method] ?? $order->shipping_method;
+                                        $shippingSubProvider = null;
+                                        if ($order->commerce_shipment_id && isset($shippingMethodLabels)) {
+                                            try {
+                                                $sh = $order->shipment;
+                                                if ($sh && $sh->provider && $sh->provider !== $order->shipping_method) {
+                                                    $shippingSubProvider = $shippingMethodLabels[$sh->provider] ?? $sh->provider;
+                                                }
+                                            } catch (\Throwable $e) {}
+                                        }
+                                    @endphp
+                                    <br><span class="text-muted">{{ $shippingLabel }}</span>
+                                    @if($shippingSubProvider)
+                                        <br><span class="text-muted fw-600">{{ $shippingSubProvider }}</span>
+                                    @endif
+                                @endif
+                            </td>
                         @endif
                         <td>
                             <div class="custom-control custom-switch">

@@ -269,8 +269,14 @@ var WebshopAdmin = (function ($) {
      * Galéria kép feltöltés AJAX
      */
     function initGalleryUpload(inputSelector, containerSelector) {
-        $(document).on('change', inputSelector, function () {
-            var files = $(this)[0].files;
+        var $input = $(inputSelector);
+        
+        // Eltároljuk a konténert az inputon
+        $input.data('container', containerSelector);
+
+        // Change esemény: gomb megjelenítése
+        $input.on('change', function () {
+            var files = this.files;
             var $btnStart = $(this).closest('.js-gallery-upload-container').find('.js-gallery-upload-start');
             if (files.length > 0) {
                 $btnStart.show();
@@ -278,75 +284,228 @@ var WebshopAdmin = (function ($) {
                 $btnStart.hide();
             }
         });
+        
+        // Csak egyszer regisztráljuk a globális click eseményeket
+        if (!window.wsGalleryEventsInitialized) {
+            window.wsGalleryEventsInitialized = true;
+            
+            $(document).on('click', '.js-gallery-upload-start', function () {
+                var $btnStart = $(this);
+                var $section = $btnStart.closest('.js-gallery-upload-container');
+                var $input = $section.find('.js-gallery-upload');
+                var url = $input.data('url');
+                var containerSelector = $input.data('container');
+                var $container = $(containerSelector);
+                var $status = $section.find('.js-gallery-upload-status');
+                var $count = $section.find('.js-gallery-upload-count');
+                var $total = $section.find('.js-gallery-upload-total');
+                var files = $input[0].files;
 
-        $(document).on('click', '.js-gallery-upload-start', function () {
-            var $btnStart = $(this);
-            var $section = $btnStart.closest('.js-gallery-upload-container');
-            var $input = $section.find(inputSelector);
-            var url = $input.data('url');
-            var $container = $(containerSelector);
-            var $status = $section.find('.js-gallery-upload-status');
-            var $count = $section.find('.js-gallery-upload-count');
-            var $total = $section.find('.js-gallery-upload-total');
-            var files = $input[0].files;
+                if (files.length === 0) return;
 
-            if (files.length === 0) return;
+                $status.show();
+                $btnStart.hide();
+                $input.prop('disabled', true);
+                $input.next('label').removeClass('font-weight-bold').text('Kép feltöltése folyamatban..');
+                $total.text(files.length);
+                $count.text(0);
 
-            $status.show();
-            $btnStart.hide();
-            $input.prop('disabled', true);
-            $input.next('label').removeClass('font-weight-bold').text('Kép feltöltése folyamatban..');
-            $total.text(files.length);
-            $count.text(0);
+                var uploadSequence = function (index) {
+                    if (index >= files.length) {
+                        $status.hide();
+                        $input.prop('disabled', false);
+                        $input.val('');
+                        return;
+                    }
 
-            var uploadSequence = function (index) {
-                if (index >= files.length) {
-                    $status.hide();
-                    $input.prop('disabled', false);
-                    $input.val('');
-                    return;
-                }
+                    $count.text(index + 1);
+                    var formData = new FormData();
+                    formData.append('gallery_image', files[index]);
+                    formData.append('gallery_type', $input.data('type') || 'default');
 
-                $count.text(index + 1);
-                var formData = new FormData();
-                formData.append('gallery_image', files[index]);
+                    $.ajax({
+                        url: url,
+                        method: 'POST',
+                        data: formData,
+                        processData: false,
+                        contentType: false,
+                        success: function (res) {
+                            if (res.success) {
+                                $container.append(res.html);
+                            } else {
+                                showToast('error', res.message || 'Hiba történt a feltöltés során.');
+                            }
+                        },
+                        error: function (xhr) {
+                            var msg = 'Hiba történt.';
+                            if (xhr.responseJSON && xhr.responseJSON.message) msg = xhr.responseJSON.message;
+                            showToast('error', msg);
+                        },
+                        complete: function () {
+                            uploadSequence(index + 1);
+                            if (index + 1 >= files.length) {
+                                 $input.next('label').text('Képek feltöltve!');
+                            }
+                        }
+                    });
+                };
+
+                uploadSequence(0);
+            });
+
+            // Galéria törlés AJAX
+            $(document).on('click', '.js-delete-gallery-item', function () {
+                if (!confirm('Biztosan törlöd a képet?')) return;
+
+                var $btn = $(this);
+                var url = $btn.data('url');
+                var id = $btn.data('id');
+
+                $.ajax({
+                    url: url,
+                    method: 'DELETE',
+                    success: function (res) {
+                        if (res.success) {
+                            $('#galleryItem' + id).remove();
+                            showToast('success', res.message);
+                        }
+                    },
+                    error: function () {
+                        showToast('error', 'Hiba történt a törlés során.');
+                    }
+                });
+            });
+
+            // Alt szöveg modal megnyitása
+            $(document).on('click', '.js-edit-gallery-alt', function () {
+                var $btn = $(this);
+                var id = $btn.data('id');
+                var alt = $btn.attr('data-alt');
+
+                $('#js-gallery-alt-id').val(id);
+                $('#js-gallery-alt-input').val(alt);
+                $('#galleryAltModal').modal('show');
+            });
+
+            // Alt szöveg mentése AJAX
+            $(document).on('click', '.js-save-gallery-alt', function () {
+                var $btn = $(this);
+                var url = $btn.data('url');
+                var id = $('#js-gallery-alt-id').val();
+                var alt = $('#js-gallery-alt-input').val();
+
+                $btn.prop('disabled', true).html('<i class="fa fa-spinner fa-spin"></i> Mentés...');
 
                 $.ajax({
                     url: url,
                     method: 'POST',
-                    data: formData,
-                    processData: false,
-                    contentType: false,
+                    data: { id: id, alt: alt },
                     success: function (res) {
                         if (res.success) {
-                            $container.append(res.html);
-                            // Ha van custom file input inicializálva az új elemen (pl. alt módosítóhoz vagy jövőbeli bővítéshez)
-                            // De itt leginkább a feltöltő labelt kell visszaállítani a végén
+                            $('.js-edit-gallery-alt[data-id="' + id + '"]').attr('data-alt', alt);
+                            $('#galleryAltModal').modal('hide');
+                            showToast('success', res.message);
                         } else {
-                            showToast('error', res.message || 'Hiba történt a feltöltés során.');
+                            showToast('error', res.message);
                         }
                     },
-                    error: function (xhr) {
-                        var msg = 'Hiba történt.';
-                        if (xhr.responseJSON && xhr.responseJSON.message) msg = xhr.responseJSON.message;
-                        showToast('error', msg);
+                    error: function () {
+                        showToast('error', 'Hiba történt a mentés során.');
                     },
                     complete: function () {
-                        uploadSequence(index + 1);
-                        if (index + 1 >= files.length) {
-                             $input.next('label').text('Képek feltöltve!');
-                        }
+                        $btn.prop('disabled', false).text('Mentés');
                     }
                 });
-            };
+            });
+        }
+    }
 
-            uploadSequence(0);
+    /**
+     * Termék dokumentumok kezelése
+     */
+    function initDocumentActions() {
+        // Típus váltás (link vs fájl)
+        $(document).on('change', '.js-new-doc-type', function() {
+            var type = $(this).val();
+            if (type === 'link') {
+                $('.js-doc-url-group').show();
+                $('.js-doc-file-group').hide();
+            } else {
+                $('.js-doc-url-group').hide();
+                $('.js-doc-file-group').show();
+            }
         });
 
-        // Galéria törlés AJAX
-        $(document).on('click', '.js-delete-gallery-item', function () {
-            if (!confirm('Biztosan törlöd a képet?')) return;
+        // Dokumentum mentése
+        $(document).on('click', '.js-save-document', function() {
+            var $btn = $(this);
+            var url = $btn.data('url');
+            var $container = $btn.closest('.content-box');
+            
+            var name = $container.find('.js-new-doc-name').val();
+            var type = $container.find('.js-new-doc-type').val();
+            var docUrl = $container.find('.js-new-doc-url').val();
+            var fileInput = $container.find('.js-new-doc-file')[0];
+            var file = fileInput ? fileInput.files[0] : null;
 
+            if (!name) {
+                showToast('error', 'Kérjük, adja meg a dokumentum nevét.');
+                return;
+            }
+
+            var formData = new FormData();
+            formData.append('doc_name', name);
+            formData.append('doc_type', type);
+            if (type === 'link') {
+                if (!docUrl) {
+                    showToast('error', 'Kérjük, adja meg az URL-t.');
+                    return;
+                }
+                formData.append('doc_url', docUrl);
+            } else {
+                if (!file) {
+                    showToast('error', 'Kérjük, válasszon ki egy fájlt.');
+                    return;
+                }
+                formData.append('doc_file', file);
+            }
+
+            $btn.prop('disabled', true).html('<i class="fa fa-spinner fa-spin"></i> Mentés...');
+
+            $.ajax({
+                url: url,
+                method: 'POST',
+                data: formData,
+                processData: false,
+                contentType: false,
+                success: function(res) {
+                    if (res.success) {
+                        showToast('success', res.message);
+                        setTimeout(function() {
+                            location.reload();
+                        }, 1000);
+                    } else {
+                        showToast('error', res.message || 'Hiba történt.');
+                        $btn.prop('disabled', false).html('<i class="fa fa-plus"></i> Dokumentum mentése');
+                    }
+                },
+                error: function(xhr) {
+                    var msg = 'Hiba történt a mentés során.';
+                    if (xhr.status === 422 && xhr.responseJSON && xhr.responseJSON.errors) {
+                        msg = Object.values(xhr.responseJSON.errors).flat()[0];
+                    } else if (xhr.responseJSON && xhr.responseJSON.message) {
+                        msg = xhr.responseJSON.message;
+                    }
+                    showToast('error', msg);
+                    $btn.prop('disabled', false).html('<i class="fa fa-plus"></i> Dokumentum mentése');
+                }
+            });
+        });
+
+        // Dokumentum törlése
+        $(document).on('click', '.js-delete-document', function() {
+            if (!confirm('Biztosan törli a dokumentumot?')) return;
+            
             var $btn = $(this);
             var url = $btn.data('url');
             var id = $btn.data('id');
@@ -354,57 +513,14 @@ var WebshopAdmin = (function ($) {
             $.ajax({
                 url: url,
                 method: 'DELETE',
-                success: function (res) {
+                success: function(res) {
                     if (res.success) {
-                        $('#galleryItem' + id).remove();
-                        showToast('success', res.message);
+                        $btn.closest('tr').remove();
+                        showToast('success', 'Dokumentum törölve.');
                     }
                 },
-                error: function () {
+                error: function() {
                     showToast('error', 'Hiba történt a törlés során.');
-                }
-            });
-        });
-
-        // Alt szöveg modal megnyitása
-        $(document).on('click', '.js-edit-gallery-alt', function () {
-            var $btn = $(this);
-            var id = $btn.data('id');
-            var alt = $btn.attr('data-alt'); // attr-t használunk, hogy a dinamikusan frissített értéket is megkapjuk
-
-            $('#js-gallery-alt-id').val(id);
-            $('#js-gallery-alt-input').val(alt);
-            $('#galleryAltModal').modal('show');
-        });
-
-        // Alt szöveg mentése AJAX
-        $(document).on('click', '.js-save-gallery-alt', function () {
-            var $btn = $(this);
-            var url = $btn.data('url');
-            var id = $('#js-gallery-alt-id').val();
-            var alt = $('#js-gallery-alt-input').val();
-
-            $btn.prop('disabled', true);
-
-            $.ajax({
-                url: url,
-                method: 'POST',
-                data: { id: id, alt: alt },
-                success: function (res) {
-                    if (res.success) {
-                        // Frissítjük a gombban tárolt alt-ot
-                        $('.js-edit-gallery-alt[data-id="' + id + '"]').attr('data-alt', alt);
-                        $('#galleryAltModal').modal('hide');
-                        showToast('success', res.message);
-                    } else {
-                        showToast('error', res.message);
-                    }
-                },
-                error: function () {
-                    showToast('error', 'Hiba történt a mentés során.');
-                },
-                complete: function () {
-                    $btn.prop('disabled', false);
                 }
             });
         });
@@ -632,6 +748,7 @@ var WebshopAdmin = (function ($) {
         initDeleteConfirm: initDeleteConfirm,
         initFilterType: initFilterType,
         initGalleryUpload: initGalleryUpload,
+        initDocumentActions: initDocumentActions,
         initOrderDetails: initOrderDetails,
         initAdminOrderCreate: initAdminOrderCreate,
         initProductRelationPicker: initProductRelationPicker,

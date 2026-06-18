@@ -10,6 +10,9 @@
 
             <div class="">
                 <h1 class="h2 mb-0 font-weight-bold">{{ $product->name }}</h1>
+                @if(($ws['product_secondary_name_enabled'] ?? 'false') === 'true' && $product->secondary_name)
+                    <div class="h4 text-muted mt-1">{{ $product->secondary_name }}</div>
+                @endif
             </div>
 
             <div class="row mt-2 ws-product-main">
@@ -17,6 +20,14 @@
                 <div class="col-lg-4 col-md-6 mb-4">
                     <div class="ws-product-gallery card shadow-sm">
                         <div class="ws-main-image p-2 text-center gallery">
+                            @if(\Weboldalnet\WebshopAiDefault\Services\Webshop\WebshopSettingsService::getBool('admin_product_labels_enabled') && $product->label)
+                                <div class="ws-product-label-badge badge position-absolute"
+                                     style="background-color: {{ $product->label->bg_color }}; color: {{ $product->label->text_color }};
+                    top: {{ (($ws['site_product_prices_visible'] ?? 'true') === 'true' && $product->sale_price && $product->discount_percentage > 0) ? '45px' : '10px' }};">
+                                    {{ $product->label->name }}
+                                </div>
+                            @endif
+
                             @if($product->primary_image)
                                 <a href="{{ $product->primary_image }}">
                                     <img src="{{ $product->primary_image }}" id="ws-main-img" alt="{{ $product->name }}" class="img-fluid" style="max-height: 100%;">
@@ -25,18 +36,18 @@
                                 <i class="fa fa-image fa-5x text-muted opacity-25"></i>
                             @endif
 
-                            @if($product->galleryImages->isNotEmpty())
-                                @foreach($product->galleryImages as $img)
+                            @if($product->defaultGalleryImages->isNotEmpty())
+                                @foreach($product->defaultGalleryImages as $img)
                                     <a href="{{ $img->image }}"></a>
                                 @endforeach
                             @endif
                         </div>
-                        @if($product->galleryImages->isNotEmpty())
+                        @if($product->defaultGalleryImages->isNotEmpty())
                             <div class="ws-thumbnails p-2 d-flex flex-wrap border-top">
                                 <div class="ws-thumb p-1" style="width: 25%; cursor: pointer;">
                                     <img src="{{ $product->primary_image_thumb }}" class="img-fluid border rounded js-thumb active" data-src="{{ $product->primary_image }}">
                                 </div>
-                                @foreach($product->galleryImages as $img)
+                                @foreach($product->defaultGalleryImages as $img)
                                     <div class="ws-thumb p-1" style="width: 25%; cursor: pointer;">
                                         <img src="{{ $img->image_thumb }}" class="img-fluid border rounded js-thumb" data-src="{{ $img->image }}" alt="{{ $img->alt }}">
                                     </div>
@@ -113,6 +124,27 @@
                 </div>
             </div>
 
+            <!-- Másodlagos galéria -->
+            @if(($ws['product_extra_gallery_enabled'] ?? 'false') === 'true' && $product->secondaryGalleryImages->isNotEmpty())
+                <div class="row mt-4">
+                    <div class="col-lg-12">
+                        <div class="card shadow-sm border-0">
+                            <div class="card-body">
+                                <div class="row gallery">
+                                    @foreach($product->secondaryGalleryImages as $img)
+                                        <div class="col-lg-2 col-md-3 col-6 mb-3">
+                                            <a href="{{ $img->image }}">
+                                                <img src="{{ $img->image_thumb }}" class="img-fluid border rounded" alt="{{ $img->alt }}">
+                                            </a>
+                                        </div>
+                                    @endforeach
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            @endif
+
             <!-- Tab-page rész -->
             <div class="row mt-4">
                 <div class="col-lg-12">
@@ -122,9 +154,9 @@
                                 <li class="nav-item">
                                     <a class="nav-link active px-4 py-2 font-weight-bold fs-20" id="desc-tab" data-toggle="tab" href="#desc" role="tab">Leírás</a>
                                 </li>
-                                @if(($ws['site_product_reviews_enabled'] ?? 'false') === 'true')
+                                @if(($ws['product_document_upload_enabled'] ?? 'false') === 'true' && $product->productDocuments->isNotEmpty())
                                     <li class="nav-item">
-                                        <a class="nav-link px-4 py-2 font-weight-bold fs-20" id="reviews-tab" data-toggle="tab" href="#reviews" role="tab">Vélemények ({{ $product->reviews()->active()->count() }})</a>
+                                        <a class="nav-link px-4 py-2 font-weight-bold fs-20" id="docs-tab" data-toggle="tab" href="#docs" role="tab">Dokumentumok</a>
                                     </li>
                                 @endif
                             </ul>
@@ -136,6 +168,32 @@
                             @if(($ws['site_product_reviews_enabled'] ?? 'false') === 'true')
                                 <div class="tab-pane fade" id="reviews" role="tabpanel">
                                     @include('site.webshop.products.partials.reviews')
+                                </div>
+                            @endif
+                            @if(($ws['product_document_upload_enabled'] ?? 'false') === 'true' && $product->productDocuments->isNotEmpty())
+                                <div class="tab-pane fade" id="docs" role="tabpanel">
+                                    <div class="table-responsive">
+                                        <table class="table table-bordered table-striped">
+                                            <thead>
+                                                <tr>
+                                                    <th>Dokumentum neve</th>
+                                                    <th style="width: 150px"></th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                @foreach($product->productDocuments as $doc)
+                                                    <tr>
+                                                        <td class="align-middle fw-600 fs-18">{{ $doc->name }}</td>
+                                                        <td class="text-center">
+                                                            <a href="{{ $doc->type === 'link' ? $doc->url : $doc->file_path }}" target="_blank" class="btn btn-primary btn-sm">
+                                                                Megnyitás <i class="fa fa-external-link-alt ml-1"></i>
+                                                            </a>
+                                                        </td>
+                                                    </tr>
+                                                @endforeach
+                                            </tbody>
+                                        </table>
+                                    </div>
                                 </div>
                             @endif
                         </div>
@@ -171,5 +229,12 @@
 
     @push('scripts')
         <script src="/packages/webshop/site/js/webshop-site.js"></script>
+        <script type="application/ld+json">
+            {!! (new \Weboldalnet\WebshopAiDefault\Services\Webshop\ProductSchemaService())->generateJson($product) !!}
+        </script>
+        @php($__scripts = \Weboldalnet\WebshopAiDefault\Models\WebshopTrackingScript::byPage('product')->active()->ordered()->get())
+        @foreach($__scripts as $__s)
+            {!! $__s->script !!}
+        @endforeach
     @endpush
 @endsection
