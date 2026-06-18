@@ -2,8 +2,8 @@
 @section('title', 'Sikeres rendelés')
 
 @section('content')
-    <div class="ws-page-container ws-checkout-success">
-        <div class="container-xl container-fluid pb-5 mt-5 text-center">
+    <div class="ws-page-container ws-checkout-success bg-light py-5">
+        <div class="container-xl container-fluid text-center">
             <div class="row justify-content-center">
                 <div class="col-lg-8">
                     <div class="card shadow-sm border border-grey py-5">
