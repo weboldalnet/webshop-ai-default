@@ -22,6 +22,7 @@ class WebshopCartService
             $cart[$productId] = [
                 'product_id' => $product->id,
                 'name' => $product->name,
+                'sec_name' => $product->secondary_name,
                 'slug' => $product->slug,
                 'quantity' => $quantity,
                 'price' => $product->sale_price ?? $product->price ?? 0,

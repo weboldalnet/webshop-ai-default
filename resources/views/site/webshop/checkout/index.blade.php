@@ -67,7 +67,13 @@
                                             @endif
                                         </div>
                                         <div class="flex-grow-1">
-                                            <h5 class="fs-16 font-weight-bold mb-1">{{ $item['name'] }}</h5>
+                                            <h5 class="fs-16 font-weight-bold mb-1">
+                                                {{ $item['name'] }}
+                                                @if($item['sec_name'])
+                                                    @if(($ws['site_product_prices_visible'] ?? 'true') === 'false') <br> @endif
+                                                    <span class="font-weight-light fs-14">{{ $item['sec_name'] }}</span>
+                                                @endif
+                                            </h5>
                                             @if(($ws['site_product_prices_visible'] ?? 'true') === 'true')
                                                 <div class="text-muted small lh-12">Egységár: {{ hufFormat($item['price']) }}</div>
                                             @endif

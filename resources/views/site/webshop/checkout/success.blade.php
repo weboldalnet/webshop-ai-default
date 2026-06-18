@@ -57,7 +57,10 @@
                                                 </td>
                                                 <td class="align-middle">
                                                     <span class="fw-600">{{ $item->product_name }}</span>
-
+                                                    @if($item['sec_name'])
+                                                        @if(($ws['site_product_prices_visible'] ?? 'true') === 'false') <br> @endif
+                                                        <span class="font-weight-light fs-14">{{ $item['sec_name'] }}</span>
+                                                    @endif
                                                 </td>
                                                 @if($showPrices && $order->total_price > 0)
                                                     <td class="text-right align-middle ws-nowrap">{{ number_format($item->unit_price, 0, '.', ' ') }} {{ $order->currency }}</td>

@@ -10,6 +10,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * @property int $category_id
  * @property int|null $label_id
  * @property string $name
+ * @property string $secondary_name
  * @property string $slug
  * @property string|null $description
  * @property string|null $primary_image
@@ -64,7 +65,7 @@ class WebshopProduct extends Model
 
     public function scopeActive($query) { return $query->where('is_active', true); }
     public function scopeOrdered($query) { return $query->orderBy('sort_order'); }
-    public function scopeSearch($query, $search) { return $search ? $query->where('name', 'ILIKE', '%'.$search.'%') : $query; }
+    public function scopeSearch($query, $search) { return $search ? $query->where('name', 'ILIKE', '%'.$search.'%')->orWhere('secondary_name', 'ILIKE', '%'.$search.'%') : $query; }
     public function scopeByCategory($query, $categoryId) { return $categoryId ? $query->where('category_id', $categoryId) : $query; }
 
     public function getDiscountPercentageAttribute()

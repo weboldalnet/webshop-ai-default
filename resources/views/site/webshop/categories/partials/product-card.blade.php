@@ -26,7 +26,7 @@
                     {{ $product->name }}
                 </a>
             </h5>
-            <div class="ws-product-card-sec-title fs-14 text-muted">{{ $product->secondary_name }}</div>
+            <div class="ws-product-card-sec-title fs-14 text-muted mb-1">{{ $product->secondary_name }}</div>
         @else
             <h5 class="ws-product-card-title font-weight-bold">
                 <a href="{{ route('site.webshop.products.show', $product) }}"

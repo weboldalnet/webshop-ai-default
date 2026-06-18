@@ -224,7 +224,8 @@ class WebshopProductController extends AdminExtendedController
         if ($search) {
             $query->where(function ($q) use ($search) {
                 $q->where('name', 'ILIKE', '%' . $search . '%')
-                  ->orWhere('sku', 'ILIKE', '%' . $search . '%');
+                  ->orWhere('sku', 'ILIKE', '%' . $search . '%')
+                  ->orWhere('secondary_name', 'ILIKE', '%' . $search . '%');
             });
         }
 
@@ -258,6 +259,7 @@ class WebshopProductController extends AdminExtendedController
         return response()->json($products->map(fn($p) => [
             'id' => $p->id,
             'name' => $p->name,
+            'sec_name' => $p->secondary_name,
             'sku' => $p->sku,
             'category_name' => $p->category->name_singular ?? '',
             'primary_image' => $p->primary_image_thumb ?? $p->primary_image,
@@ -356,7 +358,7 @@ class WebshopProductController extends AdminExtendedController
         }
 
         WebshopProductDocument::create($data);
-        
+
         if ($request->ajax()) {
             return response()->json(['success' => true, 'message' => 'Dokumentum sikeresen hozzáadva.']);
         }

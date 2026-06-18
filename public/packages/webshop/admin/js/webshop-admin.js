@@ -270,7 +270,7 @@ var WebshopAdmin = (function ($) {
      */
     function initGalleryUpload(inputSelector, containerSelector) {
         var $input = $(inputSelector);
-        
+
         // Eltároljuk a konténert az inputon
         $input.data('container', containerSelector);
 
@@ -284,11 +284,11 @@ var WebshopAdmin = (function ($) {
                 $btnStart.hide();
             }
         });
-        
+
         // Csak egyszer regisztráljuk a globális click eseményeket
         if (!window.wsGalleryEventsInitialized) {
             window.wsGalleryEventsInitialized = true;
-            
+
             $(document).on('click', '.js-gallery-upload-start', function () {
                 var $btnStart = $(this);
                 var $section = $btnStart.closest('.js-gallery-upload-container');
@@ -441,7 +441,7 @@ var WebshopAdmin = (function ($) {
             var $btn = $(this);
             var url = $btn.data('url');
             var $container = $btn.closest('.content-box');
-            
+
             var name = $container.find('.js-new-doc-name').val();
             var type = $container.find('.js-new-doc-type').val();
             var docUrl = $container.find('.js-new-doc-url').val();
@@ -505,7 +505,7 @@ var WebshopAdmin = (function ($) {
         // Dokumentum törlése
         $(document).on('click', '.js-delete-document', function() {
             if (!confirm('Biztosan törli a dokumentumot?')) return;
-            
+
             var $btn = $(this);
             var url = $btn.data('url');
             var id = $btn.data('id');
@@ -641,12 +641,13 @@ var WebshopAdmin = (function ($) {
                                             data-id="${p.id}"
                                             data-name="${p.name}"
                                             data-sku="${p.sku || ''}"
+                                            data-secname="${p.sec_name || ''}"
                                             data-category="${p.category_name}"
                                             data-img="${p.primary_image || ''}">
                                             <div class="d-flex align-items-center">
                                                 <img src="${p.primary_image || ''}" class="img-fluid mr-2" style="width:30px;height:30px;object-fit:cover">
                                                 <div class="lh-12">
-                                                    <div class="fw-600 fs-14">${p.name}</div>
+                                                    <div class="fw-600 fs-14">${p.name} <span class="text-muted font-weight-normal">${p.sec_name || ''}</span></div>
                                                     <small class="text-muted">${p.category_name} ${p.sku ? '| ' + p.sku : ''}</small>
                                                 </div>
                                             </div>

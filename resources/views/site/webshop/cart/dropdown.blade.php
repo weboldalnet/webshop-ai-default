@@ -9,7 +9,13 @@
                 @endif
             </div>
             <div class="flex-grow-1">
-                <div class="font-weight-bold fs-14 text-truncate" style="max-width: 180px;">{{ $item['name'] }}</div>
+                <div class="font-weight-bold fs-14 text-truncate lh-12" style="max-width: 180px;">
+                    {{ $item['name'] }}
+                    @if($item['sec_name'])
+                        @if(($ws['site_product_prices_visible'] ?? 'true') === 'false') <br> @endif
+                        <span class="font-weight-light fs-13">{{ $item['sec_name'] }}</span>
+                    @endif
+                </div>
                 <div class="small text-muted">
                     {{ $item['quantity'] }} db @if(($ws['site_product_prices_visible'] ?? 'true') === 'true')× {{ hufFormat($item['price']) }} @endif
                 </div>

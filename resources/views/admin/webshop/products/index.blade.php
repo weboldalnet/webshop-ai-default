@@ -56,7 +56,7 @@
                 <tr>
                     <th style="width:40px"><i class="fa fa-arrows-alt"></i></th>
                     <th class="py-1"><i class="fa fa-image fs-20"></i></th>
-                    <th>Név</th>
+                    <th class="text-left">Név</th>
                     <th>Kategória</th>
                     @if(($ws['product_variations_enabled'] ?? 'false') === 'true')<th>Variáció</th>@endif
                     @if(($ws['product_related_enabled'] ?? 'false') === 'true')<th>Kapcs.t</th>@endif
@@ -70,7 +70,10 @@
                     <tr>
                         <td class="ws-drag-handle"><i class="fa fa-grip-vertical text-muted"></i><input type="hidden" class="js-sort-id" value="{{ $prod->id }}"></td>
                         <td class="py-1" style="max-width: 50px"><img src="{{ $prod->primary_image_thumb ?? $prod->primary_image }}" class="img-fluid" style="max-width: 50px; max-height: 50px;"></td>
-                        <td class="font-weight-bold">{{ $prod->name }}</td>
+                        <td class="font-weight-bold lh-12 py-1 text-left">
+                            <span>{{ $prod->name }}</span>
+                            @if($prod->secondary_name) <br><span class="fs-14 text-muted font-weight-normal lh-1">{{ $prod->secondary_name }}</span> @endif
+                        </td>
                         <td>
                             {{ $prod->category->name_singular ?? '-' }}
                             @if($prod->category && $prod->category->children->isNotEmpty())
