@@ -174,7 +174,7 @@
                                     <img src="{{ $category->list_image_cropped_path }}" class="img-fluid mb-2 mx-auto" style="max-height: 150px">
                                 @endif
                                 @include('admin.elements.commons.img-crop-object-input', [
-                                    'object' => $category,
+                                    'object' => $isEdit ? $category : new \Weboldalnet\WebshopAiDefault\Models\WebshopCategory(),
                                     'label' => 'Vágott kép feltöltése (1 egység szélesség)',
                                     'variable' => 'list_image_cropped_upload',
                                     'fieldName' => 'list_image_cropped_upload',
@@ -191,7 +191,7 @@
                                         <img src="{{ $category->list_image_cropped_path_wide }}" class="img-fluid mb-2" style="max-height: 150px">
                                     @endif
                                     @include('admin.elements.commons.img-crop-object-input', [
-                                        'object' => $category,
+                                        'object' =>  $isEdit ? $category : new \Weboldalnet\WebshopAiDefault\Models\WebshopCategory(),
                                         'label' => 'Vágott kép feltöltése (' . $i . ' egység szélesség)',
                                         'variable' => 'list_image_cropped_upload_wide',
                                         'fieldName' => 'list_image_cropped_upload_wide',
