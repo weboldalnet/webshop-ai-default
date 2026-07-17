@@ -173,8 +173,22 @@ class WebshopCheckoutController extends Controller
     /**
      * Fizetési eredmény oldal (online fizetés visszatérése után).
      */
-    public function paymentResult(WebshopOrder $order)
+    public function paymentResult(WebshopOrder $order, Request $request)
     {
+        // Ha online fizetés volt, megpróbáljuk szinkronizálni az állapotot a visszatéréskor
+        if (WebshopCommerceService::isAvailable() && $order->payment_method) {
+            try {
+                $processor = app(\Weboldalnet\CommerceCore\Services\PaymentCallbackProcessor::class);
+                // A Barion a query paraméterekben küldi a paymentId-t
+                $processor->process($order->payment_method, $request->all());
+            } catch (\Exception $e) {
+                Log::error('Webshop paymentResult sync error: ' . $e->getMessage(), [
+                    'order_id' => $order->id,
+                    'payment_method' => $order->payment_method,
+                ]);
+            }
+        }
+
         $order->refresh();
         return view('site.webshop.checkout.payment-result', compact('order'));
     }

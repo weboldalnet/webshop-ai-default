@@ -4,13 +4,17 @@ namespace Weboldalnet\WebshopAiDefault\Http\Controllers\Admin\Webshop;
 
 use App\Http\Controllers\Admin\AdminExtendedController;
 use Weboldalnet\WebshopAiDefault\Services\Webshop\WebshopSettingsService;
+use Weboldalnet\WebshopAiDefault\Services\Webshop\Commerce\WebshopCommerceService;
 use Illuminate\Http\Request;
 
 class WebshopSettingController extends AdminExtendedController
 {
     public function index()
     {
-        return view('admin.webshop.settings.index', ['ws' => WebshopSettingsService::all()]);
+        return view('admin.webshop.settings.index', [
+            'ws' => WebshopSettingsService::all(),
+            'paymentMethods' => WebshopCommerceService::getAllPaymentMethodLabels(),
+        ]);
     }
 
     public function update(Request $request)
@@ -46,6 +50,14 @@ class WebshopSettingController extends AdminExtendedController
             'category_list_image_enabled',
             'category_merchant_feed_enabled',
         ];
+
+        // Dinamikusan hozzáadjuk az online fizetési módok checkbox kulcsait
+        $allPaymentMethods = WebshopCommerceService::getAllPaymentMethodLabels();
+        foreach ($allPaymentMethods as $code => $label) {
+            if (WebshopCommerceService::isOnlinePaymentMethod($code)) {
+                $checkboxKeys[] = 'site_checkout_payment_method_' . $code . '_enabled';
+            }
+        }
 
         $valueKeys = [
             'site_category_cards_per_row', 'site_checkout_mode', 'site_product_list_default_view',

@@ -39,7 +39,10 @@ class WebshopCommerceService
         if (WebshopSettingsService::getBool('site_checkout_payment_online_enabled')) {
             foreach ($onlineCodes as $code) {
                 if (isset($allMethods[$code])) {
-                    $filtered[$code] = $allMethods[$code];
+                    // Csak akkor adjuk hozzá, ha az egyedi checkbox is be van pipálva az adminon
+                    if (WebshopSettingsService::getBool('site_checkout_payment_method_' . $code . '_enabled')) {
+                        $filtered[$code] = $allMethods[$code];
+                    }
                 }
             }
         }

@@ -209,6 +209,19 @@
                                                @if(($ws['site_checkout_payment_online_enabled'] ?? 'false') === 'true') checked @endif>
                                         <label class="custom-control-label" for="site_checkout_payment_online_enabled">Online fizetés</label>
                                     </div>
+                                    <div id="checkout-online-payment-providers" class="pl-4 mb-2" @if(($ws['site_checkout_payment_online_enabled'] ?? 'false') !== 'true') style="display:none;" @endif>
+                                        @foreach($paymentMethods as $code => $label)
+                                            @if(\Weboldalnet\WebshopAiDefault\Services\Webshop\Commerce\WebshopCommerceService::isOnlinePaymentMethod($code))
+                                                <div class="custom-control custom-checkbox mb-1">
+                                                    <input type="checkbox" class="custom-control-input" 
+                                                           id="site_checkout_payment_method_{{ $code }}_enabled" 
+                                                           name="site_checkout_payment_method_{{ $code }}_enabled"
+                                                           @if(($ws['site_checkout_payment_method_' . $code . '_enabled'] ?? 'false') === 'true') checked @endif>
+                                                    <label class="custom-control-label" for="site_checkout_payment_method_{{ $code }}_enabled">{{ $label }}</label>
+                                                </div>
+                                            @endif
+                                        @endforeach
+                                    </div>
                                     <div class="custom-control custom-checkbox mb-2">
                                         <input type="checkbox" class="custom-control-input" id="site_checkout_payment_cod_enabled" name="site_checkout_payment_cod_enabled"
                                                @if(($ws['site_checkout_payment_cod_enabled'] ?? 'false') === 'true') checked @endif>
@@ -323,6 +336,11 @@
                 var block = document.getElementById('checkout-payment-options-settings');
                 if (block) block.style.display = cb && cb.checked ? '' : 'none';
             }
+            function toggleOnlinePaymentProviders() {
+                var cb = document.getElementById('site_checkout_payment_online_enabled');
+                var block = document.getElementById('checkout-online-payment-providers');
+                if (block) block.style.display = cb && cb.checked ? '' : 'none';
+            }
             function toggleShippingOptionsSettings() {
                 var cb = document.getElementById('site_checkout_shipping_options_enabled');
                 var block = document.getElementById('checkout-shipping-options-settings');
@@ -335,6 +353,9 @@
 
                 var payOptCb = document.getElementById('site_checkout_payment_options_enabled');
                 if (payOptCb) payOptCb.addEventListener('change', togglePaymentOptionsSettings);
+
+                var onlinePayCb = document.getElementById('site_checkout_payment_online_enabled');
+                if (onlinePayCb) onlinePayCb.addEventListener('change', toggleOnlinePaymentProviders);
 
                 var shipOptCb = document.getElementById('site_checkout_shipping_options_enabled');
                 if (shipOptCb) shipOptCb.addEventListener('change', toggleShippingOptionsSettings);
