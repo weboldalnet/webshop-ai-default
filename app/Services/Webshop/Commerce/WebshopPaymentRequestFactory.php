@@ -8,8 +8,8 @@ class WebshopPaymentRequestFactory
 {
     public static function fromOrder(WebshopOrder $order, array $options = []): array
     {
-        $billingData = $order->billing_data ? json_decode($order->billing_data, true) : [];
-        $shippingData = $order->shipping_data ? json_decode($order->shipping_data, true) : [];
+        $billingData = $order->getBillingDataArray();
+        $shippingData = $order->getShippingDataArray();
 
         return [
             'order_id' => $order->id,

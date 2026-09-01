@@ -45,7 +45,10 @@ class CreateInvoiceForOrder implements ShouldQueue
             $result = WebshopCommerceService::createInvoice($order);
 
             if ($result['success']) {
-                $documentId = $result['documentId'] ?? null;
+                // A helyi bizonylat-sor azonosítója (int), NEM a szolgáltatói számlaszám.
+                $documentId = isset($result['documentId']) && is_numeric($result['documentId'])
+                    ? (int) $result['documentId']
+                    : null;
                 $order->markInvoiced($documentId);
                 Log::info('CreateInvoiceForOrder: Számla sikeresen elkészítve.', [
                     'order_id' => $this->orderId,

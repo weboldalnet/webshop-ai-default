@@ -142,7 +142,7 @@
                         <dl class="row mb-1">
                             @if($order->payment_method)
                                 <dt class="col-6 small text-muted">Fizetési mód:</dt>
-                                <dd class="col-6 small">{{ $order->payment_method }}</dd>
+                                <dd class="col-6 small">{{ \Weboldalnet\WebshopAiDefault\Services\Webshop\Commerce\WebshopCommerceService::getPaymentMethodLabel($order->payment_method) }}</dd>
                             @endif
                             <dt class="col-6 small text-muted">Fizetési státusz:</dt>
                             <dd class="col-6 small">
@@ -160,13 +160,15 @@
                                 <dd class="col-6 small">#{{ $order->commerce_payment_transaction_id }}</dd>
                             @endif
                         </dl>
+                        {{-- Az űrlap a fő szerkesztő űrlapon KÍVÜL van (lásd az oldal alján),
+                             mert az egymásba ágyazott form érvénytelen HTML. --}}
                         @if(in_array($order->payment_status, ['unpaid', 'pending', 'failed']))
-                            <form method="POST" action="{{ route('admin.webshop.orders.mark-paid', $order) }}" class="mt-2">
-                                @csrf @method('PATCH')
-                                <button type="submit" class="btn btn-sm btn-success w-100" onclick="return confirm('Biztosan manuálisan fizetettre állítja?')">
-                                    <i class="fa fa-check mr-1"></i> Manuálisan fizetve
-                                </button>
-                            </form>
+                            <button type="button" class="btn btn-sm btn-success w-100 mt-2 js-confirm-action"
+                                    data-confirm-form="markPaidForm"
+                                    data-confirm-title="Fizetettre állítás"
+                                    data-confirm-text="Biztosan manuálisan fizetettre állítod ezt a rendelést?">
+                                <i class="fa fa-check mr-1"></i> Manuálisan fizetve
+                            </button>
                         @endif
                     </div>
                 </div>
@@ -183,22 +185,38 @@
                                     {{ $order->invoice_status_label }}
                                 </span>
                             </dd>
-                            @if($order->invoiced_at)
+                            @if($order->invoiceDocument)
+                                @php $inv = $order->invoiceDocument; @endphp
+                                @if($inv->invoice_number)
+                                    <dt class="col-6 small text-muted">Számlaszám:</dt>
+                                    <dd class="col-6 small font-weight-bold">{{ $inv->invoice_number }}</dd>
+                                @endif
+                                <dt class="col-6 small text-muted">Kiállítva:</dt>
+                                <dd class="col-6 small">{{ $inv->issued_at ? $inv->issued_at->format('Y.m.d H:i') : '—' }}</dd>
+                                @if($inv->pdf_path)
+                                    <dt class="col-6 small text-muted">Letöltés:</dt>
+                                    <dd class="col-6 small">
+                                        <a href="{{ route('admin.webshop.invoices.download', $inv->id) }}" class="btn btn-xs btn-outline-danger px-2 py-0">
+                                            <i class="fa fa-file-pdf"></i> PDF
+                                        </a>
+                                    </dd>
+                                @endif
+                                @if($inv->error_message)
+                                    <dt class="col-12 small text-danger mt-1">Hibaüzenet:</dt>
+                                    <dd class="col-12 small text-danger font-italic">{{ $inv->error_message }}</dd>
+                                @endif
+                            @elseif($order->invoiced_at)
                                 <dt class="col-6 small text-muted">Számlázva:</dt>
                                 <dd class="col-6 small">{{ $order->invoiced_at->format('Y.m.d H:i') }}</dd>
                             @endif
-                            @if($order->commerce_invoice_document_id)
-                                <dt class="col-6 small text-muted">Bizonylat ID:</dt>
-                                <dd class="col-6 small">#{{ $order->commerce_invoice_document_id }}</dd>
-                            @endif
                         </dl>
                         @if(in_array($order->invoice_status, ['not_required', 'failed', 'pending']))
-                            <form method="POST" action="{{ route('admin.webshop.orders.create-invoice', $order) }}" class="mt-2">
-                                @csrf @method('POST')
-                                <button type="submit" class="btn btn-sm btn-outline-primary w-100" onclick="return confirm('Számlát kíván készíteni ehhez a rendeléshez?')">
-                                    <i class="fa fa-file-invoice mr-1"></i> Számla készítése
-                                </button>
-                            </form>
+                            <button type="button" class="btn btn-sm btn-outline-primary w-100 mt-2 js-confirm-action"
+                                    data-confirm-form="createInvoiceForm"
+                                    data-confirm-title="Számla készítése"
+                                    data-confirm-text="A Számlázz.hu-n valódi, éles számla kerül kiállításra ehhez a rendeléshez. Biztosan folytatod?">
+                                <i class="fa fa-file-invoice mr-1"></i> Számla készítése
+                            </button>
                         @endif
                     </div>
                 </div>
@@ -210,7 +228,7 @@
                         <dl class="row mb-1">
                             @if($order->shipping_method)
                                 <dt class="col-6 small text-muted">Szállítási mód:</dt>
-                                <dd class="col-6 small">{{ $order->shipping_method }}</dd>
+                                <dd class="col-6 small">{{ \Weboldalnet\WebshopAiDefault\Services\Webshop\Commerce\WebshopCommerceService::getShippingMethodLabel($order->shipping_method) }}</dd>
                             @endif
                             <dt class="col-6 small text-muted">Szállítás státusz:</dt>
                             <dd class="col-6 small">
@@ -229,12 +247,12 @@
                             @endif
                         </dl>
                         @if(in_array($order->shipping_status, ['not_required', 'pending', 'failed']))
-                            <form method="POST" action="{{ route('admin.webshop.orders.create-shipment', $order) }}" class="mt-2">
-                                @csrf @method('POST')
-                                <button type="submit" class="btn btn-sm btn-outline-info w-100" onclick="return confirm('Szállítmányt kíván létrehozni?')">
-                                    <i class="fa fa-shipping-fast mr-1"></i> Szállítmány létrehozása
-                                </button>
-                            </form>
+                            <button type="button" class="btn btn-sm btn-outline-info w-100 mt-2 js-confirm-action"
+                                    data-confirm-form="createShipmentForm"
+                                    data-confirm-title="Szállítmány létrehozása"
+                                    data-confirm-text="Biztosan létrehozod a szállítmányt ehhez a rendeléshez?">
+                                <i class="fa fa-shipping-fast mr-1"></i> Szállítmány létrehozása
+                            </button>
                         @endif
                     </div>
                 </div>
@@ -289,6 +307,28 @@
                 </button>
             </div>
         </form>
+
+        {{-- Commerce műveletek űrlapjai – szándékosan a fő szerkesztő űrlapon KÍVÜL,
+             mert az egymásba ágyazott <form> érvénytelen HTML: a böngésző az első
+             </form>-nál lezárja a külsőt, amitől a mentés gomb és a gombok elrontódnak. --}}
+        @if(in_array($order->payment_status, ['unpaid', 'pending', 'failed']))
+            <form id="markPaidForm" method="POST" action="{{ route('admin.webshop.orders.mark-paid', $order) }}" class="d-none">
+                @csrf @method('PATCH')
+            </form>
+        @endif
+        @if(in_array($order->invoice_status, ['not_required', 'failed', 'pending']))
+            <form id="createInvoiceForm" method="POST" action="{{ route('admin.webshop.orders.create-invoice', $order) }}" class="d-none">
+                @csrf
+            </form>
+        @endif
+        @if(in_array($order->shipping_status, ['not_required', 'pending', 'failed']))
+            <form id="createShipmentForm" method="POST" action="{{ route('admin.webshop.orders.create-shipment', $order) }}" class="d-none">
+                @csrf
+            </form>
+        @endif
     </div>
+
+    @include('admin.webshop.modals.action-confirm')
+
     <link rel="stylesheet" href="/packages/webshop/admin/css/webshop-admin.css">
 @endsection

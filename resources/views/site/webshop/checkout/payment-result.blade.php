@@ -88,11 +88,11 @@
                                 <dd class="col-sm-7">{{ $order->payment_status_label }}</dd>
                                 @if($order->payment_method)
                                     <dt class="col-sm-5">Fizetési mód:</dt>
-                                    <dd class="col-sm-7">{{ $order->payment_method }}</dd>
+                                    <dd class="col-sm-7">{{ \Weboldalnet\WebshopAiDefault\Services\Webshop\Commerce\WebshopCommerceService::getPaymentMethodLabel($order->payment_method) }}</dd>
                                 @endif
                                 @if($order->shipping_method)
                                     <dt class="col-sm-5">Szállítási mód:</dt>
-                                    <dd class="col-sm-7">{{ $order->shipping_method }}</dd>
+                                    <dd class="col-sm-7">{{ \Weboldalnet\WebshopAiDefault\Services\Webshop\Commerce\WebshopCommerceService::getShippingMethodLabel($order->shipping_method) }}</dd>
                                 @endif
                                 @if(($ws['site_product_prices_visible'] ?? 'true') === 'true')
                                     <dt class="col-sm-5">Összeg:</dt>

@@ -68,8 +68,9 @@ class WebshopCheckoutService
                 'customer_phone' => $data['phone'] ?? null,
                 'customer_company' => $data['company'] ?? null,
                 'customer_tax_number' => $data['tax_number'] ?? null,
-                'billing_data' => $billingData ? json_encode($billingData) : null,
-                'shipping_data' => isset($data['shipping']) ? json_encode($data['shipping']) : null,
+                // A modellen 'array' cast van, tehát tömbként adjuk át (a json_encode dupla kódolást okozna).
+                'billing_data' => $billingData ?: null,
+                'shipping_data' => $data['shipping'] ?? null,
                 'total_price' => $totalPrice,
                 'currency' => 'HUF',
                 'note' => $data['note'] ?? null,

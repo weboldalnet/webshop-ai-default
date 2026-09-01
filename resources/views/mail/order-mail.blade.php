@@ -70,23 +70,26 @@
                         </p>
                     </div>
 
-                    @if($order->billing_data)
+                    @php($mailBillingData = $order->getBillingDataArray())
+                    @php($mailShippingData = $order->getShippingDataArray())
+
+                    @if($mailBillingData)
                         <div style="flex: 1; min-width: 250px; margin-right: 20px; margin-bottom: 15px;">
                             <p style="font-weight: bold; margin-bottom: 5px; border-bottom: 1px solid #eee;">Számlázási adatok</p>
                             <p style="margin: 0; font-size: 14px;">
-                                {{ $order->billing_data['name'] ?? '' }}<br>
-                                {{ $order->billing_data['zip'] ?? '' }} {{ $order->billing_data['city'] ?? '' }}<br>
-                                {{ $order->billing_data['address'] ?? '' }}
+                                {{ $mailBillingData['name'] ?? '' }}<br>
+                                {{ $mailBillingData['zip'] ?? '' }} {{ $mailBillingData['city'] ?? '' }}<br>
+                                {{ $mailBillingData['address'] ?? '' }}
                             </p>
                         </div>
                     @endif
 
-                    @if($order->shipping_data && $order->shipping_method !== 'pickup')
+                    @if($mailShippingData && $order->shipping_method !== 'pickup')
                         <div style="flex: 1; min-width: 250px; margin-bottom: 15px;">
                             <p style="font-weight: bold; margin-bottom: 5px; border-bottom: 1px solid #eee;">Szállítási adatok</p>
                             <p style="margin: 0; font-size: 14px;">
-                                {{ $order->shipping_data['zip'] ?? '' }} {{ $order->shipping_data['city'] ?? '' }}<br>
-                                {{ $order->shipping_data['address'] ?? '' }}
+                                {{ $mailShippingData['zip'] ?? '' }} {{ $mailShippingData['city'] ?? '' }}<br>
+                                {{ $mailShippingData['address'] ?? '' }}
                             </p>
                         </div>
                     @endif

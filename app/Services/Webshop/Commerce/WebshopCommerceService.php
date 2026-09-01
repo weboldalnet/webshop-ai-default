@@ -228,17 +228,25 @@ class WebshopCommerceService
         }
 
         try {
-            $manager = app(\Weboldalnet\CommerceCore\Managers\InvoiceManager::class);
+            // A számlázó provider lekérése (vagy alapértelmezett, vagy fixen szamlazzhu)
+            $providerCode = 'szamlazzhu'; 
+            
+            $service = app(\Weboldalnet\CommerceCore\Services\InvoiceService::class);
             $requestData = WebshopInvoiceRequestFactory::fromOrder($order);
-            $result = $manager->createInvoice($requestData);
+            $dto = \Weboldalnet\CommerceCore\Data\InvoiceRequestData::fromArray($requestData);
+            
+            $result = $service->createInvoice($providerCode, $dto);
 
             return [
-                'success' => $result['success'] ?? false,
-                'invoiceNumber' => $result['invoiceNumber'] ?? null,
-                'invoiceId' => $result['invoiceId'] ?? null,
-                'documentId' => $result['documentId'] ?? null,
-                'message' => $result['message'] ?? null,
-                'rawResult' => $result,
+                'success' => $result->success,
+                'invoiceNumber' => $result->invoiceNumber,
+                'invoiceId' => $result->invoiceId,
+                // A helyi commerce_invoice_documents sor azonosítója – ezt kell a
+                // rendeléshez kötni, nem a szolgáltatói számlaszámot.
+                'documentId' => $result->documentId,
+                'pdfPath' => $result->pdfPath,
+                'message' => $result->message,
+                'rawResult' => $result->toArray(),
             ];
         } catch (\Throwable $e) {
             Log::error('WebshopCommerceService: Számlázási hiba: ' . $e->getMessage(), ['order_id' => $order->id]);
@@ -296,8 +304,12 @@ class WebshopCommerceService
      * Visszaadja egy fizetési mód kód human-readable nevét.
      * Ha nincs label a kódhoz, a kódot adja vissza.
      */
-    public static function getPaymentMethodLabel(string $code): string
+    public static function getPaymentMethodLabel(?string $code): string
     {
+        if ($code === null || $code === '') {
+            return '';
+        }
+
         $allMethods = array_merge(self::getFallbackPaymentMethods(), [
             'on_site' => 'Fizetés a helyszínen',
         ]);
@@ -322,24 +334,13 @@ class WebshopCommerceService
      * Visszaadja egy szállítási mód kód human-readable nevét.
      * Ha nincs label a kódhoz, a kódot adja vissza.
      */
-    public static function getShippingMethodLabel(string $code): string
+    public static function getShippingMethodLabel(?string $code): string
     {
-        $allMethods = self::getFallbackShippingMethods();
-
-        // Ha elérhető a commerce-core, lekéri a provider nevét
-        if (self::isAvailable()) {
-            try {
-                $manager = app(\Weboldalnet\CommerceCore\Managers\ShippingManager::class);
-                $providers = $manager->getEnabledProviders();
-                foreach ($providers as $providerCode => $provider) {
-                    $allMethods[$providerCode] = $provider->getName();
-                }
-            } catch (\Throwable $e) {
-                // fallback
-            }
+        if ($code === null || $code === '') {
+            return '';
         }
 
-        return $allMethods[$code] ?? $code;
+        return self::getAllShippingMethodLabels()[$code] ?? $code;
     }
 
     /**
@@ -378,7 +379,11 @@ class WebshopCommerceService
                 $manager = app(\Weboldalnet\CommerceCore\Managers\ShippingManager::class);
                 $providers = $manager->getEnabledProviders();
                 foreach ($providers as $code => $provider) {
-                    $allMethods[$code] = $provider->getName();
+                    // A webshop saját elnevezése az elsődleges (a checkout is ezt kínálja),
+                    // a provider neve csak az itt még nem ismert kódokra vonatkozik.
+                    if (!isset($allMethods[$code])) {
+                        $allMethods[$code] = $provider->getName();
+                    }
                 }
             } catch (\Throwable $e) {
                 // fallback

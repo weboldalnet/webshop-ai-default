@@ -26,7 +26,7 @@ class WebshopOrderMail extends Mailable
     {
         $this->order = $order;
         $this->customContent = WebshopContentService::getContent('email', $order);
-        $this->showPrices = WebshopSettingsService::getBool('site_show_prices', true);
+        $this->showPrices = WebshopSettingsService::getBool('site_product_prices_visible', true);
     }
 
     /**

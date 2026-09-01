@@ -9,6 +9,9 @@
     <div class="collapse collapse-box @if(str_contains($url, 'webshop')) show @endif " id="webshopCollapse">
         <div class="collapse-menu-points">
             <a href="/webshop/orders" class="fw-800">Rendelések</a>
+            @if(class_exists(\Weboldalnet\CommerceSzamlazzhu\Services\SzamlazzhuSettingsService::class) && \Weboldalnet\CommerceSzamlazzhu\Services\SzamlazzhuSettingsService::getBool('enabled'))
+                <a href="/webshop/invoices">Számlák</a>
+            @endif
             <a href="/webshop/categories">Kategóriák</a>
             <a href="/webshop/property-categories">Tulajdonságok</a>
             <a href="/webshop/products">Termékek</a>
@@ -16,9 +19,14 @@
                 <a href="/webshop/labels">Címkék</a>
             @endif
 
+            <a href="{{ route('admin.webshop.extra-settings.index') }}" class="fw-800">Webshop beállítások</a>
+
             @if($user->is_super)
                 <hr class="d-block w-fill my-1 mx-2">
                 <a href="/webshop/settings" class="fw-800">Beállítások</a>
+                @if(class_exists(\Weboldalnet\CommerceSzamlazzhu\Services\SzamlazzhuSettingsService::class))
+                    <a href="/webshop/szamlazzhu/settings">Számlázz.hu</a>
+                @endif
             @endif
         </div>
     </div>

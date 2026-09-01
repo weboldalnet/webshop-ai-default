@@ -307,6 +307,16 @@
                 </div>
 
                 <div class="col-lg-6 mb-3">
+                    <h2 class="header-box product-info">Számlázz.hu</h2>
+                    <div class="content-box bordered">
+                        <p class="text-muted small mb-2">Számla Agent API integráció:</p>
+                        <a href="/webshop/szamlazzhu/settings" class="btn btn-secondary btn-sm">
+                            <i class="fa fa-cog mr-1"></i> Számlázz.hu beállítások
+                        </a>
+                    </div>
+                </div>
+
+                <div class="col-lg-6 mb-3">
                     <h2 class="header-box product-info">Egyéb Site beállítások</h2>
                     <div class="content-box bordered">
                         <div class="custom-control custom-switch mb-3">

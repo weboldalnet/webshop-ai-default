@@ -8,39 +8,43 @@ class WebshopInvoiceRequestFactory
 {
     public static function fromOrder(WebshopOrder $order, array $options = []): array
     {
-        $billingData = $order->billing_data ? json_decode($order->billing_data, true) : [];
+        $billingData = $order->getBillingDataArray();
 
         return [
             'order_id' => $order->id,
             'order_number' => $order->order_number,
-            'amount' => $order->total_price,
-            'currency' => $order->currency ?? 'HUF',
-            'customer' => [
-                'name' => $billingData['name'] ?? $order->customer_name,
-                'email' => $order->customer_email,
-                'phone' => $order->customer_phone,
-                'company' => $order->customer_company,
-                'tax_number' => $order->customer_tax_number,
-            ],
-            'billing_address' => [
-                'name' => $billingData['name'] ?? $order->customer_name,
+            'customer_name' => $billingData['name'] ?? $order->customer_name,
+            'customer_email' => $order->customer_email,
+            'customer_tax_number' => $order->customer_tax_number,
+            'billing_data' => [
                 'zip' => $billingData['zip'] ?? null,
                 'city' => $billingData['city'] ?? null,
                 'address' => $billingData['address'] ?? null,
                 'country' => $billingData['country'] ?? 'HU',
             ],
+            // A webshop árai bruttók. A nettó/áfa bontást a számlázó provider végzi,
+            // mert az áfakerekítés szolgáltatófüggő.
             'items' => $order->items->map(function ($item) {
                 return [
                     'name' => $item->product_name,
                     'quantity' => $item->quantity,
-                    'unit_price' => $item->unit_price,
-                    'total_price' => $item->total_price,
-                    'vat_rate' => $item->vat_rate ?? 27,
+                    'unit' => 'db',
+                    'gross_unit_price' => (float) $item->unit_price,
+                    'gross_total' => (float) $item->total_price,
+                    'vat_key' => (string) ($item->vat_rate ?? '27'),
                 ];
             })->toArray(),
-            'payment_method' => $order->payment_method,
-            'paid_at' => $order->paid_at ? $order->paid_at->toDateString() : null,
-            'language' => $options['language'] ?? 'HU',
+            'gross_total' => $order->total_price,
+            'currency' => $order->currency ?? 'HUF',
+            'language' => $options['language'] ?? 'hu',
+            'extra' => [
+                'issue_date' => date('Y-m-d'),
+                'fulfillment_date' => date('Y-m-d'),
+                'payment_due_date' => date('Y-m-d', strtotime('+8 days')),
+                'payment_method_text' => \Weboldalnet\WebshopAiDefault\Services\Webshop\Commerce\WebshopCommerceService::getPaymentMethodLabel($order->payment_method),
+                'comment' => $order->note,
+                'is_electronic' => true,
+            ],
         ];
     }
 }

@@ -64,6 +64,9 @@
                     @if($shippingOptionsEnabled)
                         <th>Szállítás</th>
                     @endif
+                    @if($szamlazzhuEnabled)
+                        <th>Számla</th>
+                    @endif
                     <th>Teljesített</th>
                     <th>Dátum</th>
                     <th>Műveletek</th>
@@ -133,6 +136,30 @@
                                     @if($shippingSubProvider)
                                         <br><span class="text-muted fw-600">{{ $shippingSubProvider }}</span>
                                     @endif
+                                @endif
+                            </td>
+                        @endif
+                        @if($szamlazzhuEnabled)
+                            <td class="fs-14 py-1">
+                                @if($order->invoiceDocument)
+                                    @php
+                                        $inv = $order->invoiceDocument;
+                                        $badgeClass = 'secondary';
+                                        if($inv->status === 'invoiced') $badgeClass = 'success';
+                                        elseif($inv->status === 'failed') $badgeClass = 'danger';
+                                        elseif($inv->status === 'voided') $badgeClass = 'warning';
+                                    @endphp
+                                    <span class="badge badge-{{ $badgeClass }} px-2 py-1">
+                                        {{ $inv->status_label }}
+                                    </span>
+                                    @if($inv->invoice_number)
+                                        <br><small class="fw-600">{{ $inv->invoice_number }}</small>
+                                        @if($inv->pdf_path)
+                                            <a href="{{ route('admin.webshop.invoices.download', $inv->id) }}" class="ml-1 text-danger" title="PDF letöltése"><i class="fa fa-file-pdf"></i></a>
+                                        @endif
+                                    @endif
+                                @else
+                                    <span class="text-muted small">Nincs számla</span>
                                 @endif
                             </td>
                         @endif

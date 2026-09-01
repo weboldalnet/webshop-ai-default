@@ -70,8 +70,9 @@ class WebshopOrderController extends AdminExtendedController
                 'customer_phone' => $request->input('customer_phone'),
                 'customer_company' => $request->input('customer_company'),
                 'customer_tax_number' => $request->input('customer_tax_number'),
-                'billing_data' => $request->has('billing') ? json_encode($request->input('billing')) : null,
-                'shipping_data' => $request->has('shipping') ? json_encode($request->input('shipping')) : null,
+                // A modellen 'array' cast van, tehát tömbként adjuk át (a json_encode dupla kódolást okozna).
+                'billing_data' => $request->has('billing') ? $request->input('billing') : null,
+                'shipping_data' => $request->has('shipping') ? $request->input('shipping') : null,
                 'total_price' => $totalPrice,
                 'currency' => 'HUF',
                 'is_completed' => $isCompleted,
@@ -105,7 +106,7 @@ class WebshopOrderController extends AdminExtendedController
 
     public function index(Request $request)
     {
-        $query = WebshopOrder::orderBy('created_at', 'desc');
+        $query = WebshopOrder::with(['invoiceDocument'])->orderBy('created_at', 'desc');
         if ($request->filled('search')) $query->search($request->input('search'));
         if ($request->filled('status')) $query->byStatus($request->input('status'));
         if ($request->filled('is_completed') && $request->input('is_completed') !== '') $query->completed($request->input('is_completed'));
@@ -115,6 +116,7 @@ class WebshopOrderController extends AdminExtendedController
         $pricesVisible = \Weboldalnet\WebshopAiDefault\Services\Webshop\WebshopSettingsService::getBool('site_product_prices_visible', true);
         $paymentOptionsEnabled = \Weboldalnet\WebshopAiDefault\Services\Webshop\WebshopSettingsService::getBool('site_checkout_payment_options_enabled', false);
         $shippingOptionsEnabled = \Weboldalnet\WebshopAiDefault\Services\Webshop\WebshopSettingsService::getBool('site_checkout_shipping_options_enabled', false);
+        $szamlazzhuEnabled = class_exists(\Weboldalnet\CommerceSzamlazzhu\Services\SzamlazzhuSettingsService::class) && \Weboldalnet\CommerceSzamlazzhu\Services\SzamlazzhuSettingsService::getBool('enabled');
 
         $paymentMethodLabels = WebshopCommerceService::getAllPaymentMethodLabels();
         $shippingMethodLabels = WebshopCommerceService::getAllShippingMethodLabels();
@@ -126,6 +128,7 @@ class WebshopOrderController extends AdminExtendedController
             'pricesVisible' => $pricesVisible,
             'paymentOptionsEnabled' => $paymentOptionsEnabled,
             'shippingOptionsEnabled' => $shippingOptionsEnabled,
+            'szamlazzhuEnabled' => $szamlazzhuEnabled,
             'paymentMethodLabels' => $paymentMethodLabels,
             'shippingMethodLabels' => $shippingMethodLabels,
             'paymentStatusLabels' => $paymentStatusLabels,
@@ -138,8 +141,8 @@ class WebshopOrderController extends AdminExtendedController
         $order->load('items');
         $pricesVisible = \Weboldalnet\WebshopAiDefault\Services\Webshop\WebshopSettingsService::getBool('site_product_prices_visible', true);
 
-        $billingData = $order->billing_data ? json_decode($order->billing_data, true) : null;
-        $shippingData = $order->shipping_data ? json_decode($order->shipping_data, true) : null;
+        $billingData = $order->getBillingDataArray() ?: null;
+        $shippingData = $order->getShippingDataArray() ?: null;
 
         $html = view('admin.webshop.orders.partials.order-details-content', [
             'order' => $order,
@@ -158,8 +161,8 @@ class WebshopOrderController extends AdminExtendedController
     {
         $order->load('items');
         $pricesVisible = \Weboldalnet\WebshopAiDefault\Services\Webshop\WebshopSettingsService::getBool('site_product_prices_visible', true);
-        $billingData = $order->billing_data ? json_decode($order->billing_data, true) : null;
-        $shippingData = $order->shipping_data ? json_decode($order->shipping_data, true) : null;
+        $billingData = $order->getBillingDataArray() ?: null;
+        $shippingData = $order->getShippingDataArray() ?: null;
 
         return view('admin.webshop.orders.edit', compact('order', 'pricesVisible', 'billingData', 'shippingData'));
     }
@@ -183,12 +186,12 @@ class WebshopOrderController extends AdminExtendedController
             'customer_company', 'customer_tax_number', 'admin_note', 'note'
         ]);
 
-        // Számlázási és szállítási adatok
+        // Számlázási és szállítási adatok ('array' cast, tehát tömbként megy be)
         if ($request->has('billing')) {
-            $data['billing_data'] = json_encode($request->input('billing'));
+            $data['billing_data'] = $request->input('billing');
         }
         if ($request->has('shipping')) {
-            $data['shipping_data'] = json_encode($request->input('shipping'));
+            $data['shipping_data'] = $request->input('shipping');
         }
 
         $isCompleted = $request->has('is_completed') || $request->input('status') === WebshopOrder::STATUS_COMPLETED;

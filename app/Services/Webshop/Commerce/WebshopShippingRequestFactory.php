@@ -8,7 +8,7 @@ class WebshopShippingRequestFactory
 {
     public static function fromOrder(WebshopOrder $order, array $options = []): array
     {
-        $shippingData = $order->shipping_data ? json_decode($order->shipping_data, true) : [];
+        $shippingData = $order->getShippingDataArray();
 
         return [
             'order_id' => $order->id,

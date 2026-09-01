@@ -15,8 +15,8 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * @property string|null $customer_phone
  * @property string|null $customer_company
  * @property string|null $customer_tax_number
- * @property string|null $billing_data
- * @property string|null $shipping_data
+ * @property array|null $billing_data
+ * @property array|null $shipping_data
  * @property float $total_price
  * @property string $currency
  * @property string|null $note
@@ -178,6 +178,45 @@ class WebshopOrder extends Model
         return $this->belongsTo(\Weboldalnet\CommerceCore\Models\Shipment::class, 'commerce_shipment_id');
     }
 
+    // --- Cím adat helper metódusok ---
+
+    /**
+     * Számlázási adatok tömbként.
+     * A billing_data oszlop 'array' cast alatt van, tehát alapesetben már tömb.
+     * Toleráljuk a korábbi, sztringként (dupla kódolva) mentett értékeket is.
+     */
+    public function getBillingDataArray(): array
+    {
+        return self::normalizeJsonAttribute($this->billing_data);
+    }
+
+    /**
+     * Szállítási adatok tömbként. Lásd getBillingDataArray().
+     */
+    public function getShippingDataArray(): array
+    {
+        return self::normalizeJsonAttribute($this->shipping_data);
+    }
+
+    /**
+     * Tömbbé alakít egy olyan attribútumot, ami tömb vagy (régi adatoknál) JSON sztring is lehet.
+     */
+    protected static function normalizeJsonAttribute($value): array
+    {
+        if (is_array($value)) {
+            return $value;
+        }
+        if (is_string($value) && $value !== '') {
+            $decoded = json_decode($value, true);
+            // Dupla kódolt érték: a dekódolás után még mindig JSON sztringet kapunk.
+            if (is_string($decoded)) {
+                $decoded = json_decode($decoded, true);
+            }
+            return is_array($decoded) ? $decoded : [];
+        }
+        return [];
+    }
+
     // --- Fizetési státusz helper metódusok ---
 
     public function isPaid(): bool
@@ -258,6 +297,15 @@ class WebshopOrder extends Model
     public function markInvoiceFailed(): void
     {
         $this->update(['invoice_status' => self::INVOICE_STATUS_FAILED]);
+    }
+
+    /**
+     * A számla érvénytelenítve (sztornózva) – a bizonylat kapcsolat megmarad,
+     * hogy a sztornózott számla továbbra is visszakereshető legyen.
+     */
+    public function markInvoiceVoided(): void
+    {
+        $this->update(['invoice_status' => self::INVOICE_STATUS_VOIDED]);
     }
 
     // --- Szállítási státusz helper metódusok ---

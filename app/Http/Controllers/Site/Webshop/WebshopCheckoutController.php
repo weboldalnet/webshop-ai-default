@@ -165,7 +165,7 @@ class WebshopCheckoutController extends Controller
     public function success(WebshopOrder $order)
     {
         $customContent = WebshopContentService::getContent('thank_you', $order);
-        $showPrices = WebshopSettingsService::getBool('site_show_prices', true);
+        $showPrices = WebshopSettingsService::getBool('site_product_prices_visible', true);
 
         return view('site.webshop.checkout.success', compact('order', 'customContent', 'showPrices'));
     }
