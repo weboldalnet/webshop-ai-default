@@ -225,10 +225,13 @@
                                         @endforeach
                                     </div>
 
-                                    {{-- GLS csomagpont-választó: csak akkor jelenik meg, ha a
-                                         csomagpontos mód elérhető és ki van választva. --}}
+                                    {{-- Átvevőpont-választók: mindegyik csak akkor jelenik meg,
+                                         ha az adott mód elérhető és ki van választva. --}}
                                     @if(isset($glsParcelShopCode) && array_key_exists($glsParcelShopCode, $shippingMethods))
                                         @include('site.webshop.checkout.partials.gls-parcel-shop')
+                                    @endif
+                                    @if(isset($foxpostCode) && array_key_exists($foxpostCode, $shippingMethods))
+                                        @include('site.webshop.checkout.partials.foxpost-apm')
                                     @endif
                                 @endif
                             @endif
@@ -367,9 +370,11 @@
 
                     // Csomagpontos szállításnál a vásárló saját címére nincs szükség:
                     // a csomag a kiválasztott átvevőpontra megy.
-                    var glsParcelShopCode = @json($glsParcelShopCode ?? null);
+                    // Provider-független: minden átvevőpontos módnál a csomag az
+                    // átvevőpontra megy, nem a vásárló címére.
+                    var parcelShopCodes = @json($parcelShopCodes ?? []);
                     var noOwnAddress = (selectedShipping === 'pickup')
-                        || (glsParcelShopCode && selectedShipping === glsParcelShopCode);
+                        || (parcelShopCodes.indexOf(selectedShipping) !== -1);
 
                     if (noOwnAddress) {
                         // Nincs saját szállítási cím, kötelező a számlázási cím

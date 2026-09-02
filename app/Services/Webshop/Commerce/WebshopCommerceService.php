@@ -297,6 +297,38 @@ class WebshopCommerceService
     }
 
     /**
+     * Átvevőpontos szállítási mód-e (csomagpont, csomagautomata)?
+     *
+     * A pénztár ez alapján dönti el, hogy kell-e átvevőpont-választó, kötelező-e
+     * az azonosító, és elrejthető-e a vásárló saját szállítási címe. Provider-
+     * független: minden csomagpontos futárszolgálatra ugyanígy működik.
+     */
+    public static function isParcelShopMethod(?string $code): bool
+    {
+        if (!$code) {
+            return false;
+        }
+
+        return self::getShippingMethodKind($code) === 'parcel_shop';
+    }
+
+    /**
+     * A pénztárban elérhető átvevőpontos szállítási módok kódjai.
+     */
+    public static function getParcelShopMethodCodes(): array
+    {
+        $codes = [];
+
+        foreach (array_keys(self::getAvailableShippingMethods()) as $code) {
+            if (self::isParcelShopMethod($code)) {
+                $codes[] = $code;
+            }
+        }
+
+        return $codes;
+    }
+
+    /**
      * Be van-e kapcsolva egy szállítási csoport (házhoz szállítás, csomagpont,
      * személyes átvétel). Az ismeretlen jellegű módokat nem korlátozzuk.
      */

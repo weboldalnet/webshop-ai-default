@@ -45,9 +45,12 @@ class WebshopCheckoutController extends Controller
             'shippingMethods' => $shippingMethods,
             'isQuoteMode' => $isQuoteMode,
             'onSitePaymentEnabled' => $onSitePaymentEnabled,
-            // A GLS csomagpontos mód kódja és országa a választóhoz (ha telepítve van)
+            // Átvevőpontos szállítási módok – ezeknél kell átvevőpont-választó.
+            // Provider-független: a GLS és a FoxPost is ide tartozik.
+            'parcelShopCodes' => WebshopCommerceService::getParcelShopMethodCodes(),
             'glsParcelShopCode' => config('commerce-gls.parcel_shop_code'),
             'glsCountry' => config('commerce-gls.country', 'hu'),
+            'foxpostCode' => config('commerce-foxpost.provider_code'),
         ]);
     }
 
@@ -92,9 +95,8 @@ class WebshopCheckoutController extends Controller
         if (WebshopSettingsService::getBool('site_checkout_shipping_enabled')) {
             // Csomagpontos szállításnál sincs saját szállítási cím – a csomag az
             // átvevőpontra megy, azt a választó tölti ki.
-            $parcelShopMethod = config('commerce-gls.parcel_shop_code');
             $isPickup = $request->input('shipping_method') === 'pickup'
-                || ($parcelShopMethod && $request->input('shipping_method') === $parcelShopMethod);
+                || WebshopCommerceService::isParcelShopMethod($request->input('shipping_method'));
             if (!$isPickup) {
                 $rules['shipping.zip'] = 'required|string|max:10';
                 $rules['shipping.city'] = 'required|string|max:100';
@@ -122,8 +124,7 @@ class WebshopCheckoutController extends Controller
 
             // Csomagpontos szállításnál kötelező a kiválasztott átvevőpont azonosítója,
             // e nélkül a futárszolgálati címke nem generálható.
-            $parcelShopCode = config('commerce-gls.parcel_shop_code');
-            if ($parcelShopCode && $request->input('shipping_method') === $parcelShopCode) {
+            if (WebshopCommerceService::isParcelShopMethod($request->input('shipping_method'))) {
                 $rules['shipping.parcel_shop_id'] = 'required|string|max:64';
             }
         }
