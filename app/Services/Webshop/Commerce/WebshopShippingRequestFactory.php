@@ -6,6 +6,9 @@ use Weboldalnet\WebshopAiDefault\Models\WebshopOrder;
 
 class WebshopShippingRequestFactory
 {
+    /** A platform utánvétes fizetési módjának kódja */
+    const PAYMENT_METHOD_COD = 'cod';
+
     public static function fromOrder(WebshopOrder $order, array $options = []): array
     {
         $shippingData = $order->getShippingDataArray();
@@ -43,7 +46,31 @@ class WebshopShippingRequestFactory
             'total_price' => $order->total_price,
             'currency' => $order->currency ?? 'HUF',
             'note' => $order->note,
+            // Provider-specifikus kiegészítők. Az utánvét összege ezen keresztül
+            // jut el a futárszolgálathoz – enélkül a futár nem szedné be a pénzt.
+            'extra' => array_merge([
+                'cod_amount' => self::codAmount($order),
+            ], $options['extra'] ?? []),
         ];
+    }
+
+    /**
+     * Az utánvéttel beszedendő összeg.
+     *
+     * Csak utánvétes és még ki nem fizetett rendelésnél van mit beszedni; minden
+     * más esetben 0, így a szállítmány utánvét nélkül jön létre.
+     */
+    protected static function codAmount(WebshopOrder $order): float
+    {
+        if ($order->payment_method !== self::PAYMENT_METHOD_COD) {
+            return 0.0;
+        }
+
+        if (method_exists($order, 'isPaid') && $order->isPaid()) {
+            return 0.0;
+        }
+
+        return (float) $order->total_price;
     }
 
     /**
