@@ -19,9 +19,9 @@ class WebshopCheckoutService
     {
         return DB::transaction(function () use ($data, $cartItems) {
             // Szerver oldalon újraszámolt összeg (sosem kliensből)
-            $totalPrice = 0;
+            $itemsTotal = 0;
             foreach ($cartItems as $item) {
-                $totalPrice += $item['quantity'] * $item['price'];
+                $itemsTotal += $item['quantity'] * $item['price'];
             }
 
             $billingData = null;
@@ -48,6 +48,23 @@ class WebshopCheckoutService
             // Szállítási mód
             $shippingMethod = $data['shipping_method'] ?? null;
 
+            // Csomagpontos szállításnál a kiválasztott átvevőpont címe a kézbesítési cím.
+            // A választó külön névtérben küldi az adatokat, hogy ne ütközzön a
+            // vásárló saját szállítási címével.
+            $shippingData = $data['shipping'] ?? null;
+            $parcelShopCode = config('commerce-gls.parcel_shop_code');
+            if ($parcelShopCode && $shippingMethod === $parcelShopCode && !empty($shippingData['parcel_shop_id'])) {
+                $shippingData = [
+                    'parcel_shop_id' => $shippingData['parcel_shop_id'],
+                    'parcel_shop_name' => $shippingData['parcel_shop_name'] ?? null,
+                    'name' => $shippingData['parcel_shop_name'] ?? ($data['name'] ?? null),
+                    'zip' => $shippingData['parcel_shop_zip'] ?? null,
+                    'city' => $shippingData['parcel_shop_city'] ?? null,
+                    'address' => $shippingData['parcel_shop_address'] ?? null,
+                    'country' => $shippingData['parcel_shop_country'] ?? 'HU',
+                ];
+            }
+
             // Kezdeti státuszok
             if ($isQuoteMode) {
                 $initialPaymentStatus = WebshopOrder::PAYMENT_STATUS_UNPAID;
@@ -58,6 +75,11 @@ class WebshopCheckoutService
                 $initialInvoiceStatus = WebshopOrder::INVOICE_STATUS_NOT_REQUIRED;
                 $initialShippingStatus = $shippingMethod ? WebshopOrder::SHIPPING_STATUS_PENDING : WebshopOrder::SHIPPING_STATUS_NOT_REQUIRED;
             }
+
+            // Szállítási díj: a providertől kérdezzük, szintén szerver oldalon.
+            // Korábban ez sehol nem történt meg, így a díj sosem került a végösszegbe.
+            $shippingCost = WebshopCommerceService::calculateShippingCost($shippingMethod, $itemsTotal);
+            $totalPrice = $itemsTotal + $shippingCost;
 
             $order = WebshopOrder::create([
                 'order_number' => $this->generateOrderNumber(),
@@ -70,8 +92,9 @@ class WebshopCheckoutService
                 'customer_tax_number' => $data['tax_number'] ?? null,
                 // A modellen 'array' cast van, tehát tömbként adjuk át (a json_encode dupla kódolást okozna).
                 'billing_data' => $billingData ?: null,
-                'shipping_data' => $data['shipping'] ?? null,
+                'shipping_data' => $shippingData,
                 'total_price' => $totalPrice,
+                'shipping_cost' => $shippingCost,
                 'currency' => 'HUF',
                 'note' => $data['note'] ?? null,
                 'is_completed' => false,
@@ -90,6 +113,8 @@ class WebshopCheckoutService
                     'quantity' => $item['quantity'],
                     'unit_price' => $item['price'],
                     'total_price' => $item['quantity'] * $item['price'],
+                    // A rendeléskori súly rögzítése (a futárszolgálati címkéhez kell)
+                    'weight' => $item['weight'] ?? null,
                 ]);
             }
 

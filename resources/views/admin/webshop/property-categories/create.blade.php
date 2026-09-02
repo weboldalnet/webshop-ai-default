@@ -8,10 +8,10 @@
 
         <div class="row">
             <div class="col-lg-12">
-                <h3 class="header-box product-info">Új tulajdonság kategória</h3>
+                <h3 class="header-box product-info mb-1">Új tulajdonság kategória</h3>
             </div>
         </div>
-        <div class="content-box bordered">
+        <div class="content-box bordered mb-3">
             <form method="POST" action="{{ route('admin.webshop.property-categories.store') }}">
                 @csrf
                 @include('admin.webshop.property-categories.form')

@@ -116,7 +116,9 @@ class WebshopOrderController extends AdminExtendedController
         $pricesVisible = \Weboldalnet\WebshopAiDefault\Services\Webshop\WebshopSettingsService::getBool('site_product_prices_visible', true);
         $paymentOptionsEnabled = \Weboldalnet\WebshopAiDefault\Services\Webshop\WebshopSettingsService::getBool('site_checkout_payment_options_enabled', false);
         $shippingOptionsEnabled = \Weboldalnet\WebshopAiDefault\Services\Webshop\WebshopSettingsService::getBool('site_checkout_shipping_options_enabled', false);
-        $szamlazzhuEnabled = class_exists(\Weboldalnet\CommerceSzamlazzhu\Services\SzamlazzhuSettingsService::class) && \Weboldalnet\CommerceSzamlazzhu\Services\SzamlazzhuSettingsService::getBool('enabled');
+        // A számlázás főkapcsolója dönt (Webshop beállítások → Számlázás),
+        // nem egy konkrét számlázó csomag saját kapcsolója.
+        $invoicingEnabled = WebshopCommerceService::isInvoicingEnabled();
 
         $paymentMethodLabels = WebshopCommerceService::getAllPaymentMethodLabels();
         $shippingMethodLabels = WebshopCommerceService::getAllShippingMethodLabels();
@@ -128,7 +130,7 @@ class WebshopOrderController extends AdminExtendedController
             'pricesVisible' => $pricesVisible,
             'paymentOptionsEnabled' => $paymentOptionsEnabled,
             'shippingOptionsEnabled' => $shippingOptionsEnabled,
-            'szamlazzhuEnabled' => $szamlazzhuEnabled,
+            'invoicingEnabled' => $invoicingEnabled,
             'paymentMethodLabels' => $paymentMethodLabels,
             'shippingMethodLabels' => $shippingMethodLabels,
             'paymentStatusLabels' => $paymentStatusLabels,
@@ -164,7 +166,15 @@ class WebshopOrderController extends AdminExtendedController
         $billingData = $order->getBillingDataArray() ?: null;
         $shippingData = $order->getShippingDataArray() ?: null;
 
-        return view('admin.webshop.orders.edit', compact('order', 'pricesVisible', 'billingData', 'shippingData'));
+        // Számlázás: főkapcsoló + a kiválasztott integráció neve (a megerősítő
+        // szövegben is ez jelenik meg, nem bedrótozott csomagnév).
+        $invoicingEnabled = WebshopCommerceService::isInvoicingEnabled();
+        $invoiceProvider = WebshopCommerceService::getInvoiceProviderMeta();
+
+        return view('admin.webshop.orders.edit', compact(
+            'order', 'pricesVisible', 'billingData', 'shippingData',
+            'invoicingEnabled', 'invoiceProvider'
+        ));
     }
 
     public function update(Request $request, WebshopOrder $order)
@@ -283,6 +293,11 @@ class WebshopOrderController extends AdminExtendedController
      */
     public function createInvoice(WebshopOrder $order)
     {
+        if (!WebshopCommerceService::isInvoicingEnabled()) {
+            return redirect()->route('admin.webshop.orders.edit', $order)
+                ->with('error', 'A számlázás nincs bekapcsolva a webshop beállításokban.');
+        }
+
         if ($order->isInvoiced()) {
             return redirect()->route('admin.webshop.orders.edit', $order)->with('info', 'A rendeléshez már van számla.');
         }

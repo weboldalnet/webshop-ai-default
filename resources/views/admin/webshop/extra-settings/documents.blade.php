@@ -5,7 +5,7 @@
     <div class="container mt-lg-4 mt-3 mb-150">
         <div class="row">
             <div class="col-lg-12">
-                <h2 class="header-box"><i class="fa fa-file-contract"></i> Dokumentumok szerkesztése</h2>
+                <h2 class="header-box my-2"><i class="fa fa-file-contract"></i> Dokumentumok szerkesztése</h2>
             </div>
         </div>
 
@@ -17,8 +17,8 @@
             {{-- ÁSZF --}}
             <div class="row mt-4">
                 <div class="col-lg-12">
-                    <h3 class="header-box product-info">Általános Szerződési Feltételek (ÁSZF)</h3>
-                    <div class="content-box bordered">
+                    <h3 class="header-box product-info mb-1">Általános Szerződési Feltételek (ÁSZF)</h3>
+                    <div class="content-box bordered mb-3">
                         <div class="custom-control custom-switch mb-3">
                             <input type="checkbox" class="custom-control-input" id="site_checkout_tos_enabled" name="site_checkout_tos_enabled" value="1" @if(($ws['site_checkout_tos_enabled'] ?? 'false') === 'true') checked @endif>
                             <label class="custom-control-label" for="site_checkout_tos_enabled">Megjelenik a checkout oldalon</label>
@@ -45,8 +45,8 @@
             {{-- Adatvédelem --}}
             <div class="row mt-4">
                 <div class="col-lg-12">
-                    <h3 class="header-box product-info">Adatvédelmi tájékoztató</h3>
-                    <div class="content-box bordered">
+                    <h3 class="header-box product-info mb-1">Adatvédelmi tájékoztató</h3>
+                    <div class="content-box bordered mb-3">
                         <div class="custom-control custom-switch mb-3">
                             <input type="checkbox" class="custom-control-input" id="site_checkout_privacy_enabled" name="site_checkout_privacy_enabled" value="1" @if(($ws['site_checkout_privacy_enabled'] ?? 'false') === 'true') checked @endif>
                             <label class="custom-control-label" for="site_checkout_privacy_enabled">Megjelenik a checkout oldalon</label>

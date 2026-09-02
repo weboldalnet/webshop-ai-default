@@ -45,6 +45,9 @@ class WebshopCheckoutController extends Controller
             'shippingMethods' => $shippingMethods,
             'isQuoteMode' => $isQuoteMode,
             'onSitePaymentEnabled' => $onSitePaymentEnabled,
+            // A GLS csomagpontos mód kódja és országa a választóhoz (ha telepítve van)
+            'glsParcelShopCode' => config('commerce-gls.parcel_shop_code'),
+            'glsCountry' => config('commerce-gls.country', 'hu'),
         ]);
     }
 
@@ -87,7 +90,11 @@ class WebshopCheckoutController extends Controller
         }
 
         if (WebshopSettingsService::getBool('site_checkout_shipping_enabled')) {
-            $isPickup = $request->input('shipping_method') === 'pickup';
+            // Csomagpontos szállításnál sincs saját szállítási cím – a csomag az
+            // átvevőpontra megy, azt a választó tölti ki.
+            $parcelShopMethod = config('commerce-gls.parcel_shop_code');
+            $isPickup = $request->input('shipping_method') === 'pickup'
+                || ($parcelShopMethod && $request->input('shipping_method') === $parcelShopMethod);
             if (!$isPickup) {
                 $rules['shipping.zip'] = 'required|string|max:10';
                 $rules['shipping.city'] = 'required|string|max:100';
@@ -111,6 +118,13 @@ class WebshopCheckoutController extends Controller
             $rules['payment_method'] = 'required|string|in:' . implode(',', $availablePaymentMethods);
             if (!empty($availableShippingMethods)) {
                 $rules['shipping_method'] = 'nullable|string|in:' . implode(',', $availableShippingMethods);
+            }
+
+            // Csomagpontos szállításnál kötelező a kiválasztott átvevőpont azonosítója,
+            // e nélkül a futárszolgálati címke nem generálható.
+            $parcelShopCode = config('commerce-gls.parcel_shop_code');
+            if ($parcelShopCode && $request->input('shipping_method') === $parcelShopCode) {
+                $rules['shipping.parcel_shop_id'] = 'required|string|max:64';
             }
         }
 

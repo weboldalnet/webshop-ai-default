@@ -14,6 +14,16 @@ class WebshopSettingController extends AdminExtendedController
         return view('admin.webshop.settings.index', [
             'ws' => WebshopSettingsService::all(),
             'paymentMethods' => WebshopCommerceService::getAllPaymentMethodLabels(),
+            // Fizetési és szállítási integrációk: a listák a commerce-core
+            // provider-nyilvántartásából jönnek, a kikapcsolt modulokkal együtt –
+            // különben nem lenne honnan visszakapcsolni őket.
+            'onlinePaymentProviders' => WebshopCommerceService::getOnlinePaymentProviders(),
+            'shippingGroups' => WebshopCommerceService::getShippingGroups(),
+            // Számlázás: a telepített integrációk listája a commerce-core-ból jön,
+            // így egy új számlázó csomag külön módosítás nélkül megjelenik.
+            'invoiceProviders' => WebshopCommerceService::getAvailableInvoiceProviders(),
+            'invoicingProvider' => WebshopCommerceService::getInvoicingProvider(),
+            'invoicingEnabled' => WebshopCommerceService::isInvoicingEnabled(),
         ]);
     }
 
@@ -49,13 +59,21 @@ class WebshopSettingController extends AdminExtendedController
             'category_sizing_enabled',
             'category_list_image_enabled',
             'category_merchant_feed_enabled',
+            // Számlázás főkapcsoló
+            'invoicing_enabled',
         ];
 
-        // Dinamikusan hozzáadjuk az online fizetési módok checkbox kulcsait
-        $allPaymentMethods = WebshopCommerceService::getAllPaymentMethodLabels();
-        foreach ($allPaymentMethods as $code => $label) {
-            if (WebshopCommerceService::isOnlinePaymentMethod($code)) {
-                $checkboxKeys[] = 'site_checkout_payment_method_' . $code . '_enabled';
+        // Dinamikusan hozzáadjuk az online fizetési módok checkbox kulcsait.
+        // A telepített (akár épp kikapcsolt) integrációk is szerepelnek, mert a
+        // beállítófelület is felkínálja őket.
+        foreach (array_keys(WebshopCommerceService::getOnlinePaymentProviders()) as $code) {
+            $checkboxKeys[] = 'site_checkout_payment_method_' . $code . '_enabled';
+        }
+
+        // Ugyanígy a szállítási csoportokon belüli futárszolgálatok kulcsait
+        foreach (WebshopCommerceService::getShippingGroups() as $group) {
+            foreach (array_keys($group['methods']) as $code) {
+                $checkboxKeys[] = 'site_checkout_shipping_method_' . $code . '_enabled';
             }
         }
 
@@ -70,6 +88,12 @@ class WebshopSettingController extends AdminExtendedController
         }
         foreach ($valueKeys as $key) {
             $settings[$key] = $request->input($key);
+        }
+
+        // A számlázó program rádiógombja nem érkezik be, ha egyetlen integráció
+        // sincs telepítve – ilyenkor a korábbi választást ne írjuk felül null-lal.
+        if ($request->filled('invoicing_provider')) {
+            $settings['invoicing_provider'] = $request->input('invoicing_provider');
         }
 
         WebshopSettingsService::save($settings);

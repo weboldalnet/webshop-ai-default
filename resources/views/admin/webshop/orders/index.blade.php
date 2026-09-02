@@ -48,7 +48,7 @@
             </form>
         </div>
 
-        <div class="content-box table-responsive">
+        <div class="content-box table-responsive mb-3">
             <table class="table table-hover">
                 <thead class="thead-dark">
                 <tr>
@@ -64,7 +64,7 @@
                     @if($shippingOptionsEnabled)
                         <th>Szállítás</th>
                     @endif
-                    @if($szamlazzhuEnabled)
+                    @if($invoicingEnabled)
                         <th>Számla</th>
                     @endif
                     <th>Teljesített</th>
@@ -139,7 +139,7 @@
                                 @endif
                             </td>
                         @endif
-                        @if($szamlazzhuEnabled)
+                        @if($invoicingEnabled)
                             <td class="fs-14 py-1">
                                 @if($order->invoiceDocument)
                                     @php

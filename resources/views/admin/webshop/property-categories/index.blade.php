@@ -7,7 +7,7 @@
 
         <div class="row">
             <div class="col-lg-12">
-                <h2 class="header-box"><i class="fa fa-tags"></i> Tulajdonság kategóriák</h2>
+                <h2 class="header-box my-2"><i class="fa fa-tags"></i> Tulajdonság kategóriák</h2>
             </div>
         </div>
 
@@ -57,7 +57,7 @@
             </form>
         </div>
 
-        <div class="content-box table-responsive">
+        <div class="content-box table-responsive mb-3">
             <table class="table table-hover">
                 <thead class="thead-dark">
                 <tr>

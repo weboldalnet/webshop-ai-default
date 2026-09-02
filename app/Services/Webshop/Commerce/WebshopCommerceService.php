@@ -98,6 +98,96 @@ class WebshopCommerceService
     }
 
     /**
+     * A telepített fizetési integrációk (kód => metaadat: name, settings_url,
+     * online, builtin, active) – a kikapcsoltak is benne vannak.
+     */
+    public static function getAvailablePaymentProviders(): array
+    {
+        if (!self::isAvailable()) {
+            return [];
+        }
+
+        try {
+            return app(\Weboldalnet\CommerceCore\Managers\PaymentManager::class)->getAvailableProviders();
+        } catch (\Throwable $e) {
+            Log::warning('WebshopCommerceService: nem sikerült lekérni a fizetési providereket: ' . $e->getMessage());
+
+            return [];
+        }
+    }
+
+    /**
+     * A beállítófelület online fizetési integrációi.
+     *
+     * A kikapcsolt modulok is szerepelnek – különben nem lenne honnan
+     * visszakapcsolni őket, mert a beállítólinkjük sem jelenne meg.
+     */
+    public static function getOnlinePaymentProviders(): array
+    {
+        $providers = [];
+
+        foreach (self::getAvailablePaymentProviders() as $code => $meta) {
+            if (empty($meta['online'])) {
+                continue;
+            }
+
+            $providers[$code] = array_merge($meta, [
+                'code' => $code,
+                'enabled' => WebshopSettingsService::getBool('site_checkout_payment_method_' . $code . '_enabled'),
+            ]);
+        }
+
+        return $providers;
+    }
+
+    /**
+     * Be van-e kapcsolva egy online fizetési mód a pénztárban.
+     */
+    public static function isOnlinePaymentMethodEnabled(string $code): bool
+    {
+        return WebshopSettingsService::getBool('site_checkout_payment_options_enabled')
+            && WebshopSettingsService::getBool('site_checkout_payment_online_enabled')
+            && WebshopSettingsService::getBool('site_checkout_payment_method_' . $code . '_enabled');
+    }
+
+    /**
+     * Az oldalsávban megjelenítendő integrációs beállítás-linkek.
+     *
+     * Csak azoké az integrációké jelenik meg, amelyek a pénztárban be vannak
+     * kapcsolva. Egy csomag több módot is regisztrálhat (pl. a GLS házhoz
+     * szállítást és csomagpontot), ezért URL szerint egyszer szerepel.
+     */
+    public static function getIntegrationSettingsLinks(): array
+    {
+        $collect = function (array $providers, callable $isEnabled) {
+            $links = [];
+
+            foreach ($providers as $code => $meta) {
+                if (empty($meta['settings_url']) || !$isEnabled($code)) {
+                    continue;
+                }
+
+                $links[$meta['settings_url']] = [
+                    'name' => $meta['settings_label'] ?? $meta['name'] ?? $code,
+                    'url' => $meta['settings_url'],
+                ];
+            }
+
+            return array_values($links);
+        };
+
+        return [
+            'payment' => $collect(self::getAvailablePaymentProviders(), function ($code) {
+                return self::isOnlinePaymentMethodEnabled($code);
+            }),
+            'shipping' => $collect(self::getAvailableShippingProviders(), function ($code) {
+                return WebshopSettingsService::getBool('site_checkout_shipping_options_enabled')
+                    && self::isShippingMethodEnabled($code);
+            }),
+        ];
+    }
+
+    /**
      * Visszaadja az engedélyezett szállítási módokat az admin beállítások szerint szűrve.
      * Ha a "Szállítási lehetőségek" nincs bekapcsolva, üres tömböt ad vissza.
      */
@@ -108,24 +198,201 @@ class WebshopCommerceService
             return [];
         }
 
+        // A módokat a regisztrált providerektől kérdezzük – korábban bedrótozott
+        // lista volt, ezért egy újonnan telepített provider (pl. GLS) meg sem
+        // jelent volna a pénztárban.
+        $labels = self::getAllShippingMethodLabels();
         $filtered = [];
 
-        // Házhoz szállítás (flat_rate kód)
-        if (WebshopSettingsService::getBool('site_checkout_shipping_home_delivery_enabled')) {
-            $filtered['flat_rate'] = 'Házhoz szállítás';
-        }
-
-        // Csomagpont automata (parcel_locker kód)
-        if (WebshopSettingsService::getBool('site_checkout_shipping_parcel_locker_enabled')) {
-            $filtered['parcel_locker'] = 'Csomagpont automata';
-        }
-
-        // Személyes átvétel (pickup kód)
-        if (WebshopSettingsService::getBool('site_checkout_shipping_pickup_enabled')) {
-            $filtered['pickup'] = 'Személyes átvétel';
+        foreach (array_keys(self::getRegisteredShippingCodes()) as $code) {
+            if (self::isShippingMethodEnabled($code)) {
+                $filtered[$code] = $labels[$code] ?? $code;
+            }
         }
 
         return $filtered;
+    }
+
+    /**
+     * A commerce-core-ban ténylegesen regisztrált szállítási providerek.
+     */
+    private static function getRegisteredShippingCodes(): array
+    {
+        if (!self::isAvailable()) {
+            return self::getFallbackShippingMethods();
+        }
+
+        try {
+            $manager = app(\Weboldalnet\CommerceCore\Managers\ShippingManager::class);
+
+            return $manager->getEnabledProviders();
+        } catch (\Throwable $e) {
+            Log::warning('WebshopCommerceService: nem sikerült lekérni a shipping providereket: ' . $e->getMessage());
+
+            return self::getFallbackShippingMethods();
+        }
+    }
+
+    /**
+     * A szállítási módok csoportjai a pénztárban.
+     *
+     * Minden csoportnak van egy saját kapcsolója; a csoporton belül pedig a
+     * telepített futárszolgálatok közül lehet válogatni (GLS, MPL, FoxPost…).
+     * A "pickup" csoportban egyetlen mód van, ott a csoport kapcsolója egyben
+     * a mód kapcsolója is.
+     */
+    public const SHIPPING_GROUPS = [
+        'home_delivery' => [
+            'label' => 'Házhoz szállítás',
+            'key' => 'site_checkout_shipping_home_delivery_enabled',
+            'has_providers' => true,
+        ],
+        'parcel_shop' => [
+            'label' => 'Csomagpont, csomagautomata',
+            'key' => 'site_checkout_shipping_parcel_locker_enabled',
+            'has_providers' => true,
+        ],
+        'pickup' => [
+            'label' => 'Személyes átvétel',
+            'key' => 'site_checkout_shipping_pickup_enabled',
+            'has_providers' => false,
+        ],
+    ];
+
+    /**
+     * A telepített szállítási integrációk (kód => metaadat: name, settings_url,
+     * kind, builtin, active) – a kikapcsoltak is benne vannak.
+     */
+    public static function getAvailableShippingProviders(): array
+    {
+        if (!self::isAvailable()) {
+            return [];
+        }
+
+        try {
+            return app(\Weboldalnet\CommerceCore\Managers\ShippingManager::class)->getAvailableProviders();
+        } catch (\Throwable $e) {
+            Log::warning('WebshopCommerceService: nem sikerült lekérni a szállítási providereket: ' . $e->getMessage());
+
+            return [];
+        }
+    }
+
+    /**
+     * Egy szállítási mód jellege (home_delivery / parcel_shop / pickup / manual).
+     */
+    public static function getShippingMethodKind(string $code): string
+    {
+        $providers = self::getAvailableShippingProviders();
+
+        if (isset($providers[$code]['kind'])) {
+            return $providers[$code]['kind'];
+        }
+
+        if (class_exists(\Weboldalnet\CommerceCore\Managers\ShippingManager::class)) {
+            return \Weboldalnet\CommerceCore\Managers\ShippingManager::resolveKind($code);
+        }
+
+        return 'home_delivery';
+    }
+
+    /**
+     * Be van-e kapcsolva egy szállítási csoport (házhoz szállítás, csomagpont,
+     * személyes átvétel). Az ismeretlen jellegű módokat nem korlátozzuk.
+     */
+    public static function isShippingGroupEnabled(string $kind): bool
+    {
+        if (!isset(self::SHIPPING_GROUPS[$kind])) {
+            return true;
+        }
+
+        return WebshopSettingsService::getBool(self::SHIPPING_GROUPS[$kind]['key']);
+    }
+
+    /**
+     * A beállítófelület szállítási csoportjai, a hozzájuk tartozó telepített
+     * futárszolgálatokkal együtt.
+     */
+    public static function getShippingGroups(): array
+    {
+        $providers = self::getAvailableShippingProviders();
+        $groups = [];
+
+        foreach (self::SHIPPING_GROUPS as $kind => $group) {
+            $methods = [];
+
+            if ($group['has_providers']) {
+                foreach ($providers as $code => $meta) {
+                    if (($meta['kind'] ?? null) !== $kind) {
+                        continue;
+                    }
+
+                    $methods[$code] = array_merge($meta, [
+                        'code' => $code,
+                        'enabled' => self::isShippingMethodChecked($code),
+                    ]);
+                }
+            }
+
+            $groups[$kind] = array_merge($group, [
+                'kind' => $kind,
+                'enabled' => WebshopSettingsService::getBool($group['key']),
+                'methods' => $methods,
+            ]);
+        }
+
+        return $groups;
+    }
+
+    /**
+     * Be van-e pipálva maga a szállítási mód (a csoport kapcsolójától függetlenül).
+     *
+     * Az egységes kulcs: site_checkout_shipping_method_{kod}_enabled.
+     * A régi, mód-specifikus kulcsokat visszafelé kompatibilisen elfogadjuk,
+     * hogy a már beállított shopokban ne változzon a viselkedés.
+     */
+    public static function isShippingMethodChecked(string $code): bool
+    {
+        $key = 'site_checkout_shipping_method_' . $code . '_enabled';
+
+        // Ha az egységes kulcs már létezik a beállításokban, az dönt.
+        if (array_key_exists($key, WebshopSettingsService::all())) {
+            return WebshopSettingsService::getBool($key);
+        }
+
+        $legacyKeys = [
+            'flat_rate' => 'site_checkout_shipping_home_delivery_enabled',
+            'pickup' => 'site_checkout_shipping_pickup_enabled',
+            'parcel_locker' => 'site_checkout_shipping_parcel_locker_enabled',
+        ];
+
+        if (isset($legacyKeys[$code])) {
+            return WebshopSettingsService::getBool($legacyKeys[$code]);
+        }
+
+        return WebshopSettingsService::getBool($key);
+    }
+
+    /**
+     * Be van-e kapcsolva egy szállítási mód az adminon.
+     *
+     * Két feltétel: a mód csoportja (házhoz szállítás / csomagpont / személyes
+     * átvétel) be legyen kapcsolva, és maga a mód is legyen kipipálva.
+     */
+    public static function isShippingMethodEnabled(string $code): bool
+    {
+        $kind = self::getShippingMethodKind($code);
+
+        if (!self::isShippingGroupEnabled($kind)) {
+            return false;
+        }
+
+        // A személyes átvételnél a csoport kapcsolója egyben a mód kapcsolója.
+        if (isset(self::SHIPPING_GROUPS[$kind]) && !self::SHIPPING_GROUPS[$kind]['has_providers']) {
+            return true;
+        }
+
+        return self::isShippingMethodChecked($code);
     }
 
     /**
@@ -219,6 +486,106 @@ class WebshopCommerceService
     }
 
     /**
+     * A telepített számlázó integrációk (kód => metaadat: name, settings_url, active).
+     *
+     * A listát a commerce-core InvoiceManager adja, ezért egy új számlázó
+     * csomag bekötéséhez a webshopban nem kell semmit módosítani.
+     */
+    public static function getAvailableInvoiceProviders(): array
+    {
+        if (!self::isAvailable()) {
+            return [];
+        }
+
+        try {
+            return app(\Weboldalnet\CommerceCore\Managers\InvoiceManager::class)->getAvailableProviders();
+        } catch (\Throwable $e) {
+            Log::warning('WebshopCommerceService: nem sikerült lekérni a számlázó providereket: ' . $e->getMessage());
+
+            return [];
+        }
+    }
+
+    /**
+     * A kiválasztott számlázó integráció kódja, vagy null.
+     */
+    public static function getInvoicingProvider(): ?string
+    {
+        $available = self::getAvailableInvoiceProviders();
+
+        if (empty($available)) {
+            return null;
+        }
+
+        $selected = WebshopSettingsService::get('invoicing_provider');
+        if ($selected && isset($available[$selected])) {
+            return $selected;
+        }
+
+        // Nincs érvényes választás. Egy külön telepített integráció (pl.
+        // Számlázz.hu) erősebb alapértelmezés, mint a commerce-core beépített
+        // manuális számlázása – így a korábbi viselkedés marad érvényben.
+        $firstActive = null;
+
+        foreach ($available as $code => $meta) {
+            if (empty($meta['active'])) {
+                continue;
+            }
+
+            if (empty($meta['builtin'])) {
+                return (string) $code;
+            }
+
+            $firstActive = $firstActive ?? (string) $code;
+        }
+
+        return $firstActive;
+    }
+
+    /**
+     * A kiválasztott (vagy megadott) számlázó integráció metaadatai.
+     */
+    public static function getInvoiceProviderMeta(?string $code = null): ?array
+    {
+        $code = $code ?: self::getInvoicingProvider();
+
+        if (!$code) {
+            return null;
+        }
+
+        $available = self::getAvailableInvoiceProviders();
+
+        return isset($available[$code]) ? array_merge(['code' => $code], $available[$code]) : null;
+    }
+
+    /**
+     * Be van-e kapcsolva a számlázás a webshopban.
+     *
+     * A webshop beállításokban lévő főkapcsoló dönt; ehhez kell egy kiválasztott
+     * (telepített) számlázó integráció is, különben a funkció használhatatlan.
+     */
+    public static function isInvoicingEnabled(): bool
+    {
+        $key = 'invoicing_enabled';
+
+        if (array_key_exists($key, WebshopSettingsService::all())) {
+            return WebshopSettingsService::getBool($key) && self::getInvoicingProvider() !== null;
+        }
+
+        // Visszafelé kompatibilitás: a főkapcsoló bevezetése előtt egy külön
+        // telepített számlázó modul saját kapcsolója döntött. A commerce-core
+        // beépített manuális providere itt nem számít – az mindig aktív, tehát
+        // önmagában nem jelentene bekapcsolt számlázást.
+        foreach (self::getAvailableInvoiceProviders() as $meta) {
+            if (!empty($meta['active']) && empty($meta['builtin'])) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
      * Elindítja a számlakészítési folyamatot egy rendeléshez.
      */
     public static function createInvoice(WebshopOrder $order): array
@@ -227,10 +594,14 @@ class WebshopCommerceService
             return ['success' => false, 'message' => 'Commerce-core nem elérhető.'];
         }
 
+        if (!self::isInvoicingEnabled()) {
+            return ['success' => false, 'message' => 'A számlázás nincs bekapcsolva a webshop beállításokban.'];
+        }
+
         try {
-            // A számlázó provider lekérése (vagy alapértelmezett, vagy fixen szamlazzhu)
-            $providerCode = 'szamlazzhu'; 
-            
+            // A kiválasztott számlázó integráció (Webshop beállítások → Számlázás)
+            $providerCode = self::getInvoicingProvider();
+
             $service = app(\Weboldalnet\CommerceCore\Services\InvoiceService::class);
             $requestData = WebshopInvoiceRequestFactory::fromOrder($order);
             $dto = \Weboldalnet\CommerceCore\Data\InvoiceRequestData::fromArray($requestData);
@@ -255,6 +626,43 @@ class WebshopCommerceService
     }
 
     /**
+     * Szállítási díj kiszámítása a választott szállítási módhoz.
+     * A providertől kérdezzük – ez korábban sehol nem történt meg, ezért a díj
+     * soha nem került bele a rendelés végösszegébe.
+     *
+     * Hibát nem dob: ha a provider nem elérhető, 0-t ad vissza, hogy a pénztár
+     * működőképes maradjon.
+     */
+    public static function calculateShippingCost(?string $shippingMethod, float $itemsTotal, string $currency = 'HUF'): float
+    {
+        if (!$shippingMethod || !self::isAvailable()) {
+            return 0.0;
+        }
+
+        try {
+            $service = app(\Weboldalnet\CommerceCore\Services\ShippingService::class);
+            $result = $service->calculate($shippingMethod, \Weboldalnet\CommerceCore\Data\ShippingRateRequestData::fromArray([
+                'shipping_method' => $shippingMethod,
+                'cart_total' => $itemsTotal,
+                'currency' => $currency,
+            ]));
+
+            if (!$result || !$result->success) {
+                return 0.0;
+            }
+
+            return (float) ($result->rate ?? 0);
+        } catch (\Throwable $e) {
+            Log::warning('WebshopCommerceService: szállítási díj számítása sikertelen.', [
+                'shipping_method' => $shippingMethod,
+                'error' => $e->getMessage(),
+            ]);
+
+            return 0.0;
+        }
+    }
+
+    /**
      * Elindítja a szállítmányozási folyamatot egy rendeléshez.
      */
     public static function createShipment(WebshopOrder $order): array
@@ -264,17 +672,25 @@ class WebshopCommerceService
         }
 
         try {
-            $manager = app(\Weboldalnet\CommerceCore\Managers\ShippingManager::class);
-            $requestData = WebshopShippingRequestFactory::fromOrder($order);
-            $result = $manager->createShipment($requestData);
+            // A ShippingService végzi a perzisztálást, az idempotenciát és az eventeket
+            // (a számlázási oldal InvoiceService-ének párja).
+            $service = app(\Weboldalnet\CommerceCore\Services\ShippingService::class);
+            $dto = \Weboldalnet\CommerceCore\Data\ShipmentRequestData::fromArray(
+                WebshopShippingRequestFactory::fromOrder($order)
+            );
+
+            $result = $service->createShipment($order->shipping_method, $dto);
 
             return [
-                'success' => $result['success'] ?? false,
-                'trackingNumber' => $result['trackingNumber'] ?? null,
-                'trackingUrl' => $result['trackingUrl'] ?? null,
-                'shipmentId' => $result['shipmentId'] ?? null,
-                'message' => $result['message'] ?? null,
-                'rawResult' => $result,
+                'success' => $result->success,
+                'trackingNumber' => $result->trackingNumber,
+                'trackingUrl' => $result->trackingUrl,
+                'labelPath' => $result->labelPath,
+                // A helyi commerce_shipments sor azonosítója – ezt kell a
+                // rendeléshez kötni, nem a futárszolgálati csomagszámot.
+                'shipmentId' => $result->shipmentId,
+                'message' => $result->message,
+                'rawResult' => $result->toArray(),
             ];
         } catch (\Throwable $e) {
             Log::error('WebshopCommerceService: Szállítmányozási hiba: ' . $e->getMessage(), ['order_id' => $order->id]);
@@ -373,6 +789,18 @@ class WebshopCommerceService
     public static function getAllShippingMethodLabels(): array
     {
         $allMethods = self::getFallbackShippingMethods();
+
+        // A telepített szállítási csomagok elnevezései akkor is kellenek, ha a
+        // modul épp ki van kapcsolva – különben a korábbi szállítmányoknál nyers
+        // kód látszana a listákban.
+        foreach ([
+            config('commerce-gls.provider_code') => config('commerce-gls.default_shipping_method_label'),
+            config('commerce-gls.parcel_shop_code') => config('commerce-gls.parcel_shop_label'),
+        ] as $code => $label) {
+            if ($code && $label && !isset($allMethods[$code])) {
+                $allMethods[$code] = $label;
+            }
+        }
 
         if (self::isAvailable()) {
             try {

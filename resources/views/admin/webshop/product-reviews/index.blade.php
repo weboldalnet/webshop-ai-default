@@ -7,7 +7,7 @@
 
         <div class="row">
             <div class="col-lg-12">
-                <h2 class="header-box">
+                <h2 class="header-box my-2">
                     <i class="fa fa-comments"></i> {{ isset($product) ? 'Vélemények: ' . $product->name : 'Összes vélemény' }}
                     <a href="{{ route('admin.webshop.products.index') }}" class="btn btn-outline-dark btn-sm float-right"><i class="fa fa-arrow-left"></i> Vissza</a>
                 </h2>

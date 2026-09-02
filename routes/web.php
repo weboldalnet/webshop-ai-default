@@ -8,6 +8,7 @@ use Weboldalnet\WebshopAiDefault\Http\Controllers\Admin\Webshop\WebshopProductLa
 use Weboldalnet\WebshopAiDefault\Http\Controllers\Admin\Webshop\WebshopProductReviewController;
 use Weboldalnet\WebshopAiDefault\Http\Controllers\Admin\Webshop\WebshopOrderController;
 use Weboldalnet\WebshopAiDefault\Http\Controllers\Admin\Webshop\WebshopSettingController;
+use Weboldalnet\WebshopAiDefault\Http\Controllers\Admin\Webshop\WebshopShipmentController;
 use Weboldalnet\WebshopAiDefault\Http\Controllers\Admin\Webshop\WebshopExtraSettingController;
 use Weboldalnet\WebshopAiDefault\Http\Controllers\Site\Webshop\WebshopCategoryController as SiteCategoryController;
 use Weboldalnet\WebshopAiDefault\Http\Controllers\Site\Webshop\WebshopProductController as SiteProductController;
@@ -15,6 +16,8 @@ use Weboldalnet\WebshopAiDefault\Http\Controllers\Site\Webshop\WebshopCartContro
 use Weboldalnet\WebshopAiDefault\Http\Controllers\Site\Webshop\WebshopCompareController;
 use Weboldalnet\WebshopAiDefault\Http\Controllers\Site\Webshop\WebshopCheckoutController;
 use Weboldalnet\WebshopAiDefault\Http\Controllers\Site\Webshop\WebshopReviewController;
+use Weboldalnet\WebshopAiDefault\Http\Controllers\Site\Webshop\WebshopWithdrawalController as SiteWithdrawalController;
+use Weboldalnet\WebshopAiDefault\Http\Controllers\Admin\Webshop\WebshopWithdrawalController as AdminWithdrawalController;
 
 Route::middleware('web')->group(function () {
     // Site oldali route-ok
@@ -51,6 +54,17 @@ Route::middleware('web')->group(function () {
 
             // Vélemények
             Route::post('/reviews', [WebshopReviewController::class, 'store'])->name('reviews.store');
+
+            // Elállás
+            // A rendelésszám itt azonosítóként működik, ezért a keresést
+            // korlátozzuk, hogy ne lehessen rendelésszámokat próbálgatni.
+            Route::post('/elallas/kereses', [SiteWithdrawalController::class, 'lookup'])
+                ->middleware('throttle:10,1')
+                ->name('withdrawals.lookup');
+            Route::get('/elallas/{orderNumber}', [SiteWithdrawalController::class, 'create'])->name('withdrawals.create');
+            Route::post('/elallas/{orderNumber}', [SiteWithdrawalController::class, 'store'])
+                ->middleware('throttle:10,1')
+                ->name('withdrawals.store');
         });
 
     // Admin oldali route-ok
@@ -141,6 +155,17 @@ Route::middleware('web')->group(function () {
             Route::patch('/orders/{order}/mark-paid', [WebshopOrderController::class, 'markPaid'])->name('orders.mark-paid');
             Route::post('/orders/{order}/create-invoice', [WebshopOrderController::class, 'createInvoice'])->name('orders.create-invoice');
             Route::post('/orders/{order}/create-shipment', [WebshopOrderController::class, 'createShipment'])->name('orders.create-shipment');
+
+            // Elállási kérelmek
+            Route::get('/withdrawals', [AdminWithdrawalController::class, 'index'])->name('withdrawals.index');
+            Route::get('/withdrawals/{withdrawal}', [AdminWithdrawalController::class, 'show'])->name('withdrawals.show');
+            Route::put('/withdrawals/{withdrawal}', [AdminWithdrawalController::class, 'update'])->name('withdrawals.update');
+            Route::delete('/withdrawals/{withdrawal}', [AdminWithdrawalController::class, 'destroy'])->name('withdrawals.destroy');
+
+            // Szállítmányok (provider-független lista)
+            Route::get('/shipments', [WebshopShipmentController::class, 'index'])->name('shipments.index');
+            Route::get('/shipments/{id}/label', [WebshopShipmentController::class, 'downloadLabel'])->name('shipments.label');
+            Route::post('/shipments/{id}/retry', [WebshopShipmentController::class, 'retry'])->name('shipments.retry');
 
             // Beállítások
             Route::get('/settings', [WebshopSettingController::class, 'index'])->name('settings.index');

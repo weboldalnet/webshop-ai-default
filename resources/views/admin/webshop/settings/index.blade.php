@@ -5,14 +5,14 @@
     <div class="container mt-lg-4 mt-3 mb-150">
         @include('admin.webshop.partials.alerts')
 
-        <div class="row"><div class="col-lg-12"><h2 class="header-box"><i class="fa fa-cog"></i> Webshop beállítások</h2></div></div>
+        <div class="row"><div class="col-lg-12"><h2 class="header-box my-2"><i class="fa fa-cog"></i> Webshop beállítások</h2></div></div>
 
         <form method="POST" action="{{ route('admin.webshop.settings.update') }}">
             @csrf
             <div class="row">
                 <div class="col-lg-6 mb-3">
-                    <h2 class="header-box product-info">Kategória beállítások</h2>
-                    <div class="content-box bordered">
+                    <h2 class="header-box product-info mb-1">Kategória beállítások</h2>
+                    <div class="content-box bordered mb-3">
                         <div class="custom-control custom-switch mb-3">
                             <input type="checkbox" class="custom-control-input" id="category_icon_enabled" name="category_icon_enabled"
                                    @if(($ws['category_icon_enabled'] ?? 'false') === 'true') checked @endif>
@@ -53,8 +53,8 @@
                 </div>
 
                 <div class="col-lg-6 mb-3">
-                    <h2 class="header-box product-info">Termék beállítások</h2>
-                    <div class="content-box bordered">
+                    <h2 class="header-box product-info mb-1">Termék beállítások</h2>
+                    <div class="content-box bordered mb-3">
                         <div class="custom-control custom-switch mb-3">
                             <input type="checkbox" class="custom-control-input" id="product_stock_enabled" name="product_stock_enabled"
                                    @if(($ws['product_stock_enabled'] ?? 'false') === 'true') checked @endif>
@@ -128,8 +128,8 @@
 
             <div class="row">
                 <div class="col-lg-6 mb-3">
-                    <h2 class="header-box product-info">Site Kategória beállítások</h2>
-                    <div class="content-box bordered">
+                    <h2 class="header-box product-info mb-1">Site Kategória beállítások</h2>
+                    <div class="content-box bordered mb-3">
                         <div class="custom-control custom-switch mb-3">
                             <input type="checkbox" class="custom-control-input" id="site_home_page_editor_enabled" name="site_home_page_editor_enabled"
                                    @if(($ws['site_home_page_editor_enabled'] ?? 'false') === 'true') checked @endif>
@@ -158,8 +158,8 @@
                 </div>
 
                 <div class="col-lg-6 mb-3">
-                    <h2 class="header-box product-info">Site Termék beállítások</h2>
-                    <div class="content-box bordered">
+                    <h2 class="header-box product-info mb-1">Site Termék beállítások</h2>
+                    <div class="content-box bordered mb-3">
                         <div class="custom-control custom-switch mb-3">
                             <input type="checkbox" class="custom-control-input" id="site_related_products_modal_enabled" name="site_related_products_modal_enabled"
                                    @if(($ws['site_related_products_modal_enabled'] ?? 'false') === 'true') checked @endif>
@@ -181,8 +181,8 @@
 
             <div class="row">
                 <div class="col-lg-6 mb-3">
-                    <h2 class="header-box product-info">Site Checkout beállítások</h2>
-                    <div class="content-box bordered">
+                    <h2 class="header-box product-info mb-1">Site Checkout beállítások</h2>
+                    <div class="content-box bordered mb-3">
                         <div class="form-group">
                             <label for="site_checkout_mode">Checkout mód</label>
                             <select class="form-control" id="site_checkout_mode" name="site_checkout_mode">
@@ -210,17 +210,27 @@
                                         <label class="custom-control-label" for="site_checkout_payment_online_enabled">Online fizetés</label>
                                     </div>
                                     <div id="checkout-online-payment-providers" class="pl-4 mb-2" @if(($ws['site_checkout_payment_online_enabled'] ?? 'false') !== 'true') style="display:none;" @endif>
-                                        @foreach($paymentMethods as $code => $label)
-                                            @if(\Weboldalnet\WebshopAiDefault\Services\Webshop\Commerce\WebshopCommerceService::isOnlinePaymentMethod($code))
-                                                <div class="custom-control custom-checkbox mb-1">
-                                                    <input type="checkbox" class="custom-control-input" 
-                                                           id="site_checkout_payment_method_{{ $code }}_enabled" 
-                                                           name="site_checkout_payment_method_{{ $code }}_enabled"
-                                                           @if(($ws['site_checkout_payment_method_' . $code . '_enabled'] ?? 'false') === 'true') checked @endif>
-                                                    <label class="custom-control-label" for="site_checkout_payment_method_{{ $code }}_enabled">{{ $label }}</label>
-                                                </div>
-                                            @endif
-                                        @endforeach
+                                        @forelse($onlinePaymentProviders as $code => $provider)
+                                            <div class="custom-control custom-checkbox mb-1">
+                                                <input type="checkbox" class="custom-control-input"
+                                                       id="site_checkout_payment_method_{{ $code }}_enabled"
+                                                       name="site_checkout_payment_method_{{ $code }}_enabled"
+                                                       @if($provider['enabled']) checked @endif>
+                                                <label class="custom-control-label" for="site_checkout_payment_method_{{ $code }}_enabled">
+                                                    {{ $provider['name'] }}
+                                                    @if(empty($provider['active']))
+                                                        <span class="badge badge-warning ml-1">nincs bekapcsolva</span>
+                                                    @endif
+                                                </label>
+                                                @if(!empty($provider['settings_url']))
+                                                    <a href="{{ $provider['settings_url'] }}" class="ml-2 small" title="Beállítások">
+                                                        <i class="fa fa-cog"></i>
+                                                    </a>
+                                                @endif
+                                            </div>
+                                        @empty
+                                            <p class="text-muted small mb-0">Nincs telepítve online fizetési integráció.</p>
+                                        @endforelse
                                     </div>
                                     <div class="custom-control custom-checkbox mb-2">
                                         <input type="checkbox" class="custom-control-input" id="site_checkout_payment_cod_enabled" name="site_checkout_payment_cod_enabled"
@@ -251,21 +261,46 @@
                             <div id="checkout-shipping-options-settings" @if(($ws['site_checkout_shipping_options_enabled'] ?? 'false') !== 'true') style="display:none;" @endif>
                                 <p class="text-muted small mb-2">Válaszd ki, mely szállítási módok jelenjenek meg a site oldalon:</p>
                                 <div class="pl-3">
-                                    <div class="custom-control custom-checkbox mb-2">
-                                        <input type="checkbox" class="custom-control-input" id="site_checkout_shipping_home_delivery_enabled" name="site_checkout_shipping_home_delivery_enabled"
-                                               @if(($ws['site_checkout_shipping_home_delivery_enabled'] ?? 'false') === 'true') checked @endif>
-                                        <label class="custom-control-label" for="site_checkout_shipping_home_delivery_enabled">Házhoz szállítás</label>
-                                    </div>
-                                    <div class="custom-control custom-checkbox mb-2">
-                                        <input type="checkbox" class="custom-control-input" id="site_checkout_shipping_parcel_locker_enabled" name="site_checkout_shipping_parcel_locker_enabled"
-                                               @if(($ws['site_checkout_shipping_parcel_locker_enabled'] ?? 'false') === 'true') checked @endif>
-                                        <label class="custom-control-label" for="site_checkout_shipping_parcel_locker_enabled">Csomagpont automata</label>
-                                    </div>
-                                    <div class="custom-control custom-checkbox mb-2">
-                                        <input type="checkbox" class="custom-control-input" id="site_checkout_shipping_pickup_enabled" name="site_checkout_shipping_pickup_enabled"
-                                               @if(($ws['site_checkout_shipping_pickup_enabled'] ?? 'false') === 'true') checked @endif>
-                                        <label class="custom-control-label" for="site_checkout_shipping_pickup_enabled">Személyes átvétel</label>
-                                    </div>
+                                    {{-- A csoportok (házhoz szállítás, csomagpont, személyes átvétel) alatt a
+                                         telepített futárszolgálatok jelennek meg – a lista a commerce-core
+                                         provider-nyilvántartásából jön, így egy új csomag (MPL, FoxPost…)
+                                         itt külön módosítás nélkül megjelenik. --}}
+                                    @foreach($shippingGroups as $kind => $group)
+                                        <div class="custom-control custom-checkbox mb-2">
+                                            <input type="checkbox" class="custom-control-input"
+                                                   id="{{ $group['key'] }}" name="{{ $group['key'] }}"
+                                                   @if($group['enabled']) checked @endif
+                                                   @if($group['has_providers']) data-shipping-group="{{ $kind }}" @endif>
+                                            <label class="custom-control-label" for="{{ $group['key'] }}">{{ $group['label'] }}</label>
+                                        </div>
+
+                                        @if($group['has_providers'])
+                                            <div class="pl-4 mb-2" id="shipping-group-{{ $kind }}"
+                                                 @if(!$group['enabled']) style="display:none;" @endif>
+                                                @forelse($group['methods'] as $code => $method)
+                                                    <div class="custom-control custom-checkbox mb-1">
+                                                        <input type="checkbox" class="custom-control-input"
+                                                               id="site_checkout_shipping_method_{{ $code }}_enabled"
+                                                               name="site_checkout_shipping_method_{{ $code }}_enabled"
+                                                               @if($method['enabled']) checked @endif>
+                                                        <label class="custom-control-label" for="site_checkout_shipping_method_{{ $code }}_enabled">
+                                                            {{ $method['name'] }}
+                                                            @if(empty($method['active']))
+                                                                <span class="badge badge-warning ml-1">nincs bekapcsolva</span>
+                                                            @endif
+                                                        </label>
+                                                        @if(!empty($method['settings_url']))
+                                                            <a href="{{ $method['settings_url'] }}" class="ml-2 small" title="Beállítások">
+                                                                <i class="fa fa-cog"></i>
+                                                            </a>
+                                                        @endif
+                                                    </div>
+                                                @empty
+                                                    <p class="text-muted small mb-0">Ehhez nincs telepítve futárszolgálat-integráció.</p>
+                                                @endforelse
+                                            </div>
+                                        @endif
+                                    @endforeach
                                 </div>
                             </div>
                         </div>
@@ -307,18 +342,65 @@
                 </div>
 
                 <div class="col-lg-6 mb-3">
-                    <h2 class="header-box product-info">Számlázz.hu</h2>
-                    <div class="content-box bordered">
-                        <p class="text-muted small mb-2">Számla Agent API integráció:</p>
-                        <a href="/webshop/szamlazzhu/settings" class="btn btn-secondary btn-sm">
-                            <i class="fa fa-cog mr-1"></i> Számlázz.hu beállítások
-                        </a>
+                    <h2 class="header-box product-info mb-1">Számlázás</h2>
+                    <div class="content-box bordered mb-3">
+                        <div class="custom-control custom-switch mb-3">
+                            <input type="checkbox" class="custom-control-input" id="invoicing_enabled" name="invoicing_enabled"
+                                   @if($invoicingEnabled) checked @endif>
+                            <label class="custom-control-label" for="invoicing_enabled">Számlázás engedélyezve</label>
+                        </div>
+
+                        <div id="invoicing-settings" @if(!$invoicingEnabled) style="display:none;" @endif>
+                            @if(empty($invoiceProviders))
+                                <div class="alert alert-warning mb-0 py-2 px-3 small">
+                                    <i class="fa fa-exclamation-triangle mr-1"></i>
+                                    Nincs telepítve számlázó integráció, ezért a számlázás nem használható.
+                                </div>
+                            @else
+                                <label class="fw-600 mb-1 d-block">Számlázó program</label>
+
+                                @foreach($invoiceProviders as $providerCode => $providerMeta)
+                                    <div class="custom-control custom-radio mb-2">
+                                        <input type="radio" class="custom-control-input"
+                                               id="invoicing_provider_{{ $providerCode }}"
+                                               name="invoicing_provider" value="{{ $providerCode }}"
+                                               @if($invoicingProvider === $providerCode) checked @endif>
+                                        <label class="custom-control-label" for="invoicing_provider_{{ $providerCode }}">
+                                            {{ $providerMeta['name'] ?? $providerCode }}
+                                            @if(empty($providerMeta['active']))
+                                                <span class="badge badge-warning ml-1">nincs bekapcsolva</span>
+                                            @endif
+                                        </label>
+                                    </div>
+                                @endforeach
+
+                                @php $selectedProvider = $invoiceProviders[$invoicingProvider] ?? null; @endphp
+
+                                @if($selectedProvider && !empty($selectedProvider['settings_url']))
+                                    <a href="{{ $selectedProvider['settings_url'] }}" class="btn btn-secondary btn-sm mt-1">
+                                        <i class="fa fa-cog mr-1"></i> {{ $selectedProvider['name'] ?? $invoicingProvider }} beállítások
+                                    </a>
+                                @endif
+
+                                @if($selectedProvider && empty($selectedProvider['active']))
+                                    <div class="alert alert-warning mt-2 mb-0 py-2 px-3 small">
+                                        <i class="fa fa-exclamation-triangle mr-1"></i>
+                                        A kiválasztott integráció a saját beállítófelületén nincs bekapcsolva,
+                                        ezért a számla kiállítása hibára fut.
+                                    </div>
+                                @endif
+
+                                <p class="text-muted small mb-0 mt-2">
+                                    Kikapcsolva a Számlák menüpont és a rendeléseknél a számlázási műveletek sem jelennek meg.
+                                </p>
+                            @endif
+                        </div>
                     </div>
                 </div>
 
                 <div class="col-lg-6 mb-3">
-                    <h2 class="header-box product-info">Egyéb Site beállítások</h2>
-                    <div class="content-box bordered">
+                    <h2 class="header-box product-info mb-1">Egyéb Site beállítások</h2>
+                    <div class="content-box bordered mb-3">
                         <div class="custom-control custom-switch mb-3">
                             <input type="checkbox" class="custom-control-input" id="site_product_compare_enabled" name="site_product_compare_enabled"
                                    @if(($ws['site_product_compare_enabled'] ?? 'false') === 'true') checked @endif>
@@ -356,6 +438,15 @@
                 var block = document.getElementById('checkout-shipping-options-settings');
                 if (block) block.style.display = cb && cb.checked ? '' : 'none';
             }
+            function toggleShippingGroupProviders(cb) {
+                var block = document.getElementById('shipping-group-' + cb.getAttribute('data-shipping-group'));
+                if (block) block.style.display = cb.checked ? '' : 'none';
+            }
+            function toggleInvoicingSettings() {
+                var cb = document.getElementById('invoicing_enabled');
+                var block = document.getElementById('invoicing-settings');
+                if (block) block.style.display = cb && cb.checked ? '' : 'none';
+            }
 
             document.addEventListener('DOMContentLoaded', function() {
                 var modeSelect = document.getElementById('site_checkout_mode');
@@ -369,6 +460,13 @@
 
                 var shipOptCb = document.getElementById('site_checkout_shipping_options_enabled');
                 if (shipOptCb) shipOptCb.addEventListener('change', toggleShippingOptionsSettings);
+
+                var invoicingCb = document.getElementById('invoicing_enabled');
+                if (invoicingCb) invoicingCb.addEventListener('change', toggleInvoicingSettings);
+
+                document.querySelectorAll('[data-shipping-group]').forEach(function (cb) {
+                    cb.addEventListener('change', function () { toggleShippingGroupProviders(cb); });
+                });
             });
         })();
     </script>

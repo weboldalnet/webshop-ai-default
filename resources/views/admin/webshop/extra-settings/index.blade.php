@@ -5,7 +5,7 @@
     <div class="container mt-lg-4 mt-3 mb-150">
         <div class="row">
             <div class="col-lg-12">
-                <h2 class="header-box"><i class="fa fa-cog"></i> Webshop extra beállítások</h2>
+                <h2 class="header-box my-2"><i class="fa fa-cog"></i> Webshop extra beállítások</h2>
             </div>
         </div>
 

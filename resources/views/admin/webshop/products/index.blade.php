@@ -9,7 +9,7 @@
     <div class="container mt-lg-4 mt-3 mb-150">
         @include('admin.webshop.partials.alerts')
 
-        <div class="row"><div class="col-lg-12"><h2 class="header-box"><i class="fa fa-box"></i> Termékek</h2></div></div>
+        <div class="row"><div class="col-lg-12"><h2 class="header-box my-2"><i class="fa fa-box"></i> Termékek</h2></div></div>
 
         <div class="row mt-2 mb-2">
             <div class="col-lg-12 text-center">
@@ -50,7 +50,7 @@
             </form>
         </div>
 
-        <div class="content-box table-responsive">
+        <div class="content-box table-responsive mb-3">
             <table class="table table-hover">
                 <thead class="thead-dark">
                 <tr>

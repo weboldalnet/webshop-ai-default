@@ -18,8 +18,8 @@
             <div class="row">
                 {{-- Alapadatok --}}
                 <div class="col-lg-6 mb-3">
-                    <h3 class="header-box product-info">Alapadatok</h3>
-                    <div class="content-box bordered">
+                    <h3 class="header-box product-info mb-1">Alapadatok</h3>
+                    <div class="content-box bordered mb-3">
                         <div class="form-group">
                             <label for="name">Név <span class="text-danger">*</span></label>
                             <input type="text" class="form-control" id="name" name="name" value="{{ old('name', $product->name) }}" required>
@@ -68,8 +68,8 @@
 
                 {{-- Kép --}}
                 <div class="col-lg-6 mb-3">
-                    <h3 class="header-box product-info">Elsődleges kép</h3>
-                    <div class="content-box bordered">
+                    <h3 class="header-box product-info mb-1">Elsődleges kép</h3>
+                    <div class="content-box bordered mb-3">
                         @if(\Weboldalnet\WebshopAiDefault\Services\Webshop\WebshopSettingsService::get('admin_product_primary_image_mode', 'cropper') === 'cropper')
                             @include('admin.elements.commons.img-crop-object-input', [
                                         'object' => $product,
@@ -103,7 +103,7 @@
                     {{-- Árak --}}
                     @if(($ws['product_price_enabled'] ?? 'false') === 'true')
                         <h3 class="header-box product-info mt-3">Árak</h3>
-                        <div class="content-box bordered">
+                        <div class="content-box bordered mb-3">
                             <div class="form-group">
                                 <label for="price">
                                     Ár (Ft)
@@ -136,7 +136,7 @@
                     {{-- Készlet --}}
                     @if(($ws['product_stock_enabled'] ?? 'false') === 'true')
                         <h3 class="header-box product-info mt-3">Készlet</h3>
-                        <div class="content-box bordered">
+                        <div class="content-box bordered mb-3">
                             <div class="custom-control custom-switch mb-2">
                                 <input type="checkbox" class="custom-control-input" id="stock_enabled" name="stock_enabled" @if(old('stock_enabled', $product->stock_enabled)) checked @endif>
                                 <label class="custom-control-label" for="stock_enabled">Készletkezelés engedélyezve</label>
@@ -150,8 +150,8 @@
                 </div>
                 
                 <div class="col-lg-12 mb-3">
-                    <h3 class="header-box product-info">Leírás</h3>
-                    <div class="content-box bordered">
+                    <h3 class="header-box product-info mb-1">Leírás</h3>
+                    <div class="content-box bordered mb-3">
                         <div class="form-group">
                             <textarea class="form-control js-tinymce"
                                       id="description"
@@ -166,8 +166,8 @@
             {{-- Tulajdonságok --}}
             <div class="row">
                 <div class="col-lg-12 mb-3">
-                    <h3 class="header-box product-info">Tulajdonságok</h3>
-                    <div class="content-box bordered">
+                    <h3 class="header-box product-info mb-1">Tulajdonságok</h3>
+                    <div class="content-box bordered mb-3">
                         <div class="row">
                         @foreach($allPropertyCategories as $pc)
                             @php
@@ -222,8 +222,8 @@
             @if(($ws['product_gallery_enabled'] ?? 'false') === 'true')
             <div class="row">
                 <div class="col-lg-12 mb-3">
-                    <h3 class="header-box product-info">Galéria</h3>
-                    <div class="content-box bordered">
+                    <h3 class="header-box product-info mb-1">Galéria</h3>
+                    <div class="content-box bordered mb-3">
                         <div id="gallery-sortable" class="row mb-3 js-gallery-sortable" data-url="{{ route('admin.webshop.products.gallery.sort') }}">
                             @foreach($product->defaultGalleryImages->sortBy('sort_order') as $img)
                                 @include('admin.webshop.products.partials.gallery-item', ['product' => $product, 'img' => $img])
@@ -265,8 +265,8 @@
             @if(($ws['product_extra_gallery_enabled'] ?? 'false') === 'true' && ($ws['product_gallery_enabled'] ?? 'false') === 'true')
             <div class="row">
                 <div class="col-lg-12 mb-3">
-                    <h3 class="header-box product-info">Másodlagos Galéria</h3>
-                    <div class="content-box bordered">
+                    <h3 class="header-box product-info mb-1">Másodlagos Galéria</h3>
+                    <div class="content-box bordered mb-3">
                         <div id="secondary-gallery-sortable" class="row mb-3 js-gallery-sortable" data-url="{{ route('admin.webshop.products.gallery.sort') }}">
                             @foreach($product->secondaryGalleryImages->sortBy('sort_order') as $img)
                                 @include('admin.webshop.products.partials.gallery-item', ['product' => $product, 'img' => $img])
@@ -308,8 +308,8 @@
             @if(($ws['product_document_upload_enabled'] ?? 'false') === 'true')
             <div class="row">
                 <div class="col-lg-12 mb-3">
-                    <h3 class="header-box product-info">Dokumentumok</h3>
-                    <div class="content-box bordered">
+                    <h3 class="header-box product-info mb-1">Dokumentumok</h3>
+                    <div class="content-box bordered mb-3">
                         <div class="js-document-sortable" data-url="{{ route('admin.webshop.products.documents.sort') }}">
                             <table class="table table-sm table-bordered">
                                 <thead>
@@ -390,8 +390,8 @@
             @if(($ws['product_related_enabled'] ?? 'false') === 'true')
             <div class="row">
                 <div class="col-lg-6 mb-3">
-                    <h3 class="header-box product-info">Kapcsolódó termékek</h3>
-                    <div class="content-box bordered">
+                    <h3 class="header-box product-info mb-1">Kapcsolódó termékek</h3>
+                    <div class="content-box bordered mb-3">
                         <div class="form-group mb-2">
                             <label>Termék hozzáadása (név vagy SKU alapján)</label>
                             <div class="input-group">
@@ -425,8 +425,8 @@
                 {{-- Variációk --}}
                 @if(($ws['product_variations_enabled'] ?? 'false') === 'true')
                 <div class="col-lg-6 mb-3">
-                    <h3 class="header-box product-info">Variációs termékek</h3>
-                    <div class="content-box bordered">
+                    <h3 class="header-box product-info mb-1">Variációs termékek</h3>
+                    <div class="content-box bordered mb-3">
                         <div class="form-group mb-2">
                             <label>Variáció hozzáadása (név vagy SKU alapján)</label>
                             <div class="input-group">

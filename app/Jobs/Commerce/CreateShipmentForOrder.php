@@ -46,7 +46,10 @@ class CreateShipmentForOrder implements ShouldQueue
             $result = WebshopCommerceService::createShipment($order);
 
             if ($result['success']) {
-                $shipmentId = $result['shipmentId'] ?? null;
+                // A helyi bizonylat-sor azonosítója (int), NEM a futárszolgálati csomagszám.
+                $shipmentId = isset($result['shipmentId']) && is_numeric($result['shipmentId'])
+                    ? (int) $result['shipmentId']
+                    : null;
                 $order->markShipped($shipmentId);
 
                 // Tracking adatok mentése

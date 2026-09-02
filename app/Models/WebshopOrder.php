@@ -121,7 +121,7 @@ class WebshopOrder extends Model
     protected $fillable = [
         'order_number', 'status', 'type', 'customer_name', 'customer_email', 'customer_phone',
         'customer_company', 'customer_tax_number', 'billing_data', 'shipping_data',
-        'total_price', 'currency', 'is_completed', 'completed_at', 'admin_note', 'note',
+        'total_price', 'shipping_cost', 'currency', 'is_completed', 'completed_at', 'admin_note', 'note',
         'payment_method', 'payment_status', 'invoice_status',
         'shipping_method', 'shipping_status',
         'commerce_payment_transaction_id', 'commerce_invoice_document_id', 'commerce_shipment_id',
@@ -130,6 +130,7 @@ class WebshopOrder extends Model
 
     protected $casts = [
         'total_price' => 'float',
+        'shipping_cost' => 'float',
         'is_completed' => 'boolean',
         'completed_at' => 'datetime',
         'paid_at' => 'datetime',

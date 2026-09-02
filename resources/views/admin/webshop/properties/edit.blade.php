@@ -5,8 +5,8 @@
     <div class="container mw-600 mt-3 mb-150">
         @include('admin.webshop.partials.alerts')
         @include('admin.webshop.partials.form-errors')
-        <div class="row"><div class="col-lg-12"><h3 class="header-box product-info">{{ $property->name }} szerkesztése</h3></div></div>
-        <div class="content-box bordered">
+        <div class="row"><div class="col-lg-12"><h3 class="header-box product-info mb-1">{{ $property->name }} szerkesztése</h3></div></div>
+        <div class="content-box bordered mb-3">
             <form method="POST" action="{{ route('admin.webshop.properties.update', [$propertyCategory, $property]) }}">
                 @csrf @method('PUT')
                 @include('admin.webshop.properties.form')

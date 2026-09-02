@@ -5,14 +5,14 @@
     <div class="container mt-lg-4 mt-3 mb-150">
         @include('admin.webshop.partials.alerts')
 
-        <div class="row"><div class="col-lg-12"><h2 class="header-box">Új termék címke létrehozása</h2></div></div>
+        <div class="row"><div class="col-lg-12"><h2 class="header-box my-2">Új termék címke létrehozása</h2></div></div>
 
         <form method="POST" action="{{ route('admin.webshop.labels.store') }}">
             @csrf
             <div class="row">
                 <div class="col-lg-6 mb-3">
-                    <h2 class="header-box product-info">Címke adatai</h2>
-                    <div class="content-box bordered">
+                    <h2 class="header-box product-info mb-1">Címke adatai</h2>
+                    <div class="content-box bordered mb-3">
                         <div class="form-group">
                             <label for="name">Név <span class="text-danger">*</span></label>
                             <input type="text" class="form-control @error('name') is-invalid @enderror" id="name" name="name" value="{{ old('name') }}" required>
@@ -37,8 +37,8 @@
                 </div>
 
                 <div class="col-lg-6 mb-3">
-                    <h2 class="header-box product-info">Előnézet</h2>
-                    <div class="content-box bordered text-center py-5">
+                    <h2 class="header-box product-info mb-1">Előnézet</h2>
+                    <div class="content-box bordered text-center py-5 mb-3">
                         <div id="label-preview" style="display: inline-block; padding: 10px 20px; font-size: 20px; font-weight: bold; border-radius: 4px; background-color: #000000; color: #ffffff;">
                             Címke minta
                         </div>

@@ -6,7 +6,7 @@
     <div class="container mt-lg-4 mt-3 mb-150">
         <div class="row">
             <div class="col-lg-12">
-                <h2 class="header-box"><i class="fa {{ $type === 'email' ? 'fa-envelope' : 'fa-check-circle' }}"></i> {{ $type === 'email' ? 'Email szerkesztése' : 'Köszönjük oldal szerkesztése' }}</h2>
+                <h2 class="header-box my-2"><i class="fa {{ $type === 'email' ? 'fa-envelope' : 'fa-check-circle' }}"></i> {{ $type === 'email' ? 'Email szerkesztése' : 'Köszönjük oldal szerkesztése' }}</h2>
             </div>
         </div>
 
@@ -23,7 +23,7 @@
             @if(($ws['site_checkout_mode'] ?? 'order') === $modeCode || !isset($ws['site_checkout_mode']))
                 <div class="row mt-4">
                     <div class="col-lg-12">
-                        <h3 class="header-box product-info">{{ $modeLabel }}</h3>
+                        <h3 class="header-box product-info mb-1">{{ $modeLabel }}</h3>
                     </div>
                 </div>
 

@@ -18,11 +18,11 @@ class WebshopOrderItem extends Model
 {
     protected $table = 'public.webshop_order_items';
 
-    protected $fillable = ['order_id', 'product_id', 'product_name', 'quantity', 'unit_price', 'total_price'];
+    protected $fillable = ['order_id', 'product_id', 'product_name', 'quantity', 'unit_price', 'total_price', 'weight'];
 
     protected $casts = [
         'order_id' => 'integer', 'product_id' => 'integer', 'quantity' => 'integer',
-        'unit_price' => 'float', 'total_price' => 'float',
+        'unit_price' => 'float', 'total_price' => 'float', 'weight' => 'float',
     ];
 
     public function order() { return $this->belongsTo(WebshopOrder::class, 'order_id'); }

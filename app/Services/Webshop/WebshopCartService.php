@@ -29,6 +29,7 @@ class WebshopCartService
                 'image' => $product->primary_image,
                 'image_thumb' => $product->primary_image_thumb,
                 'category_id' => $product->category_id,
+                'weight' => $product->weight,
             ];
         }
 

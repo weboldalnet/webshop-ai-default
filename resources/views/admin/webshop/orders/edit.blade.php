@@ -8,7 +8,7 @@
 
         <div class="row">
             <div class="col-lg-12">
-                <h2 class="header-box"><i class="fa fa-shopping-cart"></i> Rendelés #{{ $order->order_number }}</h2>
+                <h2 class="header-box my-2"><i class="fa fa-shopping-cart"></i> Rendelés #{{ $order->order_number }}</h2>
             </div>
         </div>
 
@@ -138,7 +138,7 @@
                 <!-- Fizetés blokk -->
                 <div class="col-lg-4 mb-4">
                     <h3 class="header-box product-info mb-3"><i class="fa fa-credit-card mr-1"></i> Fizetés</h3>
-                    <div class="content-box bordered h-100">
+                    <div class="content-box bordered h-100 mb-3">
                         <dl class="row mb-1">
                             @if($order->payment_method)
                                 <dt class="col-6 small text-muted">Fizetési mód:</dt>
@@ -173,10 +173,11 @@
                     </div>
                 </div>
 
-                <!-- Számla blokk -->
+                <!-- Számla blokk – csak ha a számlázás be van kapcsolva -->
+                @if($invoicingEnabled)
                 <div class="col-lg-4 mb-4">
                     <h3 class="header-box product-info mb-3"><i class="fa fa-file-invoice mr-1"></i> Számla</h3>
-                    <div class="content-box bordered h-100">
+                    <div class="content-box bordered h-100 mb-3">
                         <dl class="row mb-1">
                             <dt class="col-6 small text-muted">Számla státusz:</dt>
                             <dd class="col-6 small">
@@ -214,17 +215,18 @@
                             <button type="button" class="btn btn-sm btn-outline-primary w-100 mt-2 js-confirm-action"
                                     data-confirm-form="createInvoiceForm"
                                     data-confirm-title="Számla készítése"
-                                    data-confirm-text="A Számlázz.hu-n valódi, éles számla kerül kiállításra ehhez a rendeléshez. Biztosan folytatod?">
+                                    data-confirm-text="A(z) {{ $invoiceProvider['name'] ?? 'számlázó program' }} rendszerében valódi, éles számla kerül kiállításra ehhez a rendeléshez. Biztosan folytatod?">
                                 <i class="fa fa-file-invoice mr-1"></i> Számla készítése
                             </button>
                         @endif
                     </div>
                 </div>
+                @endif
 
                 <!-- Szállítás blokk -->
                 <div class="col-lg-4 mb-4">
                     <h3 class="header-box product-info mb-3"><i class="fa fa-truck mr-1"></i> Szállítás</h3>
-                    <div class="content-box bordered h-100">
+                    <div class="content-box bordered h-100 mb-3">
                         <dl class="row mb-1">
                             @if($order->shipping_method)
                                 <dt class="col-6 small text-muted">Szállítási mód:</dt>
@@ -316,7 +318,7 @@
                 @csrf @method('PATCH')
             </form>
         @endif
-        @if(in_array($order->invoice_status, ['not_required', 'failed', 'pending']))
+        @if($invoicingEnabled && in_array($order->invoice_status, ['not_required', 'failed', 'pending']))
             <form id="createInvoiceForm" method="POST" action="{{ route('admin.webshop.orders.create-invoice', $order) }}" class="d-none">
                 @csrf
             </form>

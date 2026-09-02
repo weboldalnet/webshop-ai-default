@@ -6,6 +6,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Weboldalnet\WebshopAiDefault\Models\WebshopOrder;
 use Weboldalnet\WebshopAiDefault\Jobs\Commerce\CreateInvoiceForOrder;
+use Weboldalnet\WebshopAiDefault\Services\Webshop\Commerce\WebshopCommerceService;
 
 class HandlePaymentSucceeded
 {
@@ -45,16 +46,7 @@ class HandlePaymentSucceeded
             }
 
             // Automatikus számlázás indítása, ha be van kapcsolva
-            $autoInvoice = config('commerce-core.auto_invoice.enabled', false);
-            
-            // Számlázz.hu specifikus automatikus mód ellenőrzése
-            if (class_exists(\Weboldalnet\CommerceSzamlazzhu\Services\SzamlazzhuSettingsService::class)) {
-                $szamlazzEnabled = \Weboldalnet\CommerceSzamlazzhu\Services\SzamlazzhuSettingsService::getBool('enabled');
-                $szamlazzAuto = \Weboldalnet\CommerceSzamlazzhu\Services\SzamlazzhuSettingsService::get('billing_mode') === 'automatic';
-                if ($szamlazzEnabled && $szamlazzAuto) {
-                    $autoInvoice = true;
-                }
-            }
+            $autoInvoice = $this->shouldAutoInvoice();
 
             if ($autoInvoice && in_array($order->invoice_status, [WebshopOrder::INVOICE_STATUS_NOT_REQUIRED, WebshopOrder::INVOICE_STATUS_PENDING])) {
                 $updateData['invoice_status'] = WebshopOrder::INVOICE_STATUS_PENDING;
@@ -64,16 +56,7 @@ class HandlePaymentSucceeded
         });
 
         // Számlázás job indítása transaction után
-        $autoInvoice = config('commerce-core.auto_invoice.enabled', false);
-        if (class_exists(\Weboldalnet\CommerceSzamlazzhu\Services\SzamlazzhuSettingsService::class)) {
-            $szamlazzEnabled = \Weboldalnet\CommerceSzamlazzhu\Services\SzamlazzhuSettingsService::getBool('enabled');
-            $szamlazzAuto = \Weboldalnet\CommerceSzamlazzhu\Services\SzamlazzhuSettingsService::get('billing_mode') === 'automatic';
-            if ($szamlazzEnabled && $szamlazzAuto) {
-                $autoInvoice = true;
-            }
-        }
-
-        if ($autoInvoice) {
+        if ($this->shouldAutoInvoice()) {
             $order->refresh();
             if ($order->invoice_status === WebshopOrder::INVOICE_STATUS_PENDING) {
                 try {
@@ -86,5 +69,31 @@ class HandlePaymentSucceeded
                 }
             }
         }
+    }
+
+    /**
+     * Kell-e automatikusan számlát készíteni a fizetés után?
+     *
+     * A webshop számlázás-főkapcsolója (Webshop beállítások → Számlázás) mindent
+     * felülír: ha a számlázás ki van kapcsolva, automatikus számla sem készül.
+     */
+    private function shouldAutoInvoice(): bool
+    {
+        if (!WebshopCommerceService::isInvoicingEnabled()) {
+            return false;
+        }
+
+        if (config('commerce-core.auto_invoice.enabled', false)) {
+            return true;
+        }
+
+        // A Számlázz.hu csomag saját "automatikus" számlázási módja – csak akkor
+        // vesszük figyelembe, ha épp az a kiválasztott számlázó integráció.
+        if (WebshopCommerceService::getInvoicingProvider() === 'szamlazzhu'
+            && class_exists(\Weboldalnet\CommerceSzamlazzhu\Services\SzamlazzhuSettingsService::class)) {
+            return \Weboldalnet\CommerceSzamlazzhu\Services\SzamlazzhuSettingsService::get('billing_mode') === 'automatic';
+        }
+
+        return false;
     }
 }

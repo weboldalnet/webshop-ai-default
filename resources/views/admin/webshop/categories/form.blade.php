@@ -8,8 +8,8 @@
 
 <div class="row">
     <div class="col-lg-6 mb-3">
-        <h3 class="header-box product-info">Alapadatok</h3>
-        <div class="content-box bordered">
+        <h3 class="header-box product-info mb-1">Alapadatok</h3>
+        <div class="content-box bordered mb-3">
             <div class="form-group">
                 <label for="name_singular">Név (egyes szám) <span class="text-danger">*</span></label>
                 <input type="text" class="form-control" id="name_singular" name="name_singular" value="{{ old('name_singular', $isEdit ? $category->name_singular : '') }}" required>
@@ -32,8 +32,8 @@
     </div>
 
     <div class="col-lg-6 mb-3">
-        <h3 class="header-box product-info"><i class="fa-solid fa-code"></i> SEO / OG adatok</h3>
-        <div class="content-box bordered">
+        <h3 class="header-box product-info mb-1"><i class="fa-solid fa-code"></i> SEO / OG adatok</h3>
+        <div class="content-box bordered mb-3">
             @if($isEdit && $category->og_img)
                 <div class="mb-2"><img src="{{ $category->og_img }}" class="img-fluid" style="max-height:150px"></div>
             @endif
@@ -53,8 +53,8 @@
     </div>
 
     <div class="col-lg-6 mb-3">
-        <h3 class="header-box product-info">Termékkép méretek (metszéshez)</h3>
-        <div class="content-box bordered">
+        <h3 class="header-box product-info mb-1">Termékkép méretek (metszéshez)</h3>
+        <div class="content-box bordered mb-3">
             <button type="button" class="btn btn-sm btn-outline-info mb-3" data-toggle="collapse" data-target="#imageSizesCollapse">
                 <i class="fa-solid fa-arrows-left-right"></i> Méretek beállítása
             </button>
@@ -76,8 +76,8 @@
 
     @if(($ws['category_parent_enabled'] ?? 'false') === 'true')
         <div class="col-lg-6 mb-3">
-            <h3 class="header-box product-info">Szülő kategória</h3>
-            <div class="content-box bordered">
+            <h3 class="header-box product-info mb-1">Szülő kategória</h3>
+            <div class="content-box bordered mb-3">
                 <div class="form-group">
                     <label for="parent_id">Szülő kategória</label>
                     <select class="form-control" id="parent_id" name="parent_id">
@@ -93,8 +93,8 @@
 
     @if(($ws['category_icon_enabled'] ?? 'false') === 'true')
         <div class="col-lg-6 mb-3">
-            <h3 class="header-box product-info">Ikon</h3>
-            <div class="content-box bordered">
+            <h3 class="header-box product-info mb-1">Ikon</h3>
+            <div class="content-box bordered mb-3">
                 @if($isEdit && $category->icon)
                     <div class="mb-2"><img src="{{ $category->icon }}" style="max-height:60px"></div>
                 @endif
@@ -109,8 +109,8 @@
 
     @if(($ws['category_sizing_enabled'] ?? 'false') === 'true')
         <div class="col-lg-6 mb-3">
-            <h3 class="header-box product-info">Kategória kártya mérete</h3>
-            <div class="content-box bordered">
+            <h3 class="header-box product-info mb-1">Kategória kártya mérete</h3>
+            <div class="content-box bordered mb-3">
                 <div class="form-group">
                     <label for="card_width_units">Kártya szélessége (egység)</label>
                     <select class="form-control" id="card_width_units" name="card_width_units">
@@ -126,8 +126,8 @@
 
     @if(($ws['category_list_image_enabled'] ?? 'false') === 'true')
         <div class="col-lg-6 mb-3">
-            <h3 class="header-box product-info">Kategória listakép</h3>
-            <div class="content-box bordered">
+            <h3 class="header-box product-info mb-1">Kategória listakép</h3>
+            <div class="content-box bordered mb-3">
                 <div class="row">
                     <div class="col-lg-12">
                         <div class="form-group">
@@ -210,8 +210,8 @@
 
     @if(($ws['category_merchant_feed_enabled'] ?? 'false') === 'true')
         <div class="col-lg-6 mb-3">
-            <h3 class="header-box product-info">Merchant Feed</h3>
-            <div class="content-box bordered">
+            <h3 class="header-box product-info mb-1">Merchant Feed</h3>
+            <div class="content-box bordered mb-3">
                 <div class="form-group">
                     <label for="google_merchant_id">Google Merchant ID</label>
                     <input type="text" class="form-control" id="google_merchant_id" name="google_merchant_id" value="{{ old('google_merchant_id', $isEdit ? $category->google_merchant_id : '') }}">
@@ -231,8 +231,8 @@
 
 <div class="row">
     <div class="col-lg-6 mb-3">
-        <h3 class="header-box product-info">Tulajdonság kategóriák</h3>
-        <div class="content-box bordered">
+        <h3 class="header-box product-info mb-1">Tulajdonság kategóriák</h3>
+        <div class="content-box bordered mb-3">
             @foreach($propertyCategories as $pc)
                 <div class="custom-control custom-checkbox mb-1">
                     <input type="checkbox" class="custom-control-input" id="pc{{ $pc->id }}" name="property_categories[]" value="{{ $pc->id }}"
@@ -254,8 +254,8 @@
 
     @if(($ws['category_related_enabled'] ?? 'false') === 'true')
     <div class="col-lg-6 mb-3">
-        <h3 class="header-box product-info">Kapcsolódó kategóriák</h3>
-        <div class="content-box bordered">
+        <h3 class="header-box product-info mb-1">Kapcsolódó kategóriák</h3>
+        <div class="content-box bordered mb-3">
             @foreach($allCategories as $cat)
                 <div class="custom-control custom-checkbox mb-1">
                     <input type="checkbox" class="custom-control-input" id="rel{{ $cat->id }}" name="related_categories[]" value="{{ $cat->id }}"

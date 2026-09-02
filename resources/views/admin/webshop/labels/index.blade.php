@@ -16,7 +16,7 @@
             </div>
         </div>
 
-        <div class="content-box bordered">
+        <div class="content-box bordered mb-3">
             <div class="table-responsive">
                 <table class="table table-striped table-hover mb-0">
                     <thead>

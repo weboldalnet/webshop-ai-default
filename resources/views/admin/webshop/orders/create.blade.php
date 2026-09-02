@@ -8,7 +8,7 @@
 
         <div class="row">
             <div class="col-lg-12">
-                <h2 class="header-box"><i class="fa fa-plus-circle"></i> Új rendelés létrehozása</h2>
+                <h2 class="header-box my-2"><i class="fa fa-plus-circle"></i> Új rendelés létrehozása</h2>
             </div>
         </div>
 

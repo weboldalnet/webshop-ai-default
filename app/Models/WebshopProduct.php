@@ -36,7 +36,7 @@ class WebshopProduct extends Model
     protected $fillable = [
         'category_id', 'label_id', 'name', 'slug', 'description', 'short_desc', 'secondary_name', 'crm_identifier',
         'primary_image', 'primary_image_thumb', 'sku',
-        'stock_enabled', 'stock_quantity', 'price', 'sale_price', 'is_active', 'sort_order',
+        'stock_enabled', 'stock_quantity', 'price', 'sale_price', 'is_active', 'sort_order', 'weight',
     ];
 
     protected $casts = [

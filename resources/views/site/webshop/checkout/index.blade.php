@@ -224,6 +224,12 @@
                                             </div>
                                         @endforeach
                                     </div>
+
+                                    {{-- GLS csomagpont-választó: csak akkor jelenik meg, ha a
+                                         csomagpontos mód elérhető és ki van választva. --}}
+                                    @if(isset($glsParcelShopCode) && array_key_exists($glsParcelShopCode, $shippingMethods))
+                                        @include('site.webshop.checkout.partials.gls-parcel-shop')
+                                    @endif
                                 @endif
                             @endif
 
@@ -359,8 +365,14 @@
                     var billingSameBlock = $('#billingSameAsShipping').closest('.custom-control');
                     var billingCollapse = $('.js-billing-collapse');
 
-                    if (selectedShipping === 'pickup') {
-                        // Személyes átvétel: nincs szállítási cím, kötelező a számlázási cím
+                    // Csomagpontos szállításnál a vásárló saját címére nincs szükség:
+                    // a csomag a kiválasztott átvevőpontra megy.
+                    var glsParcelShopCode = @json($glsParcelShopCode ?? null);
+                    var noOwnAddress = (selectedShipping === 'pickup')
+                        || (glsParcelShopCode && selectedShipping === glsParcelShopCode);
+
+                    if (noOwnAddress) {
+                        // Nincs saját szállítási cím, kötelező a számlázási cím
                         if (shippingBlock.length) {
                             shippingBlock.hide();
                             shippingBlock.find('.ws-shipping-address-input').prop('required', false);

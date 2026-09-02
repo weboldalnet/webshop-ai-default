@@ -5,7 +5,7 @@
     <div class="container mt-lg-4 mt-3 mb-150">
         <div class="row">
             <div class="col-lg-12">
-                <h2 class="header-box"><i class="fa fa-code"></i> Mérési scriptek</h2>
+                <h2 class="header-box my-2"><i class="fa fa-code"></i> Mérési scriptek</h2>
             </div>
         </div>
 
@@ -68,8 +68,8 @@
 
         <div class="row mt-4">
             <div class="col-lg-12">
-                <h3 class="header-box product-info">Új script hozzáadása</h3>
-                <div class="content-box bordered">
+                <h3 class="header-box product-info mb-1">Új script hozzáadása</h3>
+                <div class="content-box bordered mb-3">
                     <form action="{{ route('admin.webshop.extra-settings.scripts.store') }}" method="POST">
                         @csrf
                         <div class="row">

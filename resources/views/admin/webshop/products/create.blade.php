@@ -6,8 +6,8 @@
         @include('admin.webshop.partials.alerts')
         @include('admin.webshop.partials.form-errors')
 
-        <div class="row"><div class="col-lg-12"><h3 class="header-box product-info"><i class="fa fa-box"></i> Új termék</h3></div></div>
-        <div class="content-box bordered">
+        <div class="row"><div class="col-lg-12"><h3 class="header-box product-info mb-1"><i class="fa fa-box"></i> Új termék</h3></div></div>
+        <div class="content-box bordered mb-3">
             <form method="POST" action="{{ route('admin.webshop.products.store') }}" enctype="multipart/form-data">
                 @csrf
                 <div class="form-group">
