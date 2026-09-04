@@ -6,7 +6,6 @@
 
     <div class="ws-page-container ws-categories-index">
         <div class="container-xl container-fluid pb-5">
-            @php($isHomeEditor = \Weboldalnet\WebshopAiDefault\Services\Webshop\WebshopSettingsService::getBool('site_home_page_editor_enabled'))
             @isset($parentCategory)
                 @include('site.webshop.partials.breadcrumb', ['category' => $parentCategory ?? null])
             @endisset

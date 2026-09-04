@@ -131,11 +131,6 @@
                     <h2 class="header-box product-info mb-1">Site Kategória beállítások</h2>
                     <div class="content-box bordered mb-3">
                         <div class="custom-control custom-switch mb-3">
-                            <input type="checkbox" class="custom-control-input" id="site_home_page_editor_enabled" name="site_home_page_editor_enabled"
-                                   @if(($ws['site_home_page_editor_enabled'] ?? 'false') === 'true') checked @endif>
-                            <label class="custom-control-label" for="site_home_page_editor_enabled">Főoldal szerkesztő</label>
-                        </div>
-                        <div class="custom-control custom-switch mb-3">
                             <input type="checkbox" class="custom-control-input" id="site_category_view_switcher_enabled" name="site_category_view_switcher_enabled"
                                    @if(($ws['site_category_view_switcher_enabled'] ?? 'false') === 'true') checked @endif>
                             <label class="custom-control-label" for="site_category_view_switcher_enabled">Nézet váltó gomb látható-e</label>
@@ -236,6 +231,19 @@
                                         <input type="checkbox" class="custom-control-input" id="site_checkout_payment_cod_enabled" name="site_checkout_payment_cod_enabled"
                                                @if(($ws['site_checkout_payment_cod_enabled'] ?? 'false') === 'true') checked @endif>
                                         <label class="custom-control-label" for="site_checkout_payment_cod_enabled">Utánvét</label>
+                                    </div>
+                                    <div class="form-group pl-4 mb-3">
+                                        <label for="site_checkout_payment_cod_fee" class="small mb-1">
+                                            Utánvét felára (Ft)
+                                        </label>
+                                        <input type="number" min="0" step="1" class="form-control form-control-sm"
+                                               style="max-width: 160px;"
+                                               id="site_checkout_payment_cod_fee" name="site_checkout_payment_cod_fee"
+                                               value="{{ $ws['site_checkout_payment_cod_fee'] ?? 0 }}">
+                                        <small class="form-text text-muted">
+                                            A pénztár összesítőjében külön soron jelenik meg, és a rendelés végösszegébe is beleszámít.
+                                            0 esetén nincs felár, és a sor sem látszik.
+                                        </small>
                                     </div>
                                     <div class="custom-control custom-checkbox mb-2">
                                         <input type="checkbox" class="custom-control-input" id="site_checkout_payment_bank_transfer_enabled" name="site_checkout_payment_bank_transfer_enabled"

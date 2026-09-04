@@ -7,11 +7,24 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Weboldalnet\WebshopAiDefault\Models\WebshopCustomContent;
 use Weboldalnet\WebshopAiDefault\Models\WebshopTrackingScript;
+use Weboldalnet\WebshopAiDefault\Services\Webshop\WebshopCheckoutQaService;
 use Weboldalnet\WebshopAiDefault\Services\Webshop\WebshopSettingsService;
 use Weboldalnet\WebshopAiDefault\Services\Webshop\Commerce\WebshopCommerceService;
 
 class WebshopExtraSettingController extends AdminExtendedController
 {
+    /** A pénztári értesítő dobozok Bootstrap alert-változatai */
+    const NOTICE_TYPES = [
+        'info' => 'Info (kék)',
+        'success' => 'Siker (zöld)',
+        'warning' => 'Figyelmeztetés (sárga)',
+        'danger' => 'Veszély (piros)',
+        'primary' => 'Elsődleges',
+        'secondary' => 'Másodlagos',
+        'light' => 'Világos',
+        'dark' => 'Sötét',
+    ];
+
     public function index()
     {
         return view('admin.webshop.extra-settings.index');
@@ -100,6 +113,44 @@ class WebshopExtraSettingController extends AdminExtendedController
         WebshopSettingsService::save($settings);
 
         return redirect()->back()->with('success', 'Dokumentumok elmentve.');
+    }
+
+    /**
+     * Pénztár kiegészítések: kérdőív választása és a két értesítő doboz.
+     */
+    public function checkoutExtras()
+    {
+        return view('admin.webshop.extra-settings.checkout-extras', [
+            'ws' => WebshopSettingsService::all(),
+            'qaSupported' => WebshopCheckoutQaService::isSupported(),
+            'qaList' => WebshopCheckoutQaService::getSelectableQas(),
+            'noticeTypes' => self::NOTICE_TYPES,
+        ]);
+    }
+
+    public function storeCheckoutExtras(Request $request)
+    {
+        $request->validate([
+            'site_checkout_qa_id' => 'nullable|integer',
+            'site_checkout_notice_top_content' => 'nullable|string',
+            'site_checkout_notice_bottom_content' => 'nullable|string',
+        ]);
+
+        // Az alert-változat adatbázisból kerül vissza a site-ra és osztálynévbe,
+        // ezért csak az ismert értékeket engedjük be.
+        $allowedTypes = array_keys(self::NOTICE_TYPES);
+        $topType = $request->input('site_checkout_notice_top_type');
+        $bottomType = $request->input('site_checkout_notice_bottom_type');
+
+        WebshopSettingsService::save([
+            'site_checkout_qa_id' => $request->input('site_checkout_qa_id') ?: '',
+            'site_checkout_notice_top_type' => in_array($topType, $allowedTypes, true) ? $topType : 'info',
+            'site_checkout_notice_top_content' => $request->input('site_checkout_notice_top_content') ?? '',
+            'site_checkout_notice_bottom_type' => in_array($bottomType, $allowedTypes, true) ? $bottomType : 'info',
+            'site_checkout_notice_bottom_content' => $request->input('site_checkout_notice_bottom_content') ?? '',
+        ]);
+
+        return redirect()->back()->with('success', 'Pénztár kiegészítések elmentve.');
     }
 
     public function scripts()

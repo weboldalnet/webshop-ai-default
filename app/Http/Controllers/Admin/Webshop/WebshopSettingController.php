@@ -50,7 +50,6 @@ class WebshopSettingController extends AdminExtendedController
             'site_checkout_shipping_parcel_locker_enabled',
             'site_checkout_shipping_pickup_enabled',
             // Új beállítások
-            'site_home_page_editor_enabled',
             'product_extra_gallery_enabled',
             'product_document_upload_enabled',
             'product_secondary_name_enabled',
@@ -80,6 +79,8 @@ class WebshopSettingController extends AdminExtendedController
         $valueKeys = [
             'site_category_cards_per_row', 'site_checkout_mode', 'site_product_list_default_view',
             'admin_product_primary_image_mode',
+            // Utánvét-felár: a pénztár összesítője és a rendelés végösszege is ebből dolgozik
+            'site_checkout_payment_cod_fee',
         ];
 
         $settings = [];

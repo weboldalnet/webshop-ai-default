@@ -48,6 +48,33 @@ class WebshopFileService
         return ImageService::saveCustomImage($file, 'webshop/products/gallery', $name, 150);
     }
 
+    /**
+     * Nyitóoldali blokk képe (banner asztali/tablet/mobil változata).
+     *
+     * MAGASSÁG NÉLKÜL mentünk: a saveCustomImage $height paramétere false, így a
+     * kép a megadott szélességre skálázódik, a magassága a feltöltött arányból jön.
+     * Ez felel meg a magasság nélküli metszőnek – a bannerek magassága szabad.
+     */
+    public static function saveHomeBlockImage(UploadedFile $file, string $name, int $width): string
+    {
+        return ImageService::saveCustomImage($file, 'webshop/home-blocks', $name, $width);
+    }
+
+    /**
+     * Nyitóoldali blokk képének törlése csere vagy blokktörlés után.
+     *
+     * FIGYELEM: az ImageService::deleteImage() ebben a projektben SZÁNDÉKOSAN
+     * nem csinál semmit (Lang::MULTI_LANGUAGE = true), mert ugyanarra a kép-URL-re
+     * a másik nyelv adatbázisából is lehet hivatkozás. A hívást mégis megtartjuk,
+     * hogy egynyelvű telepítésen a takarítás magától működjön – itt viszont
+     * számolni kell azzal, hogy a lecserélt képek fájlként a lemezen maradnak.
+     */
+    public static function deleteHomeBlockImage(?string $imgUrl): void
+    {
+        if ($imgUrl) {
+            ImageService::deleteImage($imgUrl);
+        }
+    }
     public static function saveCategoryOgImage(UploadedFile $file, string $name): string
     {
         return ImageService::saveOgImage($file, 'webshop/categories/og', $name);

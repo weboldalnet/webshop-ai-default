@@ -40,7 +40,6 @@ class WebshopCategoryController extends AdminExtendedController
             'name_singular' => 'required|string|max:255',
             'name_plural' => 'required|string|max:255',
             'og_img' => 'nullable|image|mimes:jpg,jpeg,png|max:5120',
-            'icon_file' => 'nullable|file|mimes:svg,png|max:2048',
             'primary_image_width' => 'nullable|integer|min:1',
             'primary_image_height' => 'nullable|integer|min:1',
         ]);
@@ -57,8 +56,10 @@ class WebshopCategoryController extends AdminExtendedController
         if ($request->hasFile('og_img')) {
             $data['og_img'] = WebshopFileService::saveCategoryOgImage($request->file('og_img'), getTransformedString($data['name_singular']));
         }
-        if ($request->hasFile('icon_file') && WebshopSettingsService::getBool('category_icon_enabled')) {
-            $data['icon'] = WebshopFileService::saveCategoryIcon($request->file('icon_file'), getTransformedString($data['name_singular']));
+        // Az ikon a központi ikonkönyvtárból választott URL. Üresen hagyva
+        // törlődik a korábbi választás – ezért nem feltételes az írás.
+        if (WebshopSettingsService::getBool('category_icon_enabled')) {
+            $data['icon'] = $request->input('icon') ?: null;
         }
 
         if (WebshopSettingsService::getBool('category_list_image_enabled')) {
@@ -114,7 +115,6 @@ class WebshopCategoryController extends AdminExtendedController
             'name_singular' => 'required|string|max:255',
             'name_plural' => 'required|string|max:255',
             'og_img' => 'nullable|image|mimes:jpg,jpeg,png|max:5120',
-            'icon_file' => 'nullable|file|mimes:svg,png|max:2048',
             'primary_image_width' => 'nullable|integer|min:1',
             'primary_image_height' => 'nullable|integer|min:1',
         ]);
@@ -129,8 +129,10 @@ class WebshopCategoryController extends AdminExtendedController
         if ($request->hasFile('og_img')) {
             $data['og_img'] = WebshopFileService::saveCategoryOgImage($request->file('og_img'), getTransformedString($data['name_singular']));
         }
-        if ($request->hasFile('icon_file') && WebshopSettingsService::getBool('category_icon_enabled')) {
-            $data['icon'] = WebshopFileService::saveCategoryIcon($request->file('icon_file'), getTransformedString($data['name_singular']));
+        // Az ikon a központi ikonkönyvtárból választott URL. Üresen hagyva
+        // törlődik a korábbi választás – ezért nem feltételes az írás.
+        if (WebshopSettingsService::getBool('category_icon_enabled')) {
+            $data['icon'] = $request->input('icon') ?: null;
         }
 
         if (WebshopSettingsService::getBool('category_list_image_enabled')) {

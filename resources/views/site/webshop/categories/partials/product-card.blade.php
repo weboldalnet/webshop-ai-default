@@ -15,7 +15,7 @@
         @if($product->primary_image)
             <img src="{{ $product->primary_image }}" alt="{{ $product->name }}" class="img-fluid" style="max-height: 100%;">
         @else
-            <i class="fa fa-image fa-4x text-dark opacity-25 fs-30"></i>
+            <i class="fa fa-image text-dark opacity-25 fs-30"></i>
         @endif
     </a>
     <div class="card-body d-flex py-3 flex-column">

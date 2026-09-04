@@ -28,6 +28,47 @@ php artisan vendor:publish --tag=webshop-config
 php artisan vendor:publish --tag=webshop-assets
 ```
 
+### A befogadó projekt composer.json-jába felveendő
+
+Friss telepítéskor ezeknek le kell futniuk. Vedd fel őket a projekt
+`composer.json`-jában a `scripts.post-install-cmd` tömb végére – így minden új
+környezet magától a helyes állapotba kerül:
+
+```json
+"post-install-cmd": [
+    "@php artisan storage:link",
+
+    "@php artisan vendor:publish --tag=webshop-config",
+    "@php artisan vendor:publish --tag=webshop-assets",
+
+    "@php artisan vendor:publish --tag=commerce-core-config",
+    "@php artisan vendor:publish --tag=commerce-barion-config",
+    "@php artisan vendor:publish --tag=commerce-szamlazzhu-config",
+    "@php artisan vendor:publish --tag=commerce-gls-config",
+    "@php artisan vendor:publish --tag=commerce-simplepay-config",
+    "@php artisan vendor:publish --tag=commerce-foxpost-config",
+
+    "@php artisan vendor:publish --tag=commerce-gls-public"
+]
+```
+
+A `post-install-cmd` csak `composer install`-kor fut, `composer update`-kor nem –
+pontosan ez kell, mert ezek friss telepítési lépések.
+
+**Amit szándékosan NEM publikálunk:**
+
+| Elem | Miért nem |
+|---|---|
+| `webshop-views` (és a `webshop-all`) | A csomag nézetei `addLocation()`-nel töltődnek be a vendorból, publish nélkül is működnek. Publikálva a projekt `resources/views`-jébe másolódnának, és onnantól **árnyékolnák a csomagot**: minden későbbi csomagfrissítés láthatatlan maradna, amíg valaki `--force`-szal újra nem publikál – az viszont a projekt testreszabásait írná felül. Ha egy projekten testre kell szabni egy nézetet, elég azt az **egy** fájlt bemásolni a projekt `resources/views`-jébe. |
+| migrációk (`webshop-database`, `commerce-*-migrations`) | Minden érintett csomag `loadMigrationsFrom()`-mal tölti be őket, elég a `php artisan migrate`. |
+
+**A `--force` veszélyei:**
+
+- `webshop-assets --force` felülírja a projekt `public/packages/webshop/site/css/webshop-site.css` fájlját. Ha a projektben ez frissebb (pl. kézzel fordított SCSS-ből), a force **visszalépés**. Force előtt mindig fordítsd újra a csomag SCSS-ét, és hasonlítsd össze a két fájlt.
+- `*-views --force` a projekt testreszabásait törli. Csak tételes összehasonlítás után.
+
+Normál (force nélküli) publish biztonságos: a már létező fájlokat kihagyja.
+
 ---
 
 ## Rendelés modell – Commerce mezők

@@ -122,6 +122,7 @@ class WebshopOrder extends Model
         'order_number', 'status', 'type', 'customer_name', 'customer_email', 'customer_phone',
         'customer_company', 'customer_tax_number', 'billing_data', 'shipping_data',
         'total_price', 'shipping_cost', 'currency', 'is_completed', 'completed_at', 'admin_note', 'note',
+        'qa_data',
         'payment_method', 'payment_status', 'invoice_status',
         'shipping_method', 'shipping_status',
         'commerce_payment_transaction_id', 'commerce_invoice_document_id', 'commerce_shipment_id',
@@ -131,6 +132,8 @@ class WebshopOrder extends Model
     protected $casts = [
         'total_price' => 'float',
         'shipping_cost' => 'float',
+        // A pénztárban kitöltött kérdőív kérdés-válasz párjai
+        'qa_data' => 'array',
         'is_completed' => 'boolean',
         'completed_at' => 'datetime',
         'paid_at' => 'datetime',

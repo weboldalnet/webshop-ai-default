@@ -95,13 +95,18 @@
         <div class="col-lg-6 mb-3">
             <h3 class="header-box product-info mb-1">Ikon</h3>
             <div class="content-box bordered mb-3">
-                @if($isEdit && $category->icon)
-                    <div class="mb-2"><img src="{{ $category->icon }}" style="max-height:60px"></div>
-                @endif
-                <div class="form-group">
-                    <label for="icon_file">Ikon (SVG/PNG)</label>
-                    <input type="file" class="form-control-file" id="icon_file" name="icon_file" accept=".svg,.png">
-                </div>
+                {{-- A központi ikonkönyvtárból választunk, nem fájlt töltünk fel:
+                     így ugyanaz az ikon több helyen újrahasználható, és a
+                     karbantartása egy helyen, az Ikonok oldalon történik.
+                     A komponens a kiválasztott ikon URL-jét írja az "icon" mezőbe,
+                     tehát a korábban FELTÖLTÖTT ikonok URL-je változatlanul él tovább. --}}
+                @include('admin.elements.commons.icon-object-input', [
+                    'variable' => 'icon',
+                    'iconUrl' => $isEdit ? $category->icon : null,
+                ])
+                <small class="form-text text-muted mt-0">
+                    Új ikon feltöltése az <a href="/admin/icons" target="_blank">Ikonok</a> oldalon.
+                </small>
             </div>
         </div>
     @endif

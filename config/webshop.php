@@ -1,6 +1,12 @@
 <?php
 
 return [
+    /*
+     | A pénztár kérdőívéhez használt PROJEKT-modell. A csomag nem drótozza be
+     | az App\ névteret; ha az osztály nincs meg, a kérdőív-funkció kikapcsolva marad.
+     */
+    'contact_qa_model' => \App\Models\ContactQa::class,
+
     'primary_image' => [
         'width' => 600,
         'height' => 450,

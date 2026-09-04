@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Weboldalnet\WebshopAiDefault\Models\WebshopCategory;
 use Weboldalnet\WebshopAiDefault\Models\WebshopProduct;
+use Weboldalnet\WebshopAiDefault\Services\Webshop\WebshopHomeBlockService;
 use Weboldalnet\WebshopAiDefault\Services\Webshop\WebshopProductFilterService;
 use Weboldalnet\WebshopAiDefault\Services\Webshop\WebshopSettingsService;
 
@@ -13,6 +14,22 @@ class WebshopCategoryController extends Controller
 {
     public function index()
     {
+        /*
+            Ha be van kapcsolva az egyedi nyitóoldal ÉS van legalább egy aktív
+            blokkja, azt mutatjuk a kategórialista helyett. Az "aktív blokk"
+            feltétel szándékos: bekapcsolt, de üres nyitóoldal esetén üres lapot
+            adnánk vissza, ami rosszabb, mint a kategórialista.
+        */
+        if (WebshopHomeBlockService::isHomePageActive()) {
+            return view('site.webshop.home.index', [
+                'blocks' => WebshopHomeBlockService::hydrateForSite(),
+                'h1' => WebshopSettingsService::get('site_home_page_h1') ?: null,
+                'metaTitle' => WebshopSettingsService::get('site_home_page_meta_title')
+                    ?: 'Webshop kategóriák',
+                'metaDescription' => WebshopSettingsService::get('site_home_page_meta_description') ?: null,
+            ]);
+        }
+
         $categories = WebshopCategory::active()->topLevel()->ordered()->get();
         return view('site.webshop.categories.index', compact('categories'));
     }

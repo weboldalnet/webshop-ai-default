@@ -132,13 +132,17 @@
                 </div>
             </div>
 
-            <!-- Commerce blokkok (Fizetés / Számla / Szállítás) -->
+            <!-- Commerce blokkok (Fizetés / Számla / Szállítás)
+                 A három doboz azonos magasságú, de a h-100 itt NEM jó: a col magasságának
+                 100%-át venné fel, holott a doboz a fejléc ALATT kezdődik – így a fejléc
+                 magasságával túllógna a soron és rácsúszna a "Rendelési tételek" blokkra.
+                 Ezért a col flex oszlop, a doboz pedig a maradék helyet tölti ki. -->
             @if($order->payment_method || $order->payment_status !== 'unpaid' || $order->shipping_method)
             <div class="row mt-2">
                 <!-- Fizetés blokk -->
-                <div class="col-lg-4 mb-4">
+                <div class="col-lg-4 mb-4 d-flex flex-column">
                     <h3 class="header-box product-info mb-3"><i class="fa fa-credit-card mr-1"></i> Fizetés</h3>
-                    <div class="content-box bordered h-100 mb-3">
+                    <div class="content-box bordered flex-grow-1 mb-3">
                         <dl class="row mb-1">
                             @if($order->payment_method)
                                 <dt class="col-6 small text-muted">Fizetési mód:</dt>
@@ -175,9 +179,9 @@
 
                 <!-- Számla blokk – csak ha a számlázás be van kapcsolva -->
                 @if($invoicingEnabled)
-                <div class="col-lg-4 mb-4">
+                <div class="col-lg-4 mb-4 d-flex flex-column">
                     <h3 class="header-box product-info mb-3"><i class="fa fa-file-invoice mr-1"></i> Számla</h3>
-                    <div class="content-box bordered h-100 mb-3">
+                    <div class="content-box bordered flex-grow-1 mb-3">
                         <dl class="row mb-1">
                             <dt class="col-6 small text-muted">Számla státusz:</dt>
                             <dd class="col-6 small">
@@ -224,9 +228,9 @@
                 @endif
 
                 <!-- Szállítás blokk -->
-                <div class="col-lg-4 mb-4">
+                <div class="col-lg-4 mb-4 d-flex flex-column">
                     <h3 class="header-box product-info mb-3"><i class="fa fa-truck mr-1"></i> Szállítás</h3>
-                    <div class="content-box bordered h-100 mb-3">
+                    <div class="content-box bordered flex-grow-1 mb-3">
                         <dl class="row mb-1">
                             @if($order->shipping_method)
                                 <dt class="col-6 small text-muted">Szállítási mód:</dt>
@@ -261,6 +265,29 @@
             </div>
             @endif
 
+            <!-- A pénztárban kitöltött kérdőív válaszai (Read-only)
+                 A kérdés szövege a rendeléssel együtt lett elmentve, ezért akkor is
+                 helyesen jelenik meg, ha a kérdőívet azóta átszerkesztették vagy törölték. -->
+            @if(!empty($order->qa_data['items']))
+                <h3 class="header-box product-info mb-3">
+                    <i class="fa fa-clipboard-question mr-1"></i>
+                    {{ $order->qa_data['qa_name'] ?? 'Kérdőív' }}
+                </h3>
+                <div class="content-box bordered mb-4">
+                    <dl class="row mb-0">
+                        @foreach($order->qa_data['items'] as $qaItem)
+                            <dt class="col-md-5 small text-muted py-1">{{ $qaItem['question'] ?? '' }}</dt>
+                            <dd class="col-md-7 small py-1 mb-0">
+                                @if(!empty($qaItem['answers']))
+                                    {{ implode(', ', $qaItem['answers']) }}
+                                @else
+                                    <span class="text-muted font-italic">nincs válasz</span>
+                                @endif
+                            </dd>
+                        @endforeach
+                    </dl>
+                </div>
+            @endif
             <!-- Rendelési tételek (Read-only) -->
             <h3 class="header-box product-info mb-3">Rendelési tételek</h3>
             <div class="content-box bordered mb-4">

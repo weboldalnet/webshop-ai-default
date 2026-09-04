@@ -22,7 +22,7 @@
             @endif
         @else
             <div class="card-img-top text-center bg-light d-flex align-items-center justify-content-center" style="height: 220px;">
-                <i class="fa fa-folder-open fa-4x text-muted"></i>
+                <i class="fa fa-folder-open fs-28 text-muted"></i>
             </div>
         @endif
         <div class="card-body text-center">

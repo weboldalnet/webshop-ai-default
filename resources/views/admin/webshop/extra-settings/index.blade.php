@@ -46,6 +46,27 @@
             <div class="col-md-6 col-lg-3 mb-4">
                 <div class="card h-100 shadow-sm border-0 text-center py-4">
                     <div class="card-body">
+                        <div class="fs-28 text-secondary mb-3"><i class="fa fa-home"></i></div>
+                        <h4 class="font-weight-bold">Webshop nyitóoldal</h4>
+                        <p class="text-muted small">Egyedi kezdőoldal blokkokból a kategórialista helyett.</p>
+                        <a href="{{ route('admin.webshop.extra-settings.home-page.index') }}" class="btn btn-outline-secondary btn-sm stretched-link">Megnyitás</a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-6 col-lg-3 mb-4">
+                <div class="card h-100 shadow-sm border-0 text-center py-4">
+                    <div class="card-body">
+                        <div class="fs-28 text-danger mb-3"><i class="fa fa-cart-plus"></i></div>
+                        <h4 class="font-weight-bold">Pénztár kiegészítések</h4>
+                        <p class="text-muted small">Kérdőív és értesítő dobozok a pénztár oldalon.</p>
+                        <a href="{{ route('admin.webshop.extra-settings.checkout-extras.index') }}" class="btn btn-outline-danger btn-sm stretched-link">Megnyitás</a>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6 col-lg-3 mb-4">
+                <div class="card h-100 shadow-sm border-0 text-center py-4">
+                    <div class="card-body">
                         <div class="fs-28 text-warning mb-3"><i class="fa fa-code"></i></div>
                         <h4 class="font-weight-bold">Mérési scriptek</h4>
                         <p class="text-muted small">Google Analytics, Facebook Pixel stb. kódok.</p>

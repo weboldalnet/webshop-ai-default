@@ -313,6 +313,45 @@ class WebshopCommerceService
     }
 
     /**
+     * A pénztárban elérhető szállítási módok csoportosítva.
+     *
+     * A vásárló először a kézbesítés módját választja (házhoz szállítás,
+     * csomagpont, személyes átvétel), és csak azon belül a futárszolgálatot –
+     * így nem egy hosszú, vegyes listából kell választania.
+     *
+     * Csak azok a csoportok szerepelnek, amikben van elérhető mód. A csoporton
+     * kívül eső (ismeretlen jellegű) módok külön, "egyéb" csoport nélkül,
+     * a lista végén jelennek meg.
+     *
+     * @return array<string, array{label: string, methods: array<string, string>}>
+     */
+    public static function getAvailableShippingMethodsGrouped(): array
+    {
+        $methods = self::getAvailableShippingMethods();
+        $groups = [];
+
+        foreach (self::SHIPPING_GROUPS as $kind => $group) {
+            $groups[$kind] = ['label' => $group['label'], 'methods' => []];
+        }
+
+        foreach ($methods as $code => $label) {
+            $kind = self::getShippingMethodKind($code);
+
+            if (!isset($groups[$kind])) {
+                // Ismeretlen jellegű mód – saját csoportot kap a nevével.
+                $groups[$kind] = ['label' => $label, 'methods' => []];
+            }
+
+            $groups[$kind]['methods'][$code] = $label;
+        }
+
+        // Az üres csoportokat nem mutatjuk
+        return array_filter($groups, function ($group) {
+            return !empty($group['methods']);
+        });
+    }
+
+    /**
      * A pénztárban elérhető átvevőpontos szállítási módok kódjai.
      */
     public static function getParcelShopMethodCodes(): array

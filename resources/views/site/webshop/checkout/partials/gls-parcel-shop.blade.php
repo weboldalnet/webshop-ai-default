@@ -9,14 +9,32 @@
 <div id="gls-parcel-shop-wrapper" class="ws-gls-parcel-shop mt-3" style="display: none;">
     <h5 class="mb-2">GLS csomagpont választása <span class="text-danger">*</span></h5>
 
-    <div class="ws-gls-map-holder">
-        <gls-dpm country="{{ strtolower($glsCountry ?? 'hu') }}"
-                 dropoffpoints-only
-                 id="gls-parcel-map"
-                 class="d-block position-relative w-100"
-                 style="min-height: 420px; height: 100%; max-height: 520px; z-index: 1"
-        ></gls-dpm>
-    </div>
+    <style>
+        /*
+            A gls-dpm zárt shadow DOM-ba renderel, és a belső tartalma végig
+            százalékos magasságokra épül. A százalékos magasság viszont NEM oldódik
+            fel min-height ellenében – ezért a "min-height + height:100%" párossal
+            a komponens 0 px magasan, láthatatlanul jött létre. A hostnak definit
+            magasság kell.
+        */
+        .ws-gls-map-holder gls-dpm {
+            display: block;
+            position: relative;
+            width: 100%;
+            height: 480px;
+            z-index: 1;
+        }
+
+        @media (max-width: 575.98px) {
+            .ws-gls-map-holder gls-dpm {
+                height: 380px;
+            }
+        }
+    </style>
+
+    {{-- A gls-dpm elemet szándékosan NEM írjuk ki ide: JS hozza létre, amikor
+         a konténer már látható. A miértje a lenti ensureMap()-nél. --}}
+    <div class="ws-gls-map-holder"></div>
 
     <div class="mt-2">
         <input type="text" id="glsSelectedShop" class="form-control"
@@ -41,10 +59,14 @@
 <script>
     (function () {
         var wrapper = document.getElementById('gls-parcel-shop-wrapper');
-        var map = document.getElementById('gls-parcel-map');
-        if (!wrapper || !map) {
+        var holder = wrapper ? wrapper.querySelector('.ws-gls-map-holder') : null;
+        if (!wrapper || !holder) {
             return;
         }
+
+        var parcelShopCode = '{{ $glsParcelShopCode ?? 'gls_parcel_shop' }}';
+        var country = '{{ strtolower($glsCountry ?? 'hu') }}';
+        var map = null;
 
         function setValue(id, value) {
             var el = document.getElementById(id);
@@ -53,7 +75,7 @@
             }
         }
 
-        map.addEventListener('change', function (e) {
+        function onShopSelected(e) {
             var detail = e.detail || {};
             var contact = detail.contact || {};
 
@@ -84,13 +106,51 @@
             if (!shopId) {
                 console.warn('gls-dpm: a kiválasztott ponthoz nem érkezett azonosító', detail);
             }
-        });
+        }
+
+        /*
+            A komponenst CSAK akkor hozzuk létre, amikor a konténer már látható.
+
+            A gls-dpm a Leafletre épül, az pedig induláskor egyszer kiméri a
+            konténerét, és a méretet később nem számolja újra (a window resize
+            esemény sem hozza helyre). Rejtett, 0 px-es konténerben indítva a
+            térkép egyetlen csempével és csomagpontok nélkül maradt – pontosan
+            ez okozta, hogy a térkép "nem nyílt meg".
+        */
+        function ensureMap() {
+            if (map) {
+                map.open = true;
+                return;
+            }
+
+            map = document.createElement('gls-dpm');
+            map.setAttribute('country', country);
+            map.setAttribute('dropoffpoints-only', '');
+            map.id = 'gls-parcel-map';
+            map.addEventListener('change', onShopSelected);
+            holder.appendChild(map);
+
+            // Az open beállítása csak a custom element regisztrációja után
+            // érvényes – korábban egy sima saját property lenne, amit az
+            // upgrade felülírna. A rAF pedig azt biztosítja, hogy a méret
+            // már ki legyen számolva, mire a térkép elindul.
+            customElements.whenDefined('gls-dpm').then(function () {
+                requestAnimationFrame(function () {
+                    map.open = true;
+                });
+            });
+        }
 
         // A választó csak akkor látszik, ha a GLS csomagpontos mód van kiválasztva
         function toggle() {
             var selected = document.querySelector('input[name="shipping_method"]:checked');
-            var isParcelShop = selected && selected.value === '{{ $glsParcelShopCode ?? 'gls_parcel_shop' }}';
+            var isParcelShop = selected && selected.value === parcelShopCode;
+
             wrapper.style.display = isParcelShop ? 'block' : 'none';
+
+            if (isParcelShop) {
+                ensureMap();
+            }
         }
 
         document.querySelectorAll('input[name="shipping_method"]').forEach(function (input) {

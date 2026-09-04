@@ -10,6 +10,9 @@ use Weboldalnet\WebshopAiDefault\Services\Webshop\Commerce\WebshopCommerceServic
 
 class WebshopCheckoutService
 {
+    /** Az utánvétes fizetési mód kódja */
+    const PAYMENT_METHOD_COD = 'cod';
+
     /**
      * Feldolgozza a checkout adatokat, létrehozza a rendelést és elindítja a payment flow-t.
      *
@@ -79,7 +82,15 @@ class WebshopCheckoutService
             // Szállítási díj: a providertől kérdezzük, szintén szerver oldalon.
             // Korábban ez sehol nem történt meg, így a díj sosem került a végösszegbe.
             $shippingCost = WebshopCommerceService::calculateShippingCost($shippingMethod, $itemsTotal);
-            $totalPrice = $itemsTotal + $shippingCost;
+
+            // Utánvét-felár. A pénztár összesítője ugyanebből a beállításból
+            // dolgozik, így a vásárlónak kiírt és a ténylegesen felszámított
+            // összeg nem térhet el. Alapból 0, tehát felár nélkül semmi nem változik.
+            $codFee = ($paymentMethod === self::PAYMENT_METHOD_COD)
+                ? (float) WebshopSettingsService::get('site_checkout_payment_cod_fee', 0)
+                : 0.0;
+
+            $totalPrice = $itemsTotal + $shippingCost + $codFee;
 
             $order = WebshopOrder::create([
                 'order_number' => $this->generateOrderNumber(),
@@ -97,6 +108,8 @@ class WebshopCheckoutService
                 'shipping_cost' => $shippingCost,
                 'currency' => 'HUF',
                 'note' => $data['note'] ?? null,
+                // A pénztárban kitöltött kérdőív kérdés-válasz párjai
+                'qa_data' => WebshopCheckoutQaService::buildOrderQaData($data),
                 'is_completed' => false,
                 'payment_method' => $paymentMethod,
                 'payment_status' => $initialPaymentStatus,

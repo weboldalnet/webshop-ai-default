@@ -10,6 +10,7 @@ use Weboldalnet\WebshopAiDefault\Http\Controllers\Admin\Webshop\WebshopOrderCont
 use Weboldalnet\WebshopAiDefault\Http\Controllers\Admin\Webshop\WebshopSettingController;
 use Weboldalnet\WebshopAiDefault\Http\Controllers\Admin\Webshop\WebshopShipmentController;
 use Weboldalnet\WebshopAiDefault\Http\Controllers\Admin\Webshop\WebshopExtraSettingController;
+use Weboldalnet\WebshopAiDefault\Http\Controllers\Admin\Webshop\WebshopHomePageController;
 use Weboldalnet\WebshopAiDefault\Http\Controllers\Site\Webshop\WebshopCategoryController as SiteCategoryController;
 use Weboldalnet\WebshopAiDefault\Http\Controllers\Site\Webshop\WebshopProductController as SiteProductController;
 use Weboldalnet\WebshopAiDefault\Http\Controllers\Site\Webshop\WebshopCartController;
@@ -51,6 +52,8 @@ Route::middleware('web')->group(function () {
             // Payment result és retry
             Route::get('/payment/{order}/result', [WebshopCheckoutController::class, 'paymentResult'])->name('payment.result');
             Route::post('/payment/{order}/retry', [WebshopCheckoutController::class, 'retryPayment'])->name('payment.retry');
+            // A fizetési eredmény oldal ezt kérdezgeti, amíg a fizetés függőben van
+            Route::get('/payment/{order}/status', [WebshopCheckoutController::class, 'paymentStatus'])->name('payment.status');
 
             // Vélemények
             Route::post('/reviews', [WebshopReviewController::class, 'store'])->name('reviews.store');
@@ -182,6 +185,19 @@ Route::middleware('web')->group(function () {
                 // Checkout Dokumentumok
                 Route::get('/documents', [WebshopExtraSettingController::class, 'documents'])->name('documents.index');
                 Route::post('/documents', [WebshopExtraSettingController::class, 'storeDocument'])->name('documents.store');
+
+                // Webshop nyitóoldal (blokkokból épített kezdőoldal)
+                Route::get('/home-page', [WebshopHomePageController::class, 'index'])->name('home-page.index');
+                Route::post('/home-page', [WebshopHomePageController::class, 'storeSettings'])->name('home-page.store');
+                // A FIX szegmensű útvonalak a {block} paraméteres elé kell kerüljenek
+                Route::post('/home-page/blocks/sort', [WebshopHomePageController::class, 'sortBlocks'])->name('home-page.blocks.sort');
+                Route::post('/home-page/blocks/toggle-active', [WebshopHomePageController::class, 'toggleBlockActive'])->name('home-page.blocks.toggle-active');
+                Route::post('/home-page/blocks', [WebshopHomePageController::class, 'storeBlock'])->name('home-page.blocks.store');
+                Route::put('/home-page/blocks/{block}', [WebshopHomePageController::class, 'updateBlock'])->name('home-page.blocks.update');
+                Route::delete('/home-page/blocks/{block}', [WebshopHomePageController::class, 'destroyBlock'])->name('home-page.blocks.destroy');
+                // Pénztár kiegészítések (kérdőív + értesítő dobozok)
+                Route::get('/checkout-extras', [WebshopExtraSettingController::class, 'checkoutExtras'])->name('checkout-extras.index');
+                Route::post('/checkout-extras', [WebshopExtraSettingController::class, 'storeCheckoutExtras'])->name('checkout-extras.store');
 
                 // Mérési scriptek
                 Route::get('/scripts', [WebshopExtraSettingController::class, 'scripts'])->name('scripts.index');
