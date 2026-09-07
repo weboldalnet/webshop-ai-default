@@ -1,3 +1,13 @@
+## [1.1.6] - 2026-09-07
+### Javítás: friss adatbázison hibára futott a migráció
+- a `2026_09_04_WEBSHOP_add_design_to_home_blocks` fájlnév ÁBÉCÉBEN megelőzte a
+  táblát létrehozó `..._create_home_blocks_table`-t, ezért az ALTER futott előbb:
+  `relation "public.webshop_home_blocks" does not exist`
+- meglévő adatbázison ez észrevétlen maradt, mert ott a tábla már létezett
+- a fájl dátuma 2026_09_05-re módosult; a migráció idempotens, ezért a már
+  migrált adatbázisokon ártalmatlanul újrafut
+
+
 ## [1.4.0] - 2026-09-07
 ### Egyedi, több szintű kategória menüsor
 - új beállítás: `category_custom_menu_enabled` (csak többszintes kategóriarendszerrel)
