@@ -87,7 +87,22 @@ class WebshopAiDefaultServiceProvider extends ServiceProvider
         // View Composers a Site oldalhoz
         View::composer(['site.webshop.*', 'site.layouts.*'], function ($view) {
             if (request()->is('webshop*') || (request()->route() && str_starts_with(request()->route()->getName(), 'site.webshop.'))) {
-                $view->with('stickyCategories', WebshopCategory::active()->stickyHeader()->ordered()->with('children.children')->get());
+                // A gyerek szinteket UGYANÚGY szűrni kell, mint a gyökeret.
+                // Enélkül egy inaktív vagy a menüsorból kikapcsolt alkategória is
+                // megjelenne a lenyílóban – az adminban kikapcsolnád, és mégis kint
+                // maradna. A closure a rendezést is szintenként elvégzi.
+                $wsMenuSzuro = function ($query) {
+                    $query->where('is_active', true)
+                        ->where('show_in_sticky_header', true)
+                        ->orderBy('sort_order');
+                };
+
+                $view->with('stickyCategories', WebshopCategory::active()->stickyHeader()->ordered()
+                    ->with(['children' => function ($query) use ($wsMenuSzuro) {
+                        $wsMenuSzuro($query);
+                        $query->with(['children' => $wsMenuSzuro]);
+                    }])
+                    ->get());
                 $view->with('cartCount', WebshopCartService::getCount());
                 $view->with('compareCount', WebshopCompareService::getCount());
                 $view->with('ws', WebshopSettingsService::all());

@@ -1,3 +1,25 @@
+{{--
+    Kategória navigáció a webshop oldalain.
+
+    KÉT megjelenés közül választ:
+      - egyedi, több szintű menüsor (category-menu.blade.php), ha be van kapcsolva
+      - a régi, vízszintesen görgethető sáv minden más esetben
+
+    A váltás SZÁNDÉKOSAN itt van, nem a 8 include-helyen: így egyetlen ponton dől el,
+    és a hívó nézeteket nem kell hozzáérni.
+
+    Az egyedi menüsor többszintes kategóriarendszer NÉLKÜL értelmetlen (nem lenne mit
+    lenyitni), ezért mindkét beállítást nézzük – ha a többszintest később kikapcsolják,
+    a navigáció magától visszaáll a régi sávra.
+--}}
+@php
+    $wsEgyediMenu = ($ws['category_parent_enabled'] ?? 'false') === 'true'
+        && ($ws['category_custom_menu_enabled'] ?? 'false') === 'true';
+@endphp
+
+@if($wsEgyediMenu)
+    @include('site.webshop.partials.category-menu')
+@else
 <?php /** @var \Weboldalnet\WebshopAiDefault\Models\WebshopCategory $cat */ ?>
 <div class="category-container sticky-top bg-white shadow-sm ws-category-nav">
     <div class="container-xl container-fluid">
@@ -35,3 +57,4 @@
         </div>
     </div>
 </div>
+@endif

@@ -10,6 +10,7 @@ use Weboldalnet\WebshopAiDefault\Mail\WebshopOrderMail;
 use Weboldalnet\WebshopAiDefault\Models\WebshopOrder;
 use Weboldalnet\WebshopAiDefault\Services\Webshop\WebshopCartService;
 use Weboldalnet\WebshopAiDefault\Services\Webshop\WebshopCheckoutQaService;
+use Weboldalnet\WebshopAiDefault\Services\Webshop\WebshopCouponService;
 use Weboldalnet\WebshopAiDefault\Services\Webshop\WebshopCheckoutService;
 use Weboldalnet\WebshopAiDefault\Services\Webshop\WebshopContentService;
 use Weboldalnet\WebshopAiDefault\Services\Webshop\WebshopSettingsService;
@@ -23,6 +24,13 @@ class WebshopCheckoutController extends Controller
         if (empty($items)) {
             return redirect()->route('site.webshop.categories.index')->with('error', 'A kosár üres.');
         }
+
+        /*
+           Az aktivált kupon CSAK az adott pénztár-látogatásra érvényes:
+           ha a vásárló elnavigál és visszajön, újra be kell írnia a kódot.
+           Ezért a lap minden megnyitása törli a korábbi aktiválást.
+        */
+        WebshopCouponService::clear();
 
         $checkoutMode = WebshopSettingsService::get('site_checkout_mode', 'order');
         $isQuoteMode = $checkoutMode === WebshopOrder::TYPE_QUOTE;
@@ -71,6 +79,8 @@ class WebshopCheckoutController extends Controller
             'foxpostCode' => config('commerce-foxpost.provider_code'),
             // A pénztárhoz beállított kérdőív (nincs beállítva => null, a blokk kimarad)
             'checkoutQa' => WebshopCheckoutQaService::getCheckoutQa(),
+            // Csak akkor rajzoljuk ki a beváltó dobozt, ha van MOST érvényes kupon
+            'couponAvailable' => WebshopCouponService::isAvailable(),
         ]);
     }
 
@@ -158,6 +168,27 @@ class WebshopCheckoutController extends Controller
 
         $request->validate($rules);
 
+        /*
+           A kupont a rendelés LÉTREHOZÁSA ELŐTT értékeljük ki újra.
+
+           Miért itt: a vásárló a kupon aktiválása óta módosíthatta a kosarat,
+           és a kupon időközben le is járhatott. Ha ilyenkor némán teljes áron
+           hoznánk létre a rendelést, a vásárló mást fizetne, mint amit a
+           pénztáron látott. Ezért inkább visszaküldjük a hibával, és nem
+           jön létre rendelés.
+        */
+        $couponResult = WebshopCouponService::currentResult();
+
+        if ($couponResult && !$couponResult['success']) {
+            WebshopCouponService::clear();
+
+            return back()->withInput()->with(
+                'error',
+                'A kupon időközben érvénytelenné vált: ' . $couponResult['message']
+                . ' Kérjük, ellenőrizd a rendelést és próbáld újra.'
+            );
+        }
+
         try {
             $checkoutService = new WebshopCheckoutService();
             $result = $checkoutService->process($request->all(), $items);
@@ -168,6 +199,7 @@ class WebshopCheckoutController extends Controller
             self::rememberOwnOrder($order);
 
             WebshopCartService::clear();
+            WebshopCouponService::clear();
 
             // Online fizetés esetén redirect a fizetési oldalra
             if ($commerceResult && !empty($commerceResult['requiresRedirect']) && !empty($commerceResult['redirectUrl'])) {
@@ -276,6 +308,21 @@ class WebshopCheckoutController extends Controller
         return view('site.webshop.checkout.payment-result', compact('order'));
     }
 
+    /**
+     * Kupon aktiválása a pénztáron (AJAX).
+     *
+     * A böngésző CSAK a kódot küldi, összeget soha – a kedvezményt kizárólag
+     * a szerver számolja, így nem manipulálható.
+     */
+    public function activateCoupon(Request $request)
+    {
+        $eredmeny = WebshopCouponService::activate((string) $request->input('code', ''));
+
+        // A friss kosárérték, hogy a pénztár összesítője azonnal frissülhessen
+        $eredmeny['cart_total'] = WebshopCartService::getTotal();
+
+        return response()->json($eredmeny);
+    }
     /**
      * A rendelés fizetési állapota JSON-ban, a fizetési eredmény oldal lekérdezéséhez.
      *

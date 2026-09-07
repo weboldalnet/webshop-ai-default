@@ -12,8 +12,9 @@
     <div class="card-body">
         <div class="row">
             {{-- Bal oldal: a tételes bontás --}}
-            @if($wsPricesVisible)
-                <div class="col-lg-6">
+
+                <div class="col-lg-12 mx-auto">
+                    @if($wsPricesVisible)
                     <div class="d-flex justify-content-between py-2">
                         <span>Kosár érték</span>
                         <span class="font-weight-bold">{{ hufFormat($total) }}</span>
@@ -38,20 +39,21 @@
                         <span class="font-weight-bold" id="ws-sum-cod">&mdash;</span>
                     </div>
 
+                    {{-- Kuponkedvezmény. Ugyanaz az osztálycserés rejtés, mint az
+                         utánvétnél: a Bootstrap .d-flex !important szabálya a
+                         hidden attribútumot és az inline display:none-t is felülírná. --}}
+                    <div class="d-none justify-content-between py-2 border-top" id="ws-sum-coupon-row">
+                        <span>Kuponkedvezmény<span class="text-muted small ml-1" id="ws-sum-coupon-code"></span></span>
+                        <span class="font-weight-bold text-success" id="ws-sum-coupon">&mdash;</span>
+                    </div>
+
                     <div class="d-flex justify-content-between py-3 border-top h4 mb-0">
                         <span class="font-weight-bold">Összesen fizetendő</span>
                         <span class="text-primary font-weight-bold" id="ws-sum-total">{{ hufFormat($total) }}</span>
                     </div>
-                </div>
-            @endif
+                @endif
 
-            {{-- Jobb oldal: elfogadások és a rendelés leadása.
-                 A belső flex-oszlop teszi lehetővé, hogy a gomb a doboz aljára
-                 kerüljön akkor is, ha a bal oldali bontás magasabb. A h-100 itt
-                 azért biztonságos, mert a .col egyetlen gyereke – nincs mellette
-                 fejléc, amivel túllógna. --}}
-            <div class="{{ $wsPricesVisible ? 'col-lg-6' : 'col-12' }}">
-                <div class="d-flex flex-column h-100">
+                <div class="d-flex flex-column">
                     <div>
                         @if(($ws['site_checkout_tos_enabled'] ?? 'false') === 'true')
                             <div class="custom-control custom-checkbox mt-3 mt-lg-0">

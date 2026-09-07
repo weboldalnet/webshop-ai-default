@@ -121,8 +121,9 @@ class WebshopOrder extends Model
     protected $fillable = [
         'order_number', 'status', 'type', 'customer_name', 'customer_email', 'customer_phone',
         'customer_company', 'customer_tax_number', 'billing_data', 'shipping_data',
-        'total_price', 'shipping_cost', 'currency', 'is_completed', 'completed_at', 'admin_note', 'note',
+        'total_price', 'shipping_cost', 'cod_fee', 'currency', 'is_completed', 'completed_at', 'admin_note', 'note',
         'qa_data',
+        'coupon_id', 'coupon_code', 'discount_amount', 'coupon_data',
         'payment_method', 'payment_status', 'invoice_status',
         'shipping_method', 'shipping_status',
         'commerce_payment_transaction_id', 'commerce_invoice_document_id', 'commerce_shipment_id',
@@ -132,8 +133,15 @@ class WebshopOrder extends Model
     protected $casts = [
         'total_price' => 'float',
         'shipping_cost' => 'float',
+        // Szandekosan nincs 'float' cast: a null (= regi rendeles, meg nem tarolt)
+        // es a 0.0 (= nem volt utanvet) kulonbsege szamit a bontas szamitasban.
+        'cod_fee' => 'decimal:2',
         // A pénztárban kitöltött kérdőív kérdés-válasz párjai
         'qa_data' => 'array',
+        // Beváltott kupon
+        'coupon_id' => 'integer',
+        'discount_amount' => 'float',
+        'coupon_data' => 'array',
         'is_completed' => 'boolean',
         'completed_at' => 'datetime',
         'paid_at' => 'datetime',
@@ -142,6 +150,45 @@ class WebshopOrder extends Model
         'billing_data' => 'array',
         'shipping_data' => 'array',
     ];
+
+    /**
+     * A fizetendő tételes bontása.
+     *
+     * EZ AZ EGYETLEN FORRÁS: a pénztári összesítő, a rendelés adatlapja, az
+     * admin rendeléslap, a visszaigazoló e-mail és a SZÁMLA is ebből dolgozik.
+     * Korábban ugyanez a képlet három blade-ben volt lemásolva, és az egyikben
+     * a kuponkedvezmény némán eltűnt.
+     *
+     * A pénztár képlete:
+     *   total_price = tételek + szállítás + utánvét − kuponkedvezmény
+     *
+     * Az utánvét-felárat régebbi rendeléseknél nem tároltuk (cod_fee = null),
+     * ott a végösszegből maradékként vezetjük le. Ami az ismert tételek után
+     * MÉG marad, az az 'egyeb' – ennek új rendelésnél mindig 0-nak kell lennie.
+     *
+     * @return array{tetelek:float, szallitas:float, utanvet:float, kedvezmeny:float, egyeb:float}
+     */
+    public function priceBreakdown(): array
+    {
+        $tetelek = (float) $this->items->sum('total_price');
+        $szallitas = (float) ($this->shipping_cost ?? 0);
+        $kedvezmeny = (float) ($this->discount_amount ?? 0);
+
+        // Amit a tételek és a szállítás nem magyaráz meg
+        $maradek = round((float) $this->total_price - $tetelek - $szallitas + $kedvezmeny, 2);
+
+        $utanvet = $this->cod_fee !== null
+            ? (float) $this->cod_fee
+            : max(0.0, $maradek);
+
+        return [
+            'tetelek' => round($tetelek, 2),
+            'szallitas' => round($szallitas, 2),
+            'utanvet' => round($utanvet, 2),
+            'kedvezmeny' => round($kedvezmeny, 2),
+            'egyeb' => round($maradek - $utanvet, 2),
+        ];
+    }
 
     // --- Relációk ---
 

@@ -42,6 +42,14 @@
                 <a href="/webshop/labels">Címkék</a>
             @endif
 
+            {{-- Kuponok: a kapcsoló mellett a route létezését is nézzük, mert a
+                 kupon modul külön csomag – enélkül a menüpont törött linket adna
+                 olyan projektben, ahol nincs telepítve. --}}
+            @if(\Weboldalnet\WebshopAiDefault\Services\Webshop\WebshopSettingsService::getBool('coupons_enabled')
+                && \Illuminate\Support\Facades\Route::has('admin.webshop.coupons.index'))
+                <a href="{{ route('admin.webshop.coupons.index') }}">Kuponok</a>
+            @endif
+
             <a href="{{ route('admin.webshop.extra-settings.index') }}" class="fw-800">Webshop beállítások</a>
 
             @if($user->is_super)

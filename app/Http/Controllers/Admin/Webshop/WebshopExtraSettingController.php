@@ -5,6 +5,7 @@ namespace Weboldalnet\WebshopAiDefault\Http\Controllers\Admin\Webshop;
 use App\Http\Controllers\Admin\AdminExtendedController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+use Weboldalnet\WebshopAiDefault\Models\WebshopCategory;
 use Weboldalnet\WebshopAiDefault\Models\WebshopCustomContent;
 use Weboldalnet\WebshopAiDefault\Models\WebshopTrackingScript;
 use Weboldalnet\WebshopAiDefault\Services\Webshop\WebshopCheckoutQaService;
@@ -27,7 +28,12 @@ class WebshopExtraSettingController extends AdminExtendedController
 
     public function index()
     {
-        return view('admin.webshop.extra-settings.index');
+        // A $ws a feltételes kártyákhoz kell. Enélkül a blade ?? ága NÉMÁN
+        // 'false'-ot adna (a ?? elnyeli a nem definiált változót), és a
+        // kártya sosem jelenne meg – hibaüzenet nélkül.
+        return view('admin.webshop.extra-settings.index', [
+            'ws' => WebshopSettingsService::all(),
+        ]);
     }
 
     public function customContents(Request $request)
@@ -204,5 +210,95 @@ class WebshopExtraSettingController extends AdminExtendedController
     {
         $script->delete();
         return redirect()->back()->with('success', 'Script törölve.');
+    }
+
+    // --- Kategória menüsor ---
+
+    /**
+     * Az egyedi kategória menüsor szerkesztője.
+     *
+     * A teljes fát EGY lekérdezéssel hozzuk le, és PHP-ban fűzzük össze: egy
+     * rekurzív with('children.children...') szintenként újabb lekérdezést adna,
+     * és fixen korlátozná a mélységet is.
+     */
+    public function categoryMenu()
+    {
+        $this->kategoriaMenuVagyHiba();
+
+        $kategoriak = WebshopCategory::ordered()->get();
+
+        return view('admin.webshop.extra-settings.category-menu', [
+            'categoryTree' => self::fabaRendez($kategoriak),
+            'ws' => WebshopSettingsService::all(),
+        ]);
+    }
+
+    /**
+     * Egy kategória be/ki kapcsolása a menüsorban (AJAX).
+     *
+     * Ugyanazt a show_in_sticky_header oszlopot írja, amit a kategória
+     * szerkesztő űrlapján a "Megjelenik a sticky fejlécben" mező – egy fogalom,
+     * két felület. A segéd JS STRINGKÉNT küldi az értéket, ezért nem boolean().
+     */
+    public function toggleCategoryMenuItem(Request $request)
+    {
+        $kategoria = WebshopCategory::findOrFail($request->input('id'));
+        $ertek = $request->input('is_active');
+
+        $kategoria->update([
+            'show_in_sticky_header' => $ertek === 'true' || $ertek === true || $ertek === '1',
+        ]);
+
+        return response()->json(['success' => true, 'message' => 'Menüsor frissítve.']);
+    }
+
+    /**
+     * A lapos kategórialistából fa.
+     *
+     * Az árva elemeket (törölt vagy nem létező szülő) SZÁNDÉKOSAN a gyökérbe
+     * tesszük, nem dobjuk el: különben némán eltűnnének a szerkesztőből, és a
+     * felhasználó nem értené, hova lett a kategóriája.
+     */
+    protected static function fabaRendez($kategoriak, $szuloId = null, int $szint = 0, ?array $letezoIdk = null): array
+    {
+        if ($letezoIdk === null) {
+            $letezoIdk = $kategoriak->pluck('id')->all();
+        }
+
+        $eredmeny = [];
+
+        foreach ($kategoriak as $kategoria) {
+            $sajatSzulo = $kategoria->parent_id;
+
+            // Árva: a szülője nincs a listában -> a gyökérszinten jelenjen meg
+            if ($sajatSzulo !== null && !in_array($sajatSzulo, $letezoIdk, true)) {
+                $sajatSzulo = null;
+            }
+
+            if ($sajatSzulo !== $szuloId) {
+                continue;
+            }
+
+            $eredmeny[] = [
+                'category' => $kategoria,
+                'level' => $szint,
+                'children' => self::fabaRendez($kategoriak, $kategoria->id, $szint + 1, $letezoIdk),
+            ];
+        }
+
+        return $eredmeny;
+    }
+
+    /**
+     * A menüsor szerkesztője csak akkor érhető el, ha a funkció be van kapcsolva.
+     * Enélkül a beállítás kikapcsolása után is szerkeszthető maradna egy olyan
+     * menü, ami a site-on meg sem jelenik.
+     */
+    protected function kategoriaMenuVagyHiba(): void
+    {
+        $bekapcsolva = WebshopSettingsService::getBool('category_parent_enabled')
+            && WebshopSettingsService::getBool('category_custom_menu_enabled');
+
+        abort_unless($bekapcsolva, 404);
     }
 }

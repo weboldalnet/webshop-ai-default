@@ -6,6 +6,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Weboldalnet\WebshopAiDefault\Models\WebshopOrder;
 use Weboldalnet\WebshopAiDefault\Models\WebshopOrderItem;
+use Weboldalnet\WebshopAiDefault\Services\Webshop\WebshopCouponService;
 use Weboldalnet\WebshopAiDefault\Services\Webshop\Commerce\WebshopCommerceService;
 
 class WebshopCheckoutService
@@ -90,7 +91,22 @@ class WebshopCheckoutService
                 ? (float) WebshopSettingsService::get('site_checkout_payment_cod_fee', 0)
                 : 0.0;
 
-            $totalPrice = $itemsTotal + $shippingCost + $codFee;
+            /*
+               Kuponkedvezmény. Ugyanazt a szolgáltatást hívjuk, mint a pénztár
+               összesítője, ezért a kiírt és a felszámított kedvezmény nem tud
+               elcsúszni egymástól – ez az utánvét-felárnál korábban valós hiba volt.
+
+               A kedvezmény a TERMÉKEKRE vonatkozik, ezért a szállítási díjat és az
+               utánvét-felárat nem csökkenti. A kupon modul garantálja, hogy a
+               kedvezmény sosem nagyobb az érintett termékösszegnél, így a végösszeg
+               nem mehet negatívba.
+            */
+            $couponResult = WebshopCouponService::currentResult();
+            $couponDiscount = ($couponResult && $couponResult['success'])
+                ? (float) $couponResult['discount']
+                : 0.0;
+
+            $totalPrice = $itemsTotal + $shippingCost + $codFee - $couponDiscount;
 
             $order = WebshopOrder::create([
                 'order_number' => $this->generateOrderNumber(),
@@ -106,10 +122,21 @@ class WebshopCheckoutService
                 'shipping_data' => $shippingData,
                 'total_price' => $totalPrice,
                 'shipping_cost' => $shippingCost,
+                // Az utánvét-felárat is eltároljuk, nem csak beleszámoljuk a végösszegbe:
+                // enélkül a rendelés utólag nem bontható tételekre (számla, adatlap).
+                'cod_fee' => $codFee,
                 'currency' => 'HUF',
                 'note' => $data['note'] ?? null,
                 // A pénztárban kitöltött kérdőív kérdés-válasz párjai
                 'qa_data' => WebshopCheckoutQaService::buildOrderQaData($data),
+
+                // A kupon adatait LEMÁSOLJUK a rendeléshez: a kupon később
+                // átszerkeszthető vagy törölhető, a rendeléshez viszont annak
+                // kell tartoznia, ami a leadás pillanatában érvényes volt.
+                'coupon_id' => $couponDiscount > 0 ? ($couponResult['coupon_id'] ?? null) : null,
+                'coupon_code' => $couponDiscount > 0 ? ($couponResult['coupon_code'] ?? null) : null,
+                'discount_amount' => $couponDiscount,
+                'coupon_data' => $couponDiscount > 0 ? $couponResult : null,
                 'is_completed' => false,
                 'payment_method' => $paymentMethod,
                 'payment_status' => $initialPaymentStatus,

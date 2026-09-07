@@ -94,6 +94,10 @@
             return Math.round(amount).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ' ') + ' Ft';
         }
 
+        // Az aktivált kupon kedvezménye. A böngésző SOSEM számolja:
+        // a szerver adja meg aktiváláskor, itt csak megjelenítjük és levonjuk.
+        var wsCouponDiscount = 0;
+
         function wsUpdateSummary() {
             var shippingCode = $('input[name="shipping_method"]:checked').val();
             var paymentCode = $('input[name="payment_method"]:checked').val();
@@ -112,12 +116,90 @@
                 .toggleClass('d-flex', cod > 0)
                 .toggleClass('d-none', cod <= 0);
 
-            $('#ws-sum-total').text(wsHuf(wsCartTotal + shipping + cod));
+            $('#ws-sum-coupon').text('-' + wsHuf(wsCouponDiscount));
+            $('#ws-sum-coupon-row')
+                .toggleClass('d-flex', wsCouponDiscount > 0)
+                .toggleClass('d-none', wsCouponDiscount <= 0);
+
+            $('#ws-sum-total').text(wsHuf(wsCartTotal + shipping + cod - wsCouponDiscount));
         }
 
         // Delegált kötés: a szállítási mód rádiói csoportváltáskor is cserélődhetnek
         $(document).on('change', 'input[name="shipping_method"], input[name="payment_method"]', wsUpdateSummary);
         wsUpdateSummary();
+
+        /*
+            Kuponbeváltás.
+
+            A kód elküldése után a SZERVER adja vissza a kedvezményt; siker esetén
+            modal ugrik fel, hiba esetén a dobozon belüli kompakt alert jelenik meg.
+            Itt csak megjelenítünk – a rendelés végösszegét a szerver ugyanabból
+            a forrásból számolja újra, ezért a kettő nem tud elcsúszni.
+        */
+        var $wsKuponMezo = $('#ws-coupon-code');
+
+        if ($wsKuponMezo.length) {
+            var $wsKuponGomb = $('#ws-coupon-apply');
+            var $wsKuponHiba = $('#ws-coupon-error');
+            var $wsKuponSiker = $('#ws-coupon-success');
+
+            function wsKuponUzenetekRejtese() {
+                $wsKuponHiba.addClass('d-none').text('');
+                $wsKuponSiker.addClass('d-none').text('');
+            }
+
+            function wsKuponAktivalas() {
+                var kod = ($wsKuponMezo.val() || '').trim();
+                wsKuponUzenetekRejtese();
+
+                if (!kod) {
+                    $wsKuponHiba.removeClass('d-none').text('Add meg a kuponkódot.');
+                    return;
+                }
+
+                $wsKuponGomb.prop('disabled', true);
+
+                $.post($wsKuponMezo.data('url'), { code: kod })
+                    .done(function (valasz) {
+                        if (valasz.success) {
+                            wsCouponDiscount = Number(valasz.discount) || 0;
+                            $('#ws-sum-coupon-code').text(' (' + valasz.coupon_code + ')');
+                            wsUpdateSummary();
+
+                            $wsKuponSiker.removeClass('d-none').text(
+                                'Aktiválva: ' + valasz.coupon_name + ' — ' + wsHuf(wsCouponDiscount) + ' kedvezmény.'
+                            );
+
+                            $('#ws-coupon-modal-name').text(valasz.coupon_name || '');
+                            $('#ws-coupon-modal-amount').text(wsHuf(wsCouponDiscount));
+                            $('#wsCouponModal').modal('show');
+                        } else {
+                            // A szerver a sikertelen beváltásnál a session-t is törli,
+                            // ezért a korábbi kedvezményt itt is elvesszük.
+                            wsCouponDiscount = 0;
+                            wsUpdateSummary();
+                            $wsKuponHiba.removeClass('d-none').text(valasz.message || 'A kupon nem aktiválható.');
+                        }
+                    })
+                    .fail(function () {
+                        $wsKuponHiba.removeClass('d-none')
+                            .text('A kupon ellenőrzése nem sikerült. Kérjük, próbáld újra.');
+                    })
+                    .always(function () {
+                        $wsKuponGomb.prop('disabled', false);
+                    });
+            }
+
+            $wsKuponGomb.on('click', wsKuponAktivalas);
+
+            // Enterre is aktiváljon, de NE küldje el a rendelés-űrlapot
+            $wsKuponMezo.on('keydown', function (e) {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    wsKuponAktivalas();
+                }
+            });
+        }
         @endif
     });
 </script>

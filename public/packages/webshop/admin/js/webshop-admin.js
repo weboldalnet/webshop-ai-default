@@ -5,9 +5,22 @@
 var WebshopAdmin = (function ($) {
     'use strict';
 
-    // CSRF token setup
+    /**
+     * CSRF token.
+     *
+     * Elsődlegesen a <meta name="csrf-token"> tagből olvassuk, de ha a befogadó
+     * projekt admin layoutjában nincs ilyen (előfordul), akkor bármelyik oldalon
+     * lévő form rejtett _token mezőjéből vesszük. Enélkül minden AJAX POST
+     * némán 419-cel száll el – a felhasználó csak annyit lát, hogy "Hiba történt".
+     */
+    function csrfToken() {
+        return $('meta[name="csrf-token"]').attr('content')
+            || $('input[name="_token"]').first().val()
+            || '';
+    }
+
     $.ajaxSetup({
-        headers: { 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content') }
+        headers: { 'X-CSRF-TOKEN': csrfToken() }
     });
 
     /**

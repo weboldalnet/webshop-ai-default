@@ -67,8 +67,17 @@
                     </div>
                 @endif
 
-                {{-- 5. Megjegyzés – teljes szélességben --}}
-                <div class="col-12 mb-4">
+                {{-- 5. Kuponbeváltás és Megjegyzés.
+                     Ha van beváltható kupon, a két doboz egy sorban áll: a kupon
+                     balra, a megjegyzés mellette – ilyenkor mindkettő col-lg-6.
+                     Kupon nélkül a megjegyzés a teljes szélességet kapja. --}}
+                @if($couponAvailable ?? false)
+                    <div class="col-lg-6 mb-4">
+                        @include('site.webshop.checkout.partials.coupon')
+                    </div>
+                @endif
+
+                <div class="{{ ($couponAvailable ?? false) ? 'col-lg-6' : 'col-12' }} mb-4">
                     @include('site.webshop.checkout.partials.note')
                 </div>
 
@@ -81,7 +90,7 @@
                 </div>
 
                 {{-- 6. Tételes összesítő és a rendelés leadása --}}
-                <div class="col-12">
+                <div class="col-6 mx-auto">
                     @include('site.webshop.checkout.partials.summary')
                 </div>
             </form>

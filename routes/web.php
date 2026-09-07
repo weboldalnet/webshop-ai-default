@@ -32,6 +32,12 @@ Route::middleware('web')->group(function () {
             Route::get('/kategoria/{categorySlug}', [SiteCategoryController::class, 'show'])->name('categories.show')->where('categorySlug', '.*');
             Route::get('/termek/{product:slug}', [SiteProductController::class, 'show'])->name('products.show');
 
+            // Kuponbeváltás a pénztáron (AJAX, JSON)
+            Route::post('/kupon/aktivalas', [WebshopCheckoutController::class, 'activateCoupon'])->name('coupon.activate');
+
+            // Szabadszavas kereső a fejlécben – rendereltt HTML-t ad vissza (AJAX)
+            Route::get('/kereses', [SiteProductController::class, 'search'])->name('products.search');
+
             // Kosár
             Route::post('/cart/add', [WebshopCartController::class, 'add'])->name('cart.add');
             Route::get('/cart/dropdown', [WebshopCartController::class, 'dropdown'])->name('cart.dropdown');
@@ -198,6 +204,10 @@ Route::middleware('web')->group(function () {
                 // Pénztár kiegészítések (kérdőív + értesítő dobozok)
                 Route::get('/checkout-extras', [WebshopExtraSettingController::class, 'checkoutExtras'])->name('checkout-extras.index');
                 Route::post('/checkout-extras', [WebshopExtraSettingController::class, 'storeCheckoutExtras'])->name('checkout-extras.store');
+
+                // Kategória menüsor (egyedi, több szintű menü szerkesztése)
+                Route::get('/category-menu', [WebshopExtraSettingController::class, 'categoryMenu'])->name('category-menu.index');
+                Route::post('/category-menu/toggle-active', [WebshopExtraSettingController::class, 'toggleCategoryMenuItem'])->name('category-menu.toggle-active');
 
                 // Mérési scriptek
                 Route::get('/scripts', [WebshopExtraSettingController::class, 'scripts'])->name('scripts.index');

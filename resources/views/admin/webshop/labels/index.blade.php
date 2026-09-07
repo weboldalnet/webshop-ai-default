@@ -43,13 +43,15 @@
                                     <a href="{{ route('admin.webshop.labels.edit', $label) }}" class="btn btn-sm btn-info" title="Szerkesztés">
                                         <i class="fa fa-edit"></i>
                                     </a>
-                                    <form action="{{ route('admin.webshop.labels.destroy', $label) }}" method="POST" class="d-inline-block js-delete-form">
-                                        @csrf
-                                        @method('DELETE')
-                                        <button type="submit" class="btn btn-sm btn-danger" title="Törlés">
-                                            <i class="fa fa-trash"></i>
-                                        </button>
-                                    </form>
+                                    {{-- A js-delete-btn + data-url a megosztott megerősítő modalt nyitja
+                                         (WebshopAdmin.initDeleteConfirm). Korábban itt egy sima form volt
+                                         "js-delete-form" osztállyal, amihez SEHOL nem tartozott JS – a
+                                         beillesztett modal sosem jelent meg, a törlés egy kattintásra,
+                                         megerősítés nélkül lefutott. --}}
+                                    <button type="button" class="btn btn-sm btn-danger js-delete-btn" title="Törlés"
+                                            data-url="{{ route('admin.webshop.labels.destroy', $label) }}">
+                                        <i class="fa fa-trash"></i>
+                                    </button>
                                 </td>
                             </tr>
                         @empty
@@ -64,4 +66,9 @@
     </div>
 
     @include('admin.webshop.modals.delete-confirm')
+
+    <script src="/packages/webshop/admin/js/webshop-admin.js"></script>
+    <script>
+        WebshopAdmin.initDeleteConfirm();
+    </script>
 @endsection

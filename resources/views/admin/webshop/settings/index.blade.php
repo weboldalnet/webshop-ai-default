@@ -23,6 +23,28 @@
                                    @if(($ws['category_parent_enabled'] ?? 'false') === 'true') checked @endif>
                             <label class="custom-control-label" for="category_parent_enabled">Több szintű kategória / szülő kategória engedélyezése</label>
                         </div>
+
+                        {{-- Egyedi kategória menüsor.
+
+                             Csak többszintes kategóriarendszerrel van értelme, ezért a
+                             blokk a szülő kapcsolóhoz kötve jelenik meg. A DOM-ból NEM
+                             tűnik el (csak display:none), így a checkbox a mentéssel
+                             akkor is elmegy, ha épp rejtve van – egy be nem küldött
+                             checkbox ugyanis megkülönböztethetetlen a kikapcsolttól. --}}
+                        <div id="category-custom-menu-settings" class="pl-4"
+                             @if(($ws['category_parent_enabled'] ?? 'false') !== 'true') style="display:none;" @endif>
+                            <div class="custom-control custom-switch mb-1">
+                                <input type="checkbox" class="custom-control-input" id="category_custom_menu_enabled" name="category_custom_menu_enabled"
+                                       @if(($ws['category_custom_menu_enabled'] ?? 'false') === 'true') checked @endif>
+                                <label class="custom-control-label" for="category_custom_menu_enabled">Egyedi kategória menüsor</label>
+                            </div>
+                            <span class="text-muted fs-14 d-block mb-3">
+                                A mai vízszintes kategória sáv helyett lenyíló, több szintű menüsor.
+                                Hogy melyik kategória kerüljön bele, azt a
+                                <a href="{{ route('admin.webshop.extra-settings.category-menu.index') }}">Webshop extra beállítások → Kategória menüsor</a>
+                                oldalon állíthatod be.
+                            </span>
+                        </div>
                         <div class="custom-control custom-switch mb-3">
                             <input type="checkbox" class="custom-control-input" id="category_related_enabled" name="category_related_enabled"
                                    @if(($ws['category_related_enabled'] ?? 'false') === 'true') checked @endif>
@@ -402,10 +424,107 @@
                                     Kikapcsolva a Számlák menüpont és a rendeléseknél a számlázási műveletek sem jelennek meg.
                                 </p>
                             @endif
+
+                            {{-- A számla tételei.
+
+                                 A blokk a Számlázás dobozon BELÜL van, ezért kikapcsolt
+                                 számlázásnál nem látszik – de a DOM-ban akkor is ott marad
+                                 (csak display:none a szülőn), tehát a checkboxai a mentéssel
+                                 továbbra is elmennek. Ez fontos: egy be nem küldött checkbox
+                                 megkülönböztethetetlen a kikapcsolttól, így a mentés némán
+                                 kikapcsolná mind a hármat. A rejtett invoice_lines_present
+                                 mező a controller oldalán is bebiztosítja ezt. --}}
+                            <hr class="my-3">
+
+                            <label class="fw-600 mb-1 d-block">Számla tételei</label>
+                            <input type="hidden" name="invoice_lines_present" value="1">
+
+                            <p class="text-muted fs-14">
+                                A termékek mellett ezek a tételek kerülnek fel a számlára. Ha valamelyiket
+                                kézzel viszed fel a számlázó programban, itt kapcsold ki, hogy ne legyen
+                                dupla tétel.
+                            </p>
+
+                            @foreach($invoiceExtraLines as $lineKey => $lineMeta)
+                                @php
+                                    $lineEnabled = ($ws['invoice_line_' . $lineKey . '_enabled'] ?? 'true') === 'true';
+                                    $lineName = $ws['invoice_line_' . $lineKey . '_name'] ?? '';
+                                @endphp
+                                <div class="border rounded p-2 mb-2">
+                                    <div class="custom-control custom-switch">
+                                        <input type="checkbox" class="custom-control-input js-invoice-line"
+                                               id="invoice_line_{{ $lineKey }}_enabled"
+                                               name="invoice_line_{{ $lineKey }}_enabled"
+                                               data-line="{{ $lineKey }}"
+                                               @if($lineEnabled) checked @endif>
+                                        <label class="custom-control-label fw-600" for="invoice_line_{{ $lineKey }}_enabled">
+                                            {{ $lineMeta['admin_label'] }}
+                                        </label>
+                                    </div>
+
+                                    <div class="mt-2 js-invoice-line-name" data-line="{{ $lineKey }}"
+                                         @if(!$lineEnabled) style="display:none;" @endif>
+                                        <input type="text" class="form-control form-control-sm"
+                                               id="invoice_line_{{ $lineKey }}_name"
+                                               name="invoice_line_{{ $lineKey }}_name"
+                                               value="{{ $lineName }}"
+                                               placeholder="{{ $lineMeta['default_name'] }}">
+                                        <span class="text-muted fs-14">
+                                            A tétel neve a számlán, pontosan így. Üresen hagyva:
+                                            „{{ $lineMeta['default_name'] }}”, kiegészítve a futárszolgálat
+                                            nevével, illetve a kuponkóddal.
+                                        </span>
+                                    </div>
+                                </div>
+                            @endforeach
+
+                            <div class="form-group mb-2 mt-3">
+                                <label for="invoice_vat_key">A számla áfakulcsa</label>
+                                <select class="form-control" id="invoice_vat_key" name="invoice_vat_key">
+                                    @foreach($invoiceVatKeys as $vatKey => $vatLabel)
+                                        <option value="{{ $vatKey }}" @if($invoiceVatKey === (string) $vatKey) selected @endif>
+                                            {{ $vatLabel }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                                <span class="text-muted fs-14">
+                                    A számla MINDEN tételére ez az áfakulcs kerül, a termékekre is –
+                                    a webshop nem tárol termékenkénti áfakulcsot. Alanyi adómentes
+                                    boltnál tehát ezt állítsd AAM-re, és az egész számla AAM lesz.
+                                </span>
+                            </div>
+
+                            <div class="alert alert-warning mb-0 py-2 px-3 small js-invoice-line-warning"
+                                 style="display:none;">
+                                <i class="fa fa-exclamation-triangle mr-1"></i>
+                                Kikapcsolt tétel esetén a számla végösszege nem fogja kiadni a rendelés
+                                végösszegét – a hiányzó tételt kézzel kell felvinni a számlázó programban.
+                            </div>
                         </div>
                     </div>
                 </div>
 
+                <div class="col-lg-6 mb-3">
+                    <h2 class="header-box product-info mb-1">Kuponok</h2>
+                    <div class="content-box bordered mb-3">
+                        <div class="custom-control custom-switch mb-0">
+                            <input type="checkbox" class="custom-control-input" id="coupons_enabled" name="coupons_enabled"
+                                   @if(($ws['coupons_enabled'] ?? 'false') === 'true') checked @endif>
+                            <label class="custom-control-label" for="coupons_enabled">Kuponok engedélyezve</label>
+                            <span class="text-muted fs-14 d-block">
+                                Kikapcsolva a Kuponok menüpont eltűnik, és a pénztáron sem fut le
+                                egyetlen kupon-lekérdezés sem.
+                            </span>
+                        </div>
+
+                        @if(!\Illuminate\Support\Facades\Route::has('admin.webshop.coupons.index'))
+                            <div class="alert alert-warning mb-0 mt-2 py-2 px-3 small">
+                                <i class="fa fa-exclamation-triangle mr-1"></i>
+                                A kupon modul (commerce-coupons) nincs telepítve, a kapcsoló önmagában nem elég.
+                            </div>
+                        @endif
+                    </div>
+                </div>
                 <div class="col-lg-6 mb-3">
                     <h2 class="header-box product-info mb-1">Egyéb Site beállítások</h2>
                     <div class="content-box bordered mb-3">
@@ -413,6 +532,14 @@
                             <input type="checkbox" class="custom-control-input" id="site_product_compare_enabled" name="site_product_compare_enabled"
                                    @if(($ws['site_product_compare_enabled'] ?? 'false') === 'true') checked @endif>
                             <label class="custom-control-label" for="site_product_compare_enabled">Termék összehasonlítás</label>
+                        </div>
+                        <div class="custom-control custom-switch mb-0">
+                            <input type="checkbox" class="custom-control-input" id="site_header_search_enabled" name="site_header_search_enabled"
+                                   @if(($ws['site_header_search_enabled'] ?? 'false') === 'true') checked @endif>
+                            <label class="custom-control-label" for="site_header_search_enabled">Szabadszavas kereső a fejlécben</label>
+                            <span class="text-muted fs-14 d-block">
+                                Bekapcsolva a fejlécben, a kosár és összehasonlítás gomboktól balra jelenik meg.
+                            </span>
                         </div>
                     </div>
                 </div>
@@ -450,6 +577,29 @@
                 var block = document.getElementById('shipping-group-' + cb.getAttribute('data-shipping-group'));
                 if (block) block.style.display = cb.checked ? '' : 'none';
             }
+            /* A számla extra tételei: a névmező csak bekapcsolt tételnél látszik,
+               és ha bármelyik ki van kapcsolva, figyelmeztetünk, hogy a számla
+               végösszege nem fogja kiadni a rendelés végösszegét. */
+            /* Az egyedi menüsor csak többszintes kategóriarendszerrel értelmes */
+            function toggleCategoryCustomMenu() {
+                var cb = document.getElementById('category_parent_enabled');
+                var block = document.getElementById('category-custom-menu-settings');
+                if (block) block.style.display = cb && cb.checked ? '' : 'none';
+            }
+
+            function toggleInvoiceLines() {
+                var vanKikapcsolt = false;
+
+                document.querySelectorAll('.js-invoice-line').forEach(function (cb) {
+                    var nev = document.querySelector('.js-invoice-line-name[data-line="' + cb.getAttribute('data-line') + '"]');
+                    if (nev) nev.style.display = cb.checked ? '' : 'none';
+                    if (!cb.checked) vanKikapcsolt = true;
+                });
+
+                var jelzes = document.querySelector('.js-invoice-line-warning');
+                if (jelzes) jelzes.style.display = vanKikapcsolt ? '' : 'none';
+            }
+
             function toggleInvoicingSettings() {
                 var cb = document.getElementById('invoicing_enabled');
                 var block = document.getElementById('invoicing-settings');
@@ -475,6 +625,15 @@
                 document.querySelectorAll('[data-shipping-group]').forEach(function (cb) {
                     cb.addEventListener('change', function () { toggleShippingGroupProviders(cb); });
                 });
+
+                var catParentCb = document.getElementById('category_parent_enabled');
+                if (catParentCb) catParentCb.addEventListener('change', toggleCategoryCustomMenu);
+                toggleCategoryCustomMenu();
+
+                document.querySelectorAll('.js-invoice-line').forEach(function (cb) {
+                    cb.addEventListener('change', toggleInvoiceLines);
+                });
+                toggleInvoiceLines();
             });
         })();
     </script>

@@ -316,7 +316,49 @@
                             @endforeach
                         </tbody>
                         @if($pricesVisible)
+                            {{-- Fizetendő bontása. Ugyanaz a számítás, mint a vásárló
+                                 adatlapján: enélkül a tételek összege és a végösszeg
+                                 eltérne (szállítás, kupon), és nem derülne ki, miért. --}}
+                            @php $wsBontas = $order->priceBreakdown(); @endphp
                             <tfoot>
+                                <tr>
+                                    <th colspan="3" class="text-right">Termékek összesen:</th>
+                                    <th>{{ hufFormat($wsBontas['tetelek']) }}</th>
+                                </tr>
+
+                                @if($order->shipping_method)
+                                    <tr>
+                                        <th colspan="3" class="text-right font-weight-normal">Szállítási díj:</th>
+                                        <th>{{ $wsBontas['szallitas'] > 0 ? hufFormat($wsBontas['szallitas']) : 'Ingyenes' }}</th>
+                                    </tr>
+                                @endif
+
+                                @if($wsBontas['kedvezmeny'] > 0)
+                                    <tr>
+                                        <th colspan="3" class="text-right font-weight-normal">
+                                            Kuponkedvezmény
+                                            @if($order->coupon_code)
+                                                <code>{{ $order->coupon_code }}</code>
+                                            @endif
+                                        </th>
+                                        <th class="text-success">-{{ hufFormat($wsBontas['kedvezmeny']) }}</th>
+                                    </tr>
+                                @endif
+
+                                @if($wsBontas['utanvet'] > 0)
+                                    <tr>
+                                        <th colspan="3" class="text-right font-weight-normal">Utánvét díja:</th>
+                                        <th>{{ hufFormat($wsBontas['utanvet']) }}</th>
+                                    </tr>
+                                @endif
+
+                                @if($wsBontas['egyeb'] > 0)
+                                    <tr>
+                                        <th colspan="3" class="text-right font-weight-normal">Egyéb díjak:</th>
+                                        <th>{{ hufFormat($wsBontas['egyeb']) }}</th>
+                                    </tr>
+                                @endif
+
                                 <tr class="bg-light">
                                     <th colspan="3" class="text-right h5 font-weight-bold">Mindösszesen:</th>
                                     <th class="h5 font-weight-bold text-primary">{{ hufFormat($order->total_price) }}</th>

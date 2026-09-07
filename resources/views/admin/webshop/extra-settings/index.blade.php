@@ -54,6 +54,23 @@
                 </div>
             </div>
 
+            {{-- Kategória menüsor: csak akkor van értelme, ha a többszintes
+                 kategóriarendszer ÉS az egyedi menüsor is be van kapcsolva.
+                 Ugyanez a feltétel őrzi a szerkesztő útvonalát is (404). --}}
+            @if(($ws['category_parent_enabled'] ?? 'false') === 'true'
+                && ($ws['category_custom_menu_enabled'] ?? 'false') === 'true')
+                <div class="col-md-6 col-lg-3 mb-4">
+                    <div class="card h-100 shadow-sm border-0 text-center py-4">
+                        <div class="card-body">
+                            <div class="fs-28 text-primary mb-3"><i class="fa fa-sitemap"></i></div>
+                            <h4 class="font-weight-bold">Kategória menüsor</h4>
+                            <p class="text-muted small">Mely kategóriák jelenjenek meg az egyedi menüsorban.</p>
+                            <a href="{{ route('admin.webshop.extra-settings.category-menu.index') }}" class="btn btn-outline-primary btn-sm stretched-link">Megnyitás</a>
+                        </div>
+                    </div>
+                </div>
+            @endif
+
             <div class="col-md-6 col-lg-3 mb-4">
                 <div class="card h-100 shadow-sm border-0 text-center py-4">
                     <div class="card-body">
