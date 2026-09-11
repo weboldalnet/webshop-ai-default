@@ -117,7 +117,7 @@
             $(this).closest('.js-hb-item').remove();
         });
 
-        function itemSor(id, nev, kepUrl, mezoNev) {
+        function itemRow(id, nev, kepUrl, mezoNev) {
             var kep = kepUrl
                 ? '<img src="' + kepUrl + '" alt="" class="mr-2 rounded border" style="width:40px;height:40px;object-fit:cover;">'
                 : '';
@@ -137,7 +137,7 @@
             return $('.js-hb-list[data-block="' + blockId + '"]');
         }
 
-        function marBenneVan($lista, id) {
+        function alreadyContains($lista, id) {
             var talalt = false;
             $lista.find('input[type=hidden]').each(function () {
                 if (String(this.value) === String(id)) { talalt = true; }
@@ -154,9 +154,9 @@
             if (!id) { return; }
 
             var $lista = listaBlokkhoz(blockId);
-            if (marBenneVan($lista, id)) { return; }
+            if (alreadyContains($lista, id)) { return; }
 
-            $lista.append(itemSor(id, $select.find('option:selected').text().trim(), null, 'category_ids[]'));
+            $lista.append(itemRow(id, $select.find('option:selected').text().trim(), null, 'category_ids[]'));
             initItemSortable($lista);
             $select.val('');
         });
@@ -167,48 +167,48 @@
         $(document).on('input', '.js-hb-prod-search', function () {
             var $mezo = $(this);
             var blockId = $mezo.data('block');
-            var $talalatok = $('.js-hb-prod-results[data-block="' + blockId + '"]');
+            var $results = $('.js-hb-prod-results[data-block="' + blockId + '"]');
             var kifejezes = $mezo.val().trim();
 
             clearTimeout(keresoIdozito);
 
             if (kifejezes.length < 2) {
-                $talalatok.addClass('d-none').empty();
+                $results.addClass('d-none').empty();
                 return;
             }
 
             keresoIdozito = setTimeout(function () {
                 $.get($mezo.data('url'), { q: kifejezes }).done(function (termekek) {
-                    $talalatok.empty();
+                    $results.empty();
 
                     if (!termekek || !termekek.length) {
-                        $talalatok.append($('<div class="list-group-item text-muted"></div>').text('Nincs találat.'));
-                        $talalatok.removeClass('d-none');
+                        $results.append($('<div class="list-group-item text-muted"></div>').text('Nincs találat.'));
+                        $results.removeClass('d-none');
                         return;
                     }
 
                     termekek.forEach(function (t) {
-                        var $sor = $('<button type="button" class="list-group-item list-group-item-action d-flex align-items-center"></button>');
+                        var $row = $('<button type="button" class="list-group-item list-group-item-action d-flex align-items-center"></button>');
 
                         if (t.primary_image) {
-                            $sor.append($('<img alt="" class="mr-2 rounded border" style="width:32px;height:32px;object-fit:cover;">').attr('src', t.primary_image));
+                            $row.append($('<img alt="" class="mr-2 rounded border" style="width:32px;height:32px;object-fit:cover;">').attr('src', t.primary_image));
                         }
 
-                        $sor.append($('<span></span>').text(t.name + (t.sku ? ' (' + t.sku + ')' : '')));
-                        $sor.on('click', function () {
+                        $row.append($('<span></span>').text(t.name + (t.sku ? ' (' + t.sku + ')' : '')));
+                        $row.on('click', function () {
                             var $lista = listaBlokkhoz(blockId);
-                            if (!marBenneVan($lista, t.id)) {
-                                $lista.append(itemSor(t.id, t.name, t.primary_image, 'product_ids[]'));
+                            if (!alreadyContains($lista, t.id)) {
+                                $lista.append(itemRow(t.id, t.name, t.primary_image, 'product_ids[]'));
                                 initItemSortable($lista);
                             }
                             $mezo.val('');
-                            $talalatok.addClass('d-none').empty();
+                            $results.addClass('d-none').empty();
                         });
 
-                        $talalatok.append($sor);
+                        $results.append($row);
                     });
 
-                    $talalatok.removeClass('d-none');
+                    $results.removeClass('d-none');
                 });
             }, 250);
         });
@@ -227,11 +227,11 @@
            mező jelenlegi értékére áll, nem a legutóbb használt színre.
            -------------------------------------------------------------- */
         $(document).on('mousedown', '.js-hb-color-pick', function () {
-            var $szoveg = $($(this).data('target'));
-            var ertek = ($szoveg.val() || '').trim();
+            var $textbox = $($(this).data('target'));
+            var colorValue = ($textbox.val() || '').trim();
 
-            if (/^#[0-9a-fA-F]{6}$/.test(ertek)) {
-                this.value = ertek;
+            if (/^#[0-9a-fA-F]{6}$/.test(colorValue)) {
+                this.value = colorValue;
             }
         });
 

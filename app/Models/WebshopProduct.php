@@ -64,6 +64,38 @@ class WebshopProduct extends Model
     }
 
     public function scopeActive($query) { return $query->where('is_active', true); }
+
+    /**
+     * Egy variációcsoportból CSAK a képviselőt hagyja meg a listában.
+     *
+     * A variációk ugyanannak a terméknek a változatai (szín, méret), ezért a
+     * terméklistában külön sorként felsorolva csak duplikátumnak látszanak – a
+     * vásárló a termék adatlapján tud köztük váltani.
+     *
+     * A képviselő a csoport LEGKISEBB sort_order-ű tagja, azonos érték esetén a
+     * legkisebb id. A pivot szimmetrikus (a syncVariations mindkét irányt beírja),
+     * ezért nincs külön "szülő" oszlop, amire támaszkodhatnánk – így viszont a
+     * választás determinisztikus, és nem ugrál lista-újratöltésenként.
+     *
+     * A variációval NEM rendelkező termékeket nem érinti.
+     */
+    public function scopeVariationRepresentative($query)
+    {
+        return $query->whereNotExists(function ($sub) {
+            $sub->selectRaw('1')
+                ->from('public.webshop_product_variations as wpv')
+                ->join('public.webshop_products as wp2', 'wp2.id', '=', 'wpv.variation_product_id')
+                ->whereColumn('wpv.product_id', 'webshop_products.id')
+                ->where('wp2.is_active', true)
+                ->where(function ($q) {
+                    $q->whereColumn('wp2.sort_order', '<', 'webshop_products.sort_order')
+                        ->orWhere(function ($q2) {
+                            $q2->whereColumn('wp2.sort_order', '=', 'webshop_products.sort_order')
+                                ->whereColumn('wp2.id', '<', 'webshop_products.id');
+                        });
+                });
+        });
+    }
     public function scopeOrdered($query) { return $query->orderBy('sort_order'); }
     public function scopeSearch($query, $search) { return $search ? $query->where('name', 'ILIKE', '%'.$search.'%')->orWhere('secondary_name', 'ILIKE', '%'.$search.'%') : $query; }
     public function scopeByCategory($query, $categoryId) { return $categoryId ? $query->where('category_id', $categoryId) : $query; }

@@ -17,7 +17,8 @@
                     @if($wsPricesVisible)
                     <div class="d-flex justify-content-between py-2">
                         <span>Kosár érték</span>
-                        <span class="font-weight-bold">{{ hufFormat($total) }}</span>
+                        {{-- id kell hozzá: mennyiség-változtatáskor JS-ből frissül --}}
+                        <span class="font-weight-bold" id="ws-sum-items">{{ hufFormat($total) }}</span>
                     </div>
 
                     @if($wsShippingEnabled)

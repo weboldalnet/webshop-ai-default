@@ -129,6 +129,36 @@
         wsUpdateSummary();
 
         /*
+            Kosár-mennyiség változás a pénztáron.
+
+            A webshop-site.js már NEM tölti újra az oldalt (az kitörölte volna a
+            kitöltött űrlapot), hanem ezt az eseményt küldi az új összegekkel.
+            A kupon kedvezményét is a szerver adja: a kosár változásával az
+            összege is változik, és akár érvénytelenné is válhat.
+        */
+        $(document).on('ws:cart-updated', function (esemeny, valasz) {
+            wsCartTotal = Number(valasz.total) || 0;
+            $('#ws-sum-items').text(wsHuf(wsCartTotal));
+
+            if (valasz.coupon) {
+                wsCouponDiscount = Number(valasz.coupon.discount) || 0;
+
+                if (valasz.coupon.code) {
+                    $('#ws-sum-coupon-code').text('(' + valasz.coupon.code + ')');
+                }
+
+                // A kosár módosítása érvénytelenné tehette a kupont
+                if (valasz.coupon.message) {
+                    var $error = $('#ws-coupon-error');
+                    $error.text(valasz.coupon.message).removeClass('d-none');
+                    $('#ws-coupon-success').addClass('d-none');
+                }
+            }
+
+            wsUpdateSummary();
+        });
+
+        /*
             Kuponbeváltás.
 
             A kód elküldése után a SZERVER adja vissza a kedvezményt; siker esetén
@@ -136,37 +166,37 @@
             Itt csak megjelenítünk – a rendelés végösszegét a szerver ugyanabból
             a forrásból számolja újra, ezért a kettő nem tud elcsúszni.
         */
-        var $wsKuponMezo = $('#ws-coupon-code');
+        var $wsCouponInput = $('#ws-coupon-code');
 
-        if ($wsKuponMezo.length) {
-            var $wsKuponGomb = $('#ws-coupon-apply');
-            var $wsKuponHiba = $('#ws-coupon-error');
-            var $wsKuponSiker = $('#ws-coupon-success');
+        if ($wsCouponInput.length) {
+            var $wsCouponButton = $('#ws-coupon-apply');
+            var $wsCouponError = $('#ws-coupon-error');
+            var $wsCouponSuccess = $('#ws-coupon-success');
 
-            function wsKuponUzenetekRejtese() {
-                $wsKuponHiba.addClass('d-none').text('');
-                $wsKuponSiker.addClass('d-none').text('');
+            function wsHideCouponMessages() {
+                $wsCouponError.addClass('d-none').text('');
+                $wsCouponSuccess.addClass('d-none').text('');
             }
 
-            function wsKuponAktivalas() {
-                var kod = ($wsKuponMezo.val() || '').trim();
-                wsKuponUzenetekRejtese();
+            function wsApplyCoupon() {
+                var kod = ($wsCouponInput.val() || '').trim();
+                wsHideCouponMessages();
 
                 if (!kod) {
-                    $wsKuponHiba.removeClass('d-none').text('Add meg a kuponkódot.');
+                    $wsCouponError.removeClass('d-none').text('Add meg a kuponkódot.');
                     return;
                 }
 
-                $wsKuponGomb.prop('disabled', true);
+                $wsCouponButton.prop('disabled', true);
 
-                $.post($wsKuponMezo.data('url'), { code: kod })
+                $.post($wsCouponInput.data('url'), { code: kod })
                     .done(function (valasz) {
                         if (valasz.success) {
                             wsCouponDiscount = Number(valasz.discount) || 0;
                             $('#ws-sum-coupon-code').text(' (' + valasz.coupon_code + ')');
                             wsUpdateSummary();
 
-                            $wsKuponSiker.removeClass('d-none').text(
+                            $wsCouponSuccess.removeClass('d-none').text(
                                 'Aktiválva: ' + valasz.coupon_name + ' — ' + wsHuf(wsCouponDiscount) + ' kedvezmény.'
                             );
 
@@ -178,25 +208,25 @@
                             // ezért a korábbi kedvezményt itt is elvesszük.
                             wsCouponDiscount = 0;
                             wsUpdateSummary();
-                            $wsKuponHiba.removeClass('d-none').text(valasz.message || 'A kupon nem aktiválható.');
+                            $wsCouponError.removeClass('d-none').text(valasz.message || 'A kupon nem aktiválható.');
                         }
                     })
                     .fail(function () {
-                        $wsKuponHiba.removeClass('d-none')
+                        $wsCouponError.removeClass('d-none')
                             .text('A kupon ellenőrzése nem sikerült. Kérjük, próbáld újra.');
                     })
                     .always(function () {
-                        $wsKuponGomb.prop('disabled', false);
+                        $wsCouponButton.prop('disabled', false);
                     });
             }
 
-            $wsKuponGomb.on('click', wsKuponAktivalas);
+            $wsCouponButton.on('click', wsApplyCoupon);
 
             // Enterre is aktiváljon, de NE küldje el a rendelés-űrlapot
-            $wsKuponMezo.on('keydown', function (e) {
+            $wsCouponInput.on('keydown', function (e) {
                 if (e.key === 'Enter') {
                     e.preventDefault();
-                    wsKuponAktivalas();
+                    wsApplyCoupon();
                 }
             });
         }

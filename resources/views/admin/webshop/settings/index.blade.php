@@ -107,11 +107,33 @@
                                    @if(($ws['product_variations_enabled'] ?? 'false') === 'true') checked @endif>
                             <label class="custom-control-label" for="product_variations_enabled">Variációs termékek engedélyezése</label>
                         </div>
+
+                        <div class="custom-control custom-switch mb-3 pl-5">
+                            <input type="checkbox" class="custom-control-input" id="site_product_list_group_variations" name="site_product_list_group_variations"
+                                   @if(($ws['site_product_list_group_variations'] ?? 'true') === 'true') checked @endif>
+                            <label class="custom-control-label" for="site_product_list_group_variations">Terméklistán a variációk összevonása</label>
+                            <span class="text-muted fs-14 d-block">
+                                A terméklistában egy variációcsoportból csak EGY termék jelenik meg, a kártyán
+                                jelezve, hány változat tartozik hozzá. Kikapcsolva minden változat külön
+                                kártyaként szerepel. A keresést és a termék adatlapját nem érinti.
+                            </span>
+                        </div>
                         <hr>
-                        <div class="custom-control custom-switch mb-3">
+                        <div class="custom-control custom-switch mb-2">
                             <input type="checkbox" class="custom-control-input" id="product_extra_gallery_enabled" name="product_extra_gallery_enabled"
                                    @if(($ws['product_extra_gallery_enabled'] ?? 'false') === 'true') checked @endif>
                             <label class="custom-control-label" for="product_extra_gallery_enabled">Extra látvány galéria</label>
+                        </div>
+                        <div class="form-group mb-3">
+                            <label for="product_extra_gallery_title">Az extra galéria címe</label>
+                            <input type="text" class="form-control" id="product_extra_gallery_title"
+                                   name="product_extra_gallery_title" maxlength="120"
+                                   value="{{ $ws['product_extra_gallery_title'] ?? '' }}"
+                                   placeholder="Galéria">
+                            <span class="text-muted fs-14">
+                                Ez a cím jelenik meg a terméklapon a képsáv fölött, középre rendezve.
+                                Üresen hagyva a galéria cím nélkül jelenik meg, és a helye sem marad üresen.
+                            </span>
                         </div>
                         <div class="custom-control custom-switch mb-3">
                             <input type="checkbox" class="custom-control-input" id="product_document_upload_enabled" name="product_document_upload_enabled"
@@ -126,12 +148,24 @@
                         <div class="custom-control custom-switch mb-3">
                             <input type="checkbox" class="custom-control-input" id="product_short_desc_instead_of_properties_enabled" name="product_short_desc_instead_of_properties_enabled"
                                    @if(($ws['product_short_desc_instead_of_properties_enabled'] ?? 'false') === 'true') checked @endif>
-                            <label class="custom-control-label" for="product_short_desc_instead_of_properties_enabled">Rövid leírás tulajdonságok helyett</label>
+                            <label class="custom-control-label" for="product_short_desc_instead_of_properties_enabled">Terméklistán rövid leírás a tulajdonságok helyett</label>
+                            <span class="text-muted fs-14 d-block">
+                                A terméklista KÁRTYÁIN a tulajdonság-címkék helyett a termék rövid leírása
+                                jelenik meg (az első 100 karakter). A termék adatlapját nem érinti: ott a
+                                rövid leírás a termék neve alatt mindig látszik, ha ki van töltve.
+                            </span>
                         </div>
                         <div class="custom-control custom-switch mb-3">
                             <input type="checkbox" class="custom-control-input" id="product_crm_id_enabled" name="product_crm_id_enabled"
                                    @if(($ws['product_crm_id_enabled'] ?? 'false') === 'true') checked @endif>
                             <label class="custom-control-label" for="product_crm_id_enabled">CRM azonosító megadása</label>
+                            <span class="text-muted fs-14 d-block">
+                                Bekapcsolva a termék SZERKESZTŐ oldalán megjelenik egy szabadon kitölthető
+                                „CRM azonosító” mező, amivel a terméket egy külső rendszer saját
+                                azonosítójához lehet kötni. Ez a mező csak tárolja az értéket –
+                                <strong>nem</strong> ez kapcsolja be a CRM szinkronizációt (MiniCRM, Bevétel+),
+                                azt a Beállítások megfelelő integrációjánál kell beállítani.
+                            </span>
                         </div>
 
                         <div class="form-group">

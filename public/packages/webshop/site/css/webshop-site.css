@@ -446,8 +446,11 @@
 
 /* Site toast message */
 .ws-site-toast {
+  /* JOBB ALSÓ sarok, nem a jobb FELSŐ: ott a fejléc kosár- és
+     összehasonlítás gombja ül, és a toast (z-index 1060) letakarta
+     őket - pont akkor, amikor a vásárló a kosárra kattintana. */
   position: fixed;
-  top: 20px;
+  bottom: 20px;
   right: 20px;
   z-index: 1060;
   min-width: 250px;
@@ -864,6 +867,119 @@
 .ws-cat-drawer-level-2 > .d-flex > .ws-cat-drawer-link {
   padding-left: 48px;
   color: #475569;
+}
+
+/* Kapcsolódó kategóriák a kategórialap alján */
+.ws-related-category {
+  color: #1e293b;
+  text-decoration: none;
+  transition: box-shadow 0.15s ease-in-out;
+}
+
+.ws-related-category:hover {
+  color: #0f172a;
+  text-decoration: none;
+  box-shadow: 0 0.25rem 0.5rem rgba(0, 0, 0, 0.1) !important;
+}
+
+.ws-related-category-icon {
+  width: 24px;
+  height: 24px;
+  object-fit: contain;
+}
+
+/* ---------------------------------------------------------------------------
+   MÁSODLAGOS GALÉRIA — oldal széles, vízszintesen görgethető filmszalag.
+
+   A csempe mérete FIX (szélesség + magasság is), a kép object-fit: contain-nel
+   ül bele. Három okból:
+
+     1. A width:auto változat a lusta betöltés (loading="lazy") miatt nem
+        működne: a még be nem töltött képnek nincs saját mérete, így a csempe
+        0 szélesre esne össze, a szalag üresen indulna, és a képek betöltéskor
+        ugrálva jelennének meg.
+     2. A section.js a léptetés hosszát az ELSŐ elem szélességéből számolja —
+        egyenlő csempéknél ez pontosan egy kép, változó szélességnél nem.
+     3. A contain (nem cover) miatt semmi nem sérül: az álló és a fekvő kép is
+        egészben látszik, csak a csempe világos háttere marad mellette.
+   --------------------------------------------------------------------------- */
+/* A szekciónak SZÁNDÉKOSAN nincs itt függőleges térköze: a markup py-0 my-0
+   utility osztályokat visel, azok !important-tal úgyis felülírnának minden
+   itt megadott margin/padding értéket. Egy ide írt szabály tehát néma halott
+   kód lenne, ami a következő olvasót félrevezeti. */
+/* A core .scroll-container-nek nincs saját pozicionálása, a .carousel-arrows
+   viszont position:absolute — kapaszkodó nélkül a nyilak a legközelebbi
+   pozicionált ősre (jellemzően a body-ra) ugranának. Itt kapják meg. */
+.ws-extra-gallery-scroll {
+  position: relative;
+}
+
+/* A core a nyilakat nagy képernyőn a konténeren KÍVÜLRE tolja (left:-16/-32px),
+   mert ott a görgetősáv egy szűk konténerben ül. Ez a szalag viszont a lap
+   széléig ér, tehát a negatív érték a képernyőn kívülre vinné a nyilat: itt a
+   szalag FÖLÉ úsznak, ahogy a széles galériáknál szokás.
+   A .default-arrows is benne van a szelektorban, hogy a core média-lekérdezéses
+   szabályainál nagyobb súlyú legyen — így nem a fájlsorrenden múlik. */
+.ws-extra-gallery-scroll .default-arrows.carousel-arrows.left {
+  left: 10px;
+}
+
+.ws-extra-gallery-scroll .default-arrows.carousel-arrows.right {
+  right: 10px;
+}
+
+/* A köz margóval megy, nem gap-pel: a section.js a léptetés hosszát az első
+   elem outerWidth(true) értékéből számolja, ami a margót beleszámítja, a
+   gap-et viszont nem — gap-pel a szalag lépésenként elcsúszna. */
+.ws-extra-gallery-item {
+  flex: 0 0 auto;
+  display: block;
+  width: 300px;
+  height: 200px;
+  margin-right: 10px;
+  overflow: hidden;
+}
+
+/* A csempének NINCS saját háttere és kerete: egy világos, lekerekített
+   téglalap a kép körül pontosan azt a kártyás hatást adná vissza, amit ez a
+   galéria el akar kerülni. Ami nem kép, az a lap háttere marad. */
+.ws-extra-gallery-item img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  border-radius: 6px;
+  transition: transform 0.3s ease;
+}
+
+.ws-extra-gallery-item:hover img {
+  transform: scale(1.04);
+}
+
+@media (min-width: 576px) {
+  .ws-extra-gallery-item {
+    width: 390px;
+    height: 260px;
+  }
+}
+@media (min-width: 768px) {
+  .ws-extra-gallery-item {
+    width: 495px;
+    height: 330px;
+    margin-right: 14px;
+  }
+}
+@media (min-width: 992px) {
+  .ws-extra-gallery-item {
+    width: 600px;
+    height: 400px;
+  }
+}
+@media (min-width: 1400px) {
+  .ws-extra-gallery-item {
+    width: 690px;
+    height: 460px;
+  }
 }
 
 /*# sourceMappingURL=webshop-site.css.map */

@@ -66,6 +66,17 @@ class WebshopCategoryController extends Controller
 
         $query = $category->products()->active();
 
+        /*
+           Variációk összevonása: egy variációcsoportból csak a képviselő kerül a
+           listába, mert a többi ugyanannak a terméknek a változata (szín, méret) –
+           külön kártyaként csak duplikátumnak látszana. A kártyán jelezzük, hány
+           változat tartozik hozzá, hogy a vásárló tudjon róluk.
+        */
+        if (WebshopSettingsService::getBool('product_variations_enabled')
+            && WebshopSettingsService::getBool('site_product_list_group_variations', true)) {
+            $query->variationRepresentative()->withCount('variations');
+        }
+
         if (WebshopSettingsService::getBool('admin_product_label_assignment_enabled')) {
             $query->with('label');
         }

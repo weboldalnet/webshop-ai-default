@@ -150,21 +150,21 @@
                         {{-- Ugyanaz a bontás, mint a rendeléslapon és a számlán.
                              Enélkül a tételsorok láthatóan nem adják ki a kiírt
                              végösszeget (szállítás, kupon, utánvét). --}}
-                        @php $wsBontas = $order->priceBreakdown(); @endphp
+                        @php $wsBreakdown = $order->priceBreakdown(); @endphp
                         <tfoot>
                         <tr>
                             <th colspan="3" class="text-right font-weight-normal">Termékek összesen:</th>
-                            <th class="text-right">{{ hufFormat($wsBontas['tetelek']) }}</th>
+                            <th class="text-right">{{ hufFormat($wsBreakdown['items']) }}</th>
                         </tr>
 
                         @if($order->shipping_method)
                             <tr>
                                 <th colspan="3" class="text-right font-weight-normal">Szállítási díj:</th>
-                                <th class="text-right">{{ $wsBontas['szallitas'] > 0 ? hufFormat($wsBontas['szallitas']) : 'Ingyenes' }}</th>
+                                <th class="text-right">{{ $wsBreakdown['shipping'] > 0 ? hufFormat($wsBreakdown['shipping']) : 'Ingyenes' }}</th>
                             </tr>
                         @endif
 
-                        @if($wsBontas['kedvezmeny'] > 0)
+                        @if($wsBreakdown['discount'] > 0)
                             <tr>
                                 <th colspan="3" class="text-right font-weight-normal">
                                     Kuponkedvezmény
@@ -172,21 +172,21 @@
                                         <code>{{ $order->coupon_code }}</code>
                                     @endif
                                 </th>
-                                <th class="text-right text-success">-{{ hufFormat($wsBontas['kedvezmeny']) }}</th>
+                                <th class="text-right text-success">-{{ hufFormat($wsBreakdown['discount']) }}</th>
                             </tr>
                         @endif
 
-                        @if($wsBontas['utanvet'] > 0)
+                        @if($wsBreakdown['cod'] > 0)
                             <tr>
                                 <th colspan="3" class="text-right font-weight-normal">Utánvét díja:</th>
-                                <th class="text-right">{{ hufFormat($wsBontas['utanvet']) }}</th>
+                                <th class="text-right">{{ hufFormat($wsBreakdown['cod']) }}</th>
                             </tr>
                         @endif
 
-                        @if($wsBontas['egyeb'] > 0)
+                        @if($wsBreakdown['other'] > 0)
                             <tr>
                                 <th colspan="3" class="text-right font-weight-normal">Egyéb díjak:</th>
-                                <th class="text-right">{{ hufFormat($wsBontas['egyeb']) }}</th>
+                                <th class="text-right">{{ hufFormat($wsBreakdown['other']) }}</th>
                             </tr>
                         @endif
 

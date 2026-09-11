@@ -39,9 +39,9 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('public.webshop_orders', function (Blueprint $table) {
-            foreach (['coupon_id', 'coupon_code', 'discount_amount', 'coupon_data'] as $oszlop) {
-                if (Schema::hasColumn('public.webshop_orders', $oszlop)) {
-                    $table->dropColumn($oszlop);
+            foreach (['coupon_id', 'coupon_code', 'discount_amount', 'coupon_data'] as $column) {
+                if (Schema::hasColumn('public.webshop_orders', $column)) {
+                    $table->dropColumn($column);
                 }
             }
         });

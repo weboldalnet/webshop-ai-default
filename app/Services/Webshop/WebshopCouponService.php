@@ -66,18 +66,18 @@ class WebshopCouponService
      */
     public static function cartLines(): array
     {
-        $sorok = [];
+        $rows = [];
 
-        foreach (WebshopCartService::getContent() as $tetel) {
-            $sorok[] = [
-                'product_id' => (int) ($tetel['product_id'] ?? 0),
-                'category_id' => isset($tetel['category_id']) ? (int) $tetel['category_id'] : null,
-                'unit_price' => (float) ($tetel['price'] ?? 0),
-                'quantity' => (int) ($tetel['quantity'] ?? 0),
+        foreach (WebshopCartService::getContent() as $item) {
+            $rows[] = [
+                'product_id' => (int) ($item['product_id'] ?? 0),
+                'category_id' => isset($item['category_id']) ? (int) $item['category_id'] : null,
+                'unit_price' => (float) ($item['price'] ?? 0),
+                'quantity' => (int) ($item['quantity'] ?? 0),
             ];
         }
 
-        return $sorok;
+        return $rows;
     }
 
     /**
@@ -100,15 +100,15 @@ class WebshopCouponService
         }
 
         $osztaly = self::SERVICE_CLASS;
-        $eredmeny = $osztaly::redeem($kod, self::cartLines());
+        $result = $osztaly::redeem($kod, self::cartLines());
 
-        if ($eredmeny->success) {
-            Session::put(self::SESSION_KEY, $eredmeny->couponCode);
+        if ($result->success) {
+            Session::put(self::SESSION_KEY, $result->couponCode);
         } else {
             self::clear();
         }
 
-        return $eredmeny->toArray();
+        return $result->toArray();
     }
 
     /** Az aktivált kuponkód, ha van */
@@ -145,9 +145,9 @@ class WebshopCouponService
      */
     public static function currentDiscount(): float
     {
-        $eredmeny = self::currentResult();
+        $result = self::currentResult();
 
-        return ($eredmeny && $eredmeny['success']) ? (float) $eredmeny['discount'] : 0.0;
+        return ($result && $result['success']) ? (float) $result['discount'] : 0.0;
     }
 
     /**

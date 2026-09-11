@@ -12,9 +12,9 @@
 --}}
 @php
     $wsView = $block->view_name ? 'site.webshop.home.partials.' . $block->view_name : null;
-    $wsVanNezet = $wsView && view()->exists($wsView);
+    $wsViewExists = $wsView && view()->exists($wsView);
 
-    if (!$wsVanNezet) {
+    if (!$wsViewExists) {
         \Illuminate\Support\Facades\Log::warning('Ismeretlen nyitóoldali blokktípus – a blokk kimaradt.', [
             'block_id' => $block->id,
             'type' => $block->type,
@@ -26,7 +26,7 @@
     $wsTitleStyle = $block->title_color ? 'color: ' . $block->title_color . ';' : '';
 @endphp
 
-@if($wsVanNezet)
+@if($wsViewExists)
     <section class="ws-home-block ws-home-block-{{ $block->type }} py-lg-4 py-3"
              @if($wsBgStyle) style="{{ $wsBgStyle }}" @endif>
         <div class="container-xl container-fluid">

@@ -13,7 +13,7 @@
 @php
     // Egyetlen forrás: ugyanaz a bontás, amit az admin rendeléslap, a
     // visszaigazoló e-mail és a számla is használ.
-    $wsBontas = $order->priceBreakdown();
+    $wsBreakdown = $order->priceBreakdown();
 @endphp
 
 <div class="card shadow-sm border-0 mb-4">
@@ -66,17 +66,17 @@
                 <div class="col-lg-6 ml-auto">
                     <div class="d-flex justify-content-between py-2 border-top">
                         <span>Termékek összesen</span>
-                        <span class="font-weight-bold">{{ hufFormat($wsBontas['tetelek']) }}</span>
+                        <span class="font-weight-bold">{{ hufFormat($wsBreakdown['items']) }}</span>
                     </div>
 
                     @if($order->shipping_method)
                         <div class="d-flex justify-content-between py-2 border-top">
                             <span>Szállítási díj</span>
-                            <span class="font-weight-bold">{{ $wsBontas['szallitas'] > 0 ? hufFormat($wsBontas['szallitas']) : 'Ingyenes' }}</span>
+                            <span class="font-weight-bold">{{ $wsBreakdown['shipping'] > 0 ? hufFormat($wsBreakdown['shipping']) : 'Ingyenes' }}</span>
                         </div>
                     @endif
 
-                    @if($wsBontas['kedvezmeny'] > 0)
+                    @if($wsBreakdown['discount'] > 0)
                         <div class="d-flex justify-content-between py-2 border-top">
                             <span>
                                 Kuponkedvezmény
@@ -84,21 +84,21 @@
                                     <span class="text-muted fs-14">({{ $order->coupon_code }})</span>
                                 @endif
                             </span>
-                            <span class="font-weight-bold text-success">-{{ hufFormat($wsBontas['kedvezmeny']) }}</span>
+                            <span class="font-weight-bold text-success">-{{ hufFormat($wsBreakdown['discount']) }}</span>
                         </div>
                     @endif
 
-                    @if($wsBontas['utanvet'] > 0)
+                    @if($wsBreakdown['cod'] > 0)
                         <div class="d-flex justify-content-between py-2 border-top">
                             <span>Utánvét díja</span>
-                            <span class="font-weight-bold">{{ hufFormat($wsBontas['utanvet']) }}</span>
+                            <span class="font-weight-bold">{{ hufFormat($wsBreakdown['cod']) }}</span>
                         </div>
                     @endif
 
-                    @if($wsBontas['egyeb'] > 0)
+                    @if($wsBreakdown['other'] > 0)
                         <div class="d-flex justify-content-between py-2 border-top">
                             <span>Egyéb díjak</span>
-                            <span class="font-weight-bold">{{ hufFormat($wsBontas['egyeb']) }}</span>
+                            <span class="font-weight-bold">{{ hufFormat($wsBreakdown['other']) }}</span>
                         </div>
                     @endif
 

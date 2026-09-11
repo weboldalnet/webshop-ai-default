@@ -34,7 +34,7 @@
 
                                 @if($wsPricesVisible)
                                     <div class="text-muted small lh-12">Egységár: {{ hufFormat($item['price']) }}</div>
-                                    <div class="d-md-none d-block font-weight-bold fs-16 mt-1" style="min-width: 100px;">
+                                    <div class="d-md-none d-block font-weight-bold fs-16 mt-1 js-item-total" data-id="{{ $productId }}" style="min-width: 100px;">
                                         {{ hufFormat($item['quantity'] * $item['price']) }}
                                     </div>
                                 @endif
@@ -56,7 +56,7 @@
                             </div>
 
                             @if($wsPricesVisible)
-                                <div class="d-md-block d-none text-right font-weight-bold ml-2 fs-16" style="min-width: 100px;">
+                                <div class="d-md-block d-none text-right font-weight-bold ml-2 fs-16 js-item-total" data-id="{{ $productId }}" style="min-width: 100px;">
                                     {{ hufFormat($item['quantity'] * $item['price']) }}
                                 </div>
                             @endif

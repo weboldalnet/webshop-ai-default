@@ -121,7 +121,7 @@ class WebshopOrder extends Model
     protected $fillable = [
         'order_number', 'status', 'type', 'customer_name', 'customer_email', 'customer_phone',
         'customer_company', 'customer_tax_number', 'billing_data', 'shipping_data',
-        'total_price', 'shipping_cost', 'cod_fee', 'currency', 'is_completed', 'completed_at', 'admin_note', 'note',
+        'total_price', 'shipping_cost', 'cod_fee', 'stock_applied', 'currency', 'is_completed', 'completed_at', 'admin_note', 'note',
         'qa_data',
         'coupon_id', 'coupon_code', 'discount_amount', 'coupon_data',
         'payment_method', 'payment_status', 'invoice_status',
@@ -136,6 +136,7 @@ class WebshopOrder extends Model
         // Szandekosan nincs 'float' cast: a null (= regi rendeles, meg nem tarolt)
         // es a 0.0 (= nem volt utanvet) kulonbsege szamit a bontas szamitasban.
         'cod_fee' => 'decimal:2',
+        'stock_applied' => 'boolean',
         // A pénztárban kitöltött kérdőív kérdés-válasz párjai
         'qa_data' => 'array',
         // Beváltott kupon
@@ -164,29 +165,29 @@ class WebshopOrder extends Model
      *
      * Az utánvét-felárat régebbi rendeléseknél nem tároltuk (cod_fee = null),
      * ott a végösszegből maradékként vezetjük le. Ami az ismert tételek után
-     * MÉG marad, az az 'egyeb' – ennek új rendelésnél mindig 0-nak kell lennie.
+     * MÉG marad, az az 'other' – ennek új rendelésnél mindig 0-nak kell lennie.
      *
      * @return array{tetelek:float, szallitas:float, utanvet:float, kedvezmeny:float, egyeb:float}
      */
     public function priceBreakdown(): array
     {
-        $tetelek = (float) $this->items->sum('total_price');
-        $szallitas = (float) ($this->shipping_cost ?? 0);
-        $kedvezmeny = (float) ($this->discount_amount ?? 0);
+        $itemsTotal = (float) $this->items->sum('total_price');
+        $shippingFee = (float) ($this->shipping_cost ?? 0);
+        $discount = (float) ($this->discount_amount ?? 0);
 
         // Amit a tételek és a szállítás nem magyaráz meg
-        $maradek = round((float) $this->total_price - $tetelek - $szallitas + $kedvezmeny, 2);
+        $remainder = round((float) $this->total_price - $itemsTotal - $shippingFee + $discount, 2);
 
-        $utanvet = $this->cod_fee !== null
+        $codFee = $this->cod_fee !== null
             ? (float) $this->cod_fee
-            : max(0.0, $maradek);
+            : max(0.0, $remainder);
 
         return [
-            'tetelek' => round($tetelek, 2),
-            'szallitas' => round($szallitas, 2),
-            'utanvet' => round($utanvet, 2),
-            'kedvezmeny' => round($kedvezmeny, 2),
-            'egyeb' => round($maradek - $utanvet, 2),
+            'items' => round($itemsTotal, 2),
+            'shipping' => round($shippingFee, 2),
+            'cod' => round($codFee, 2),
+            'discount' => round($discount, 2),
+            'other' => round($remainder - $codFee, 2),
         ];
     }
 

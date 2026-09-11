@@ -11,6 +11,7 @@ use Weboldalnet\WebshopAiDefault\Models\WebshopOrder;
 use Weboldalnet\WebshopAiDefault\Services\Webshop\WebshopCartService;
 use Weboldalnet\WebshopAiDefault\Services\Webshop\WebshopCheckoutQaService;
 use Weboldalnet\WebshopAiDefault\Services\Webshop\WebshopCouponService;
+use Weboldalnet\WebshopAiDefault\Services\Webshop\WebshopStockService;
 use Weboldalnet\WebshopAiDefault\Services\Webshop\WebshopCheckoutService;
 use Weboldalnet\WebshopAiDefault\Services\Webshop\WebshopContentService;
 use Weboldalnet\WebshopAiDefault\Services\Webshop\WebshopSettingsService;
@@ -189,6 +190,30 @@ class WebshopCheckoutController extends Controller
             );
         }
 
+        /*
+           Készlet-előellenőrzés a rendelés létrehozása ELŐTT.
+
+           A tényleges levonás sorzárolással, a tranzakción belül történik – de az
+           ott dobott kivételből a vásárló csak egy általános hibát látna. Itt még
+           meg tudjuk mondani, MELYIK termékből mennyi maradt.
+        */
+        $stockErrors = WebshopStockService::checkCart(WebshopCartService::getContent());
+
+        if ($stockErrors) {
+            $reszletek = [];
+            foreach ($stockErrors as $productName => $available) {
+                $reszletek[] = $available > 0
+                    ? $productName . ' (már csak ' . $available . ' db)'
+                    : $productName . ' (elfogyott)';
+            }
+
+            return back()->withInput()->with(
+                'error',
+                'A kosaradban lévő termékek közül időközben elfogyott: '
+                . implode(', ', $reszletek) . '. Kérjük, módosítsd a mennyiséget.'
+            );
+        }
+
         try {
             $checkoutService = new WebshopCheckoutService();
             $result = $checkoutService->process($request->all(), $items);
@@ -316,12 +341,12 @@ class WebshopCheckoutController extends Controller
      */
     public function activateCoupon(Request $request)
     {
-        $eredmeny = WebshopCouponService::activate((string) $request->input('code', ''));
+        $result = WebshopCouponService::activate((string) $request->input('code', ''));
 
         // A friss kosárérték, hogy a pénztár összesítője azonnal frissülhessen
-        $eredmeny['cart_total'] = WebshopCartService::getTotal();
+        $result['cart_total'] = WebshopCartService::getTotal();
 
-        return response()->json($eredmeny);
+        return response()->json($result);
     }
     /**
      * A rendelés fizetési állapota JSON-ban, a fizetési eredmény oldal lekérdezéséhez.

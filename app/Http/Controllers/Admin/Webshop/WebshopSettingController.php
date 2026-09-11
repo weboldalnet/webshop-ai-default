@@ -41,6 +41,7 @@ class WebshopSettingController extends AdminExtendedController
             'category_custom_menu_enabled',
             'category_product_card_properties_enabled', 'product_stock_enabled', 'product_related_enabled',
             'product_price_enabled', 'product_gallery_enabled', 'product_variations_enabled',
+            'site_product_list_group_variations',
             'admin_product_labels_enabled',
             'site_category_view_switcher_enabled', 'site_related_products_modal_enabled',
             'site_product_reviews_enabled', 'site_product_prices_visible',
@@ -105,6 +106,8 @@ class WebshopSettingController extends AdminExtendedController
             'admin_product_primary_image_mode',
             // Utánvét-felár: a pénztár összesítője és a rendelés végösszege is ebből dolgozik
             'site_checkout_payment_cod_fee',
+            // Az extra galéria címe a terméklapon (üresen hagyva „Galéria")
+            'product_extra_gallery_title',
         ];
 
         if ($request->has('invoice_lines_present')) {

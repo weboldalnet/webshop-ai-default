@@ -16,26 +16,26 @@ class WebshopInvoiceRequestFactory
      *   invoice_line_<kulcs>_enabled   (checkbox, alap: be)
      *   invoice_line_<kulcs>_name      (szöveg, alap: a lenti default_name)
      *
-     * A 'forras' a WebshopOrder::priceBreakdown() kulcsa, az 'elojel' pedig azt
+     * A 'source' a WebshopOrder::priceBreakdown() kulcsa, az 'sign' pedig azt
      * mondja meg, hozzáad vagy levon. Új tétel felvétele: egy sor ide.
      */
     const EXTRA_LINES = [
         'coupon' => [
             'default_name' => 'Kuponkedvezmény',
-            'forras' => 'kedvezmeny',
-            'elojel' => -1,
+            'source' => 'discount',
+            'sign' => -1,
             'admin_label' => 'Kuponkedvezmény',
         ],
         'shipping' => [
             'default_name' => 'Szállítási díj',
-            'forras' => 'szallitas',
-            'elojel' => 1,
+            'source' => 'shipping',
+            'sign' => 1,
             'admin_label' => 'Szállítási díj',
         ],
         'cod' => [
             'default_name' => 'Utánvét díja',
-            'forras' => 'utanvet',
-            'elojel' => 1,
+            'source' => 'cod',
+            'sign' => 1,
             'admin_label' => 'Utánvét díja',
         ],
     ];
@@ -119,64 +119,64 @@ class WebshopInvoiceRequestFactory
      *
      * Ha minden extra tétel be van kapcsolva, a tételek összege PONTOSAN a
      * rendelés végösszege – erre a WebshopOrder::priceBreakdown() képlete a
-     * garancia. Az 'egyeb' maradék is felkerül, hogy egy régi vagy kézzel
+     * garancia. Az 'other' maradék is felkerül, hogy egy régi vagy kézzel
      * módosított rendelésnél se maradjon megmagyarázatlan különbözet.
      */
     protected static function items(WebshopOrder $order): array
     {
         // Minden sor ugyanazt az áfakulcsot kapja – lásd a SETTING_VAT_KEY
         // magyarázatát: a webshop adatmodelljében nincs soronkénti áfa.
-        $afakulcs = self::vatKey();
+        $vatKey = self::vatKey();
 
-        $tetelek = $order->items->map(function ($item) use ($afakulcs) {
+        $lines = $order->items->map(function ($item) use ($vatKey) {
             return [
                 'name' => $item->product_name,
                 'quantity' => $item->quantity,
                 'unit' => 'db',
                 'gross_unit_price' => (float) $item->unit_price,
                 'gross_total' => (float) $item->total_price,
-                'vat_key' => $afakulcs,
+                'vat_key' => $vatKey,
             ];
         })->toArray();
 
-        $bontas = $order->priceBreakdown();
+        $breakdown = $order->priceBreakdown();
 
-        foreach (self::EXTRA_LINES as $kulcs => $meta) {
-            $osszeg = round(((float) ($bontas[$meta['forras']] ?? 0)) * $meta['elojel'], 2);
+        foreach (self::EXTRA_LINES as $lineKey => $meta) {
+            $amount = round(((float) ($breakdown[$meta['source']] ?? 0)) * $meta['sign'], 2);
 
-            if ($osszeg == 0.0 || !self::lineEnabled($kulcs)) {
+            if ($amount == 0.0 || !self::lineEnabled($lineKey)) {
                 continue;
             }
 
-            $tetelek[] = self::extraItem(self::lineName($kulcs, $meta['default_name'], $order), $osszeg, $afakulcs);
+            $lines[] = self::extraItem(self::lineName($lineKey, $meta['default_name'], $order), $amount, $vatKey);
         }
 
         // Ami az ismert tételek után is marad (régi, cod_fee nélküli rendelés
         // furcsa kerekítése vagy kézi módosítás). Új rendelésnél mindig 0.
-        if (round((float) $bontas['egyeb'], 2) != 0.0) {
-            $tetelek[] = self::extraItem('Egyéb díj', round((float) $bontas['egyeb'], 2), $afakulcs);
+        if (round((float) $breakdown['other'], 2) != 0.0) {
+            $lines[] = self::extraItem('Egyéb díj', round((float) $breakdown['other'], 2), $vatKey);
         }
 
-        return $tetelek;
+        return $lines;
     }
 
     /** Egy nem termék jellegű számlatétel (1 db, bruttó = egységár) */
-    protected static function extraItem(string $nev, float $osszeg, string $afakulcs): array
+    protected static function extraItem(string $name, float $amount, string $vatKey): array
     {
         return [
-            'name' => $nev,
+            'name' => $name,
             'quantity' => 1,
             'unit' => 'db',
-            'gross_unit_price' => $osszeg,
-            'gross_total' => $osszeg,
-            'vat_key' => $afakulcs,
+            'gross_unit_price' => $amount,
+            'gross_total' => $amount,
+            'vat_key' => $vatKey,
         ];
     }
 
     /** Be van-e kapcsolva ez az extra tétel (alapértelmezés: IGEN) */
-    protected static function lineEnabled(string $kulcs): bool
+    protected static function lineEnabled(string $lineKey): bool
     {
-        return WebshopSettingsService::getBool('invoice_line_' . $kulcs . '_enabled', true);
+        return WebshopSettingsService::getBool('invoice_line_' . $lineKey . '_enabled', true);
     }
 
     /**
@@ -188,29 +188,29 @@ class WebshopInvoiceRequestFactory
      * névből "Szállítási költség (GLS futárszolgálat)" lenne, és egy FoxPost
      * rendelésnél a beírt "Szállítási díj (GLS)" mellé még egy zárójel kerülne.
      */
-    protected static function lineName(string $kulcs, string $alapertelmezett, WebshopOrder $order): string
+    protected static function lineName(string $lineKey, string $defaultName, WebshopOrder $order): string
     {
-        $nev = trim((string) WebshopSettingsService::get('invoice_line_' . $kulcs . '_name', ''));
+        $name = trim((string) WebshopSettingsService::get('invoice_line_' . $lineKey . '_name', ''));
 
-        if ($nev !== '') {
-            return $nev;
+        if ($name !== '') {
+            return $name;
         }
 
-        $nev = $alapertelmezett;
+        $name = $defaultName;
 
-        if ($kulcs === 'shipping' && $order->shipping_method) {
-            $mod = WebshopCommerceService::getShippingMethodLabel($order->shipping_method);
+        if ($lineKey === 'shipping' && $order->shipping_method) {
+            $methodLabel = WebshopCommerceService::getShippingMethodLabel($order->shipping_method);
 
-            if ($mod && mb_stripos($nev, $mod) === false) {
-                $nev .= ' (' . $mod . ')';
+            if ($methodLabel && mb_stripos($name, $methodLabel) === false) {
+                $name .= ' (' . $methodLabel . ')';
             }
         }
 
-        if ($kulcs === 'coupon' && $order->coupon_code) {
-            $nev .= ' (' . $order->coupon_code . ')';
+        if ($lineKey === 'coupon' && $order->coupon_code) {
+            $name .= ' (' . $order->coupon_code . ')';
         }
 
-        return $nev;
+        return $name;
     }
 
     /**
@@ -223,8 +223,8 @@ class WebshopInvoiceRequestFactory
      */
     public static function vatKey(): string
     {
-        $ertek = trim((string) WebshopSettingsService::get(self::SETTING_VAT_KEY, ''));
+        $value = trim((string) WebshopSettingsService::get(self::SETTING_VAT_KEY, ''));
 
-        return array_key_exists($ertek, self::VAT_KEYS) ? $ertek : self::DEFAULT_VAT_KEY;
+        return array_key_exists($value, self::VAT_KEYS) ? $value : self::DEFAULT_VAT_KEY;
     }
 }

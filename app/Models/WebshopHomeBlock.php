@@ -159,8 +159,8 @@ class WebshopHomeBlock extends Model
     }
 
     /** Egy típusfüggő beállítás kiolvasása alapértelmezettel */
-    public function setting(string $kulcs, $alapertelmezett = null)
+    public function setting(string $key, $alapertelmezett = null)
     {
-        return $this->settings[$kulcs] ?? $alapertelmezett;
+        return $this->settings[$key] ?? $alapertelmezett;
     }
 }

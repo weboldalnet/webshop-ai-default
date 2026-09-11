@@ -54,13 +54,13 @@ class WebshopProductController extends Controller
 
         $osszesTalalat = (clone $query)->count();
 
-        $termekek = $query->orderBy('sort_order')->orderBy('id')
+        $products = $query->orderBy('sort_order')->orderBy('id')
             ->limit(self::SEARCH_LIMIT)
             ->get();
 
         return view('site.webshop.partials.search-results', [
             'searchValue' => $kifejezes,
-            'products' => $termekek,
+            'products' => $products,
             'resultCount' => $osszesTalalat,
         ])->render();
     }
@@ -68,7 +68,27 @@ class WebshopProductController extends Controller
     {
         if (!$product->is_active) abort(404);
 
-        $relations = ['category', 'relatedProducts', 'variations', 'productProperties.property'];
+        /*
+           A tulajdonságokat SZŰRVE töltjük be. Enélkül egy adminban inaktivált
+           tulajdonság (vagy tulajdonság-kategória) továbbra is megjelent az éles
+           termékoldalon: a mentett kapcsolósor ugyanis megmarad, csak a választható
+           listából tűnik el. A vásárló így nem létező jellemzőt látott.
+        */
+        $relations = [
+            'category',
+            'relatedProducts',
+            'variations',
+            'productProperties' => function ($query) {
+                $query->whereHas('propertyCategory', fn($q) => $q->where('is_active', true))
+                    ->where(function ($q) {
+                        // Vagy egy AKTÍV tulajdonságra mutat, vagy szám értéket hordoz
+                        $q->whereHas('property', fn($p) => $p->where('is_active', true))
+                            ->orWhereNull('property_id');
+                    });
+            },
+            'productProperties.property' => fn($query) => $query->where('is_active', true),
+            'productProperties.propertyCategory',
+        ];
         
         if (WebshopSettingsService::getBool('product_extra_gallery_enabled')) {
             $relations[] = 'defaultGalleryImages';
@@ -89,9 +109,17 @@ class WebshopProductController extends Controller
 
         $product->load($relations);
 
+        /*
+           A "Hasonló termékek" közül KI kell zárni a saját variációit: azok
+           ugyanannak a terméknek a változatai, és a termékoldalon már ott vannak
+           a Variációk blokkban. Korábban ide is beestek, mert csak a saját ID-t
+           zártuk ki, a kategória viszont ugyanaz.
+        */
+        $ownVariationGroup = $product->variations()->pluck('webshop_products.id')->push($product->id)->all();
+
         $similarQuery = WebshopProduct::active()
             ->where('category_id', $product->category_id)
-            ->where('id', '!=', $product->id)
+            ->whereNotIn('id', $ownVariationGroup)
             ->limit(8);
 
         if (WebshopSettingsService::getBool('admin_product_label_assignment_enabled')) {

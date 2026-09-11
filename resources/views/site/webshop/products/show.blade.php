@@ -5,7 +5,7 @@
     @include('site.webshop.partials.sticky-categories', ['category' => $product->category])
 
     <div class="ws-page-container ws-products-show">
-        <div class="container-xl container-fluid pb-5">
+        <div class="container-xl container-fluid">
             @include('site.webshop.partials.breadcrumb', ['category' => $product->category, 'product' => $product])
 
             <div class="">
@@ -13,6 +13,7 @@
                 @if(($ws['product_secondary_name_enabled'] ?? 'false') === 'true' && $product->secondary_name)
                     <div class="h4 text-muted mt-1">{{ $product->secondary_name }}</div>
                 @endif
+
             </div>
 
             <div class="row mt-2 ws-product-main">
@@ -61,6 +62,17 @@
                 <div class="col-lg-4 col-md-6 mb-4">
                     <div class="card shadow-sm h-100 border-0">
                         <div class="card-body">
+                            {{-- Rövid leírás a tulajdonságok FÖLÖTT, saját címmel.
+
+                                 SZÁNDÉKOSAN nincs beállítás mögé kötve: az adminban
+                                 kitölthető mező eddig sehol nem jelent meg a boltban,
+                                 tehát írás-only volt. A "Terméklistán rövid leírás..."
+                                 kapcsoló a LISTA kártyáira vonatkozik, nem erre. --}}
+                            @if($product->short_desc)
+                                <h4 class="font-weight-bold mb-2 border-bottom pb-2">Rövid leírás</h4>
+                                <div class="ws-product-short-desc text-muted mb-4">{{ $product->short_desc }}</div>
+                            @endif
+
                             <h4 class="font-weight-bold mb-3 border-bottom pb-2">Tulajdonságok</h4>
                             <div class="ws-product-properties">
                                 @foreach($product->productProperties->groupBy('property_category_id') as $pcId => $pProps)
@@ -71,7 +83,12 @@
                                             <div class="ws-prop-values">
                                                 @foreach($pProps as $pp)
                                                     @if($pp->property)
-                                                        <a href="{{ route('site.webshop.categories.show', $product->category) }}?f[{{ $pc->id }}][]={{ $pp->property->id }}" class="badge badge-secondary mr-1">{{ $pp->property->name }}</a>
+                                                        {{-- A kategórialap a ";{slug}-f{id}" alakot érti (parseBeautyUrl).
+                                                             A korábbi "?f[1][]=1" lekérdezés-paraméteres alakot SEM a szerver,
+                                                             SEM a szűrő JS nem dolgozta fel, így a link odavitt a kategóriára,
+                                                             de szűrés nélkül - és a böngésző Vissza gombja is emiatt viselkedett
+                                                             furcsán. --}}
+                                                        <a href="{{ route('site.webshop.categories.show', $product->category) }};{{ $pp->property->slug }}-f{{ $pp->property->id }}" class="badge badge-secondary mr-1">{{ $pp->property->name }}</a>
                                                     @elseif($pp->number_value !== null)
                                                         <span class="fw-600">{{ (float)$pp->number_value }}{{ $pc->suffix }}</span>
                                                     @endif
@@ -91,23 +108,61 @@
                         <div class="card-body d-flex flex-column">
                             <h4 class="font-weight-bold mb-4 border-bottom pb-2 text-primary">Vásárlás</h4>
 
-                            <div class="mb-4">
-                                @include('site.webshop.partials.product-price', ['product' => $product])
-                            </div>
+                            @include('site.webshop.partials.product-price', [
+                                'product' => $product,
+                                'priceWrapClass' => 'mb-4',
+                            ])
 
-                            <div class="form-group mb-4">
-                                <label for="quantity" class="font-weight-bold">Mennyiség:</label>
-                                <select id="quantity" class="form-control form-control w-100 js-quantity-select">
-                                    @for($i=1; $i<=10; $i++)
-                                        <option value="{{ $i }}">{{ $i }} db</option>
-                                    @endfor
-                                </select>
-                            </div>
+                            {{-- Készlet-állapot.
+
+                                 A $wsStock null, ha a termék korlátlan (nincs
+                                 készletkezelés, vagy a terméken nincs bekapcsolva) –
+                                 ilyenkor semmit nem írunk ki, hogy a nem készletezett
+                                 boltok látképe ne változzon. --}}
+                            @php($wsStock = \Weboldalnet\WebshopAiDefault\Services\Webshop\WebshopStockService::available($product))
+
+                            @if($wsStock !== null)
+                                <div class="ws-product-stock mb-3">
+                                    @if($wsStock <= 0)
+                                        <span class="badge badge-danger px-3 py-2 fs-14">
+                                            <i class="fa fa-circle-xmark mr-1"></i> Elfogyott
+                                        </span>
+                                    @elseif($wsStock <= 5)
+                                        <span class="badge badge-warning px-3 py-2 fs-14">
+                                            <i class="fa fa-triangle-exclamation mr-1"></i>
+                                            Utolsó {{ $wsStock }} db
+                                        </span>
+                                    @else
+                                        <span class="badge badge-success px-3 py-2 fs-14">
+                                            <i class="fa fa-circle-check mr-1"></i> Raktáron
+                                        </span>
+                                    @endif
+                                </div>
+                            @endif
+
+                            @if($wsStock === null || $wsStock > 0)
+                                <div class="form-group mb-4">
+                                    <label for="quantity" class="font-weight-bold">Mennyiség:</label>
+                                    <select id="quantity" class="form-control form-control w-100 js-quantity-select">
+                                        {{-- Legfeljebb annyi választható, amennyi raktáron van --}}
+                                        @php($wsMaxQuantity = $wsStock === null ? 10 : min(10, $wsStock))
+                                        @for($i = 1; $i <= $wsMaxQuantity; $i++)
+                                            <option value="{{ $i }}">{{ $i }} db</option>
+                                        @endfor
+                                    </select>
+                                </div>
+                            @endif
 
                             <div class="mt-auto">
-                                <button type="button" class="btn btn-primary btn-lg btn-block font-weight-bold py-3 mb-2 js-add-to-cart" data-id="{{ $product->id }}" data-with-qty="true">
-                                    <i class="fa fa-shopping-cart mr-2"></i> Kosárba rakom
-                                </button>
+                                @if($wsStock !== null && $wsStock <= 0)
+                                    <button type="button" class="btn btn-secondary btn-lg btn-block font-weight-bold py-3 mb-2" disabled>
+                                        <i class="fa fa-circle-xmark mr-2"></i> Jelenleg nem rendelhető
+                                    </button>
+                                @else
+                                    <button type="button" class="btn btn-primary btn-lg btn-block font-weight-bold py-3 mb-2 js-add-to-cart" data-id="{{ $product->id }}" data-with-qty="true">
+                                        <i class="fa fa-shopping-cart mr-2"></i> Kosárba rakom
+                                    </button>
+                                @endif
 
                                 @if(($ws['site_product_compare_enabled'] ?? 'false') === 'true')
                                     <button type="button" class="btn btn-outline-info btn-block js-add-to-compare" data-id="{{ $product->id }}">
@@ -124,26 +179,70 @@
                 </div>
             </div>
 
-            <!-- Másodlagos galéria -->
-            @if(($ws['product_extra_gallery_enabled'] ?? 'false') === 'true' && $product->secondaryGalleryImages->isNotEmpty())
-                <div class="row mt-4">
-                    <div class="col-lg-12">
-                        <div class="card shadow-sm border-0">
-                            <div class="card-body">
-                                <div class="row gallery">
-                                    @foreach($product->secondaryGalleryImages as $img)
-                                        <div class="col-lg-2 col-md-3 col-6 mb-3">
-                                            <a href="{{ $img->image }}">
-                                                <img src="{{ $img->image_thumb }}" class="img-fluid border rounded" alt="{{ $img->alt }}">
-                                            </a>
-                                        </div>
-                                    @endforeach
-                                </div>
-                            </div>
+        </div>{{-- /container: a galéria OLDAL SZÉLES, ezért ki kell lépnie belőle --}}
+
+        {{-- MÁSODLAGOS GALÉRIA — oldal széles, vízszintesen görgethető sáv.
+
+             Miért nem kártyában, egy rácsban, apró bélyegképekkel (ahogy korábban volt):
+             a másodlagos galéria a termék hangulatképeit hordozza, azoknak nagynak kell
+             lenniük, különben semmit nem adnak hozzá. Ezért a profi boltok mintája:
+             a képek a lap teljes szélességében, egy magas filmszalagban futnak, és
+             vízszintesen görgethetők — a rács ehhez képest minden képet összenyomna.
+
+             A cím a rendes tartalom-konténerben marad, hogy a többi szekciócímmel
+             egy vonalban álljon; csak maga a szalag fut ki a széléig.
+
+             A .scroll-container / .scroll-wrapper / .scroll-row-list a projekt SAJÁT
+             görgetőmintája (public/js/section.js), tehát a nyilak, a léptetés és a
+             nyilak elrejtése a széleken külön JS nélkül működik. A section.js minden
+             site-oldalon be van töltve, ezen is.
+
+             KÉPMÉRET: itt szándékosan a NAGY kép megy ki ($img->image, 1000 px), nem a
+             bélyegkép ($img->image_thumb, 150 px) — ekkora megjelenítésnél a bélyegkép
+             látványosan pixeles lenne. A loading="lazy" tartja kordában a letöltést.
+
+             A .gallery osztály a baguetteBox-nak szól (public/js/header.js indítja
+             minden .gallery elemre), így a képek nagyításra ugyanúgy megnyílnak. --}}
+        @if(($ws['product_extra_gallery_enabled'] ?? 'false') === 'true' && $product->secondaryGalleryImages->isNotEmpty())
+            @php($wsGalleryTitle = trim($ws['product_extra_gallery_title'] ?? ''))
+
+            <section class="ws-extra-gallery py-0 my-0">
+                {{-- Cím nélkül a KONTÉNER SEM kerül ki, nem csak a szöveg: egy üres
+                     címsor a saját alsó margójával és a konténer belső térközével
+                     ugyanúgy hézagot hagyna a képsáv fölött, csak épp láthatatlanul.
+                     Az admin így tudja cím nélkül is használni a galériát. --}}
+                @if($wsGalleryTitle !== '')
+                    <div class="container-xl container-fluid">
+                        <h2 class="font-weight-bold mb-3 text-center ws-extra-gallery-title">
+                            {{ $wsGalleryTitle }}
+                        </h2>
+                    </div>
+                @endif
+
+                <div class="scroll-container ws-extra-gallery-scroll">
+                    <div class="scroll-wrapper">
+                        <div class="scroll-row-list d-flex gallery">
+                            @foreach($product->secondaryGalleryImages as $img)
+                                <a href="{{ $img->image }}" class="ws-extra-gallery-item">
+                                    <img src="{{ $img->image }}"
+                                         alt="{{ $img->alt ?: $product->name }}"
+                                         loading="lazy">
+                                </a>
+                            @endforeach
                         </div>
                     </div>
+
+                    <span class="scroll-left default-arrows carousel-arrows left" aria-label="Előző képek">
+                        <i class="fa fa-arrow-left"></i>
+                    </span>
+                    <span class="scroll-right default-arrows carousel-arrows right" aria-label="További képek">
+                        <i class="fa fa-arrow-right"></i>
+                    </span>
                 </div>
-            @endif
+            </section>
+        @endif
+
+        <div class="container-xl container-fluid pb-5">
 
             <!-- Tab-page rész -->
             <div class="row mt-4">
@@ -154,6 +253,21 @@
                                 <li class="nav-item">
                                     <a class="nav-link active px-4 py-2 font-weight-bold fs-20" id="desc-tab" data-toggle="tab" href="#desc" role="tab">Leírás</a>
                                 </li>
+                                {{-- A Vélemények fül GOMBJA. A tartalma (tab-pane) korábban is
+                                     kirenderelődött, de gomb nélkül semmi nem tudta aktiválni,
+                                     így a vélemények szekció elérhetetlen volt. --}}
+                                @if(($ws['site_product_reviews_enabled'] ?? 'false') === 'true')
+                                    <li class="nav-item">
+                                        <a class="nav-link px-4 py-2 font-weight-bold fs-20" id="reviews-tab" data-toggle="tab" href="#reviews" role="tab">
+                                            Vélemények
+                                            @php($wsReviewCount = $product->reviews()->active()->count())
+                                            @if($wsReviewCount)
+                                                <span class="badge badge-secondary ml-1">{{ $wsReviewCount }}</span>
+                                            @endif
+                                        </a>
+                                    </li>
+                                @endif
+
                                 @if(($ws['product_document_upload_enabled'] ?? 'false') === 'true' && $product->productDocuments->isNotEmpty())
                                     <li class="nav-item">
                                         <a class="nav-link px-4 py-2 font-weight-bold fs-20" id="docs-tab" data-toggle="tab" href="#docs" role="tab">Dokumentumok</a>

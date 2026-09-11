@@ -40,9 +40,11 @@
                                                     </div>
                                                 @endif
                                                 @if(($ws['site_product_prices_visible'] ?? 'true') === 'true')
-                                                    <div class="ws-related-product-price text-primary font-weight-bold fs-14 mb-2">
-                                                        @include('site.webshop.partials.product-price', ['product' => $rel, 'priceSize' => 'small'])
-                                                    </div>
+                                                    @include('site.webshop.partials.product-price', [
+                                                        'product' => $rel,
+                                                        'priceSize' => 'small',
+                                                        'priceWrapClass' => 'ws-related-product-price text-primary font-weight-bold fs-14 mb-2',
+                                                    ])
                                                 @endif
                                                 <button type="button" class="btn btn-sm btn-primary ws-related-product-cart js-add-to-cart" data-id="{{ $rel->id }}">
                                                     <i class="fa fa-shopping-cart mr-1"></i> Kosárba

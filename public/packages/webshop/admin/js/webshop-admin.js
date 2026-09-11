@@ -35,13 +35,41 @@ var WebshopAdmin = (function ($) {
             axis: axis || (isGrid ? false : 'y'),
             cursor: 'move',
             opacity: 0.7,
-            tolerance: 'pointer',
+            /*
+                RÁCSNÁL (galéria) 'intersect', táblázatnál 'pointer'.
+
+                A 'pointer' azt kívánja, hogy maga az EGÉRMUTATÓ érjen a cél elem
+                fölé. Több soros képrácsnál ez nehézkes: a képek nagyok, a mutató
+                a megfogott kép közepén marad, és a szélső képet szinte lehetetlen
+                a sor közepére vinni. Az 'intersect' már akkor cserél, ha a húzott
+                elem félig fedi a célt - ez a rácsos elrendezés természetes
+                viselkedése.
+            */
+            tolerance: isGrid ? 'intersect' : 'pointer',
             forcePlaceholderSize: true,
+            /*
+                A helyőrző vagy OSZTÁLYBÓL kapja a méretét, vagy explicit px-ből -
+                a kettő együtt versengett, és a rács ugrált húzás közben, ami
+                elrontotta a dobás célpontját. Rácsnál a Bootstrap oszlop-osztály
+                adja a szélességet, a magasságot a start() állítja.
+            */
             placeholder: 'ui-sortable-placeholder' + (isGrid ? ' col-md-3 col-6' : ''),
-            containment: 'parent',
+            /*
+                RÁCSNÁL NINCS containment.
+
+                A 'parent' nem engedte a húzott képet a szülő dobozán kívülre, és
+                mivel a rács tördelt (több soros), a szélső kép mozgatása pont a
+                doboz széléhez ütközött. Táblázatnál marad, ott egydimenziós a
+                mozgás és segít.
+            */
+            containment: isGrid ? false : 'parent',
+            /* A segédelemet a mutató alatt tartjuk, hogy a mutató mindig
+               a húzott képen belül maradjon - enélkül a találat-számítás elcsúszik. */
+            cursorAt: isGrid ? { top: 30, left: 30 } : false,
             start: function(e, ui) {
                 ui.placeholder.height(ui.item.outerHeight());
-                if (isGrid) {
+                if (!isGrid) {
+                    // Táblázatnál nincs oszlop-osztály, itt kell a szélesség
                     ui.placeholder.width(ui.item.outerWidth());
                 }
             },

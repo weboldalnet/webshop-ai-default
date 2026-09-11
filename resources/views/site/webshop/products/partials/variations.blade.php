@@ -1,5 +1,14 @@
 @php
-    $variations = $product->variations()->active()->ordered()->get();
+    /*
+       A TELJES variációcsoportot mutatjuk, a jelenlegi terméket is beleértve –
+       a variations() reláció csak a TÖBBIT adja vissza. Enélkül a látogató nem
+       látta, melyik változaton áll éppen, és a lista eggyel kevesebb elemű volt,
+       mint ahány változat valójában van.
+    */
+    $variations = $product->variations()->active()->get()
+        ->push($product)
+        ->sortBy([['sort_order', 'asc'], ['id', 'asc']])
+        ->values();
 @endphp
 
 @if($variations->isNotEmpty())
@@ -20,11 +29,12 @@
                         </div>
                         <div class="ws-product-variation-info lh-12">
                             <div class="ws-product-variation-title fw-600 fs-16">{{ $var->name }}</div>
-                            @if(($ws['site_product_prices_visible'] ?? 'true') === 'true')
-                                <div class="ws-product-variation-price text-primary fw-600 small">
-                                    @include('site.webshop.partials.product-price', ['product' => $var, 'priceSize' => 'fs-16'])
-                                </div>
-                            @endif
+                            {{-- A látható/rejtett árat maga a részlet dönti el, itt nem kell újra --}}
+                            @include('site.webshop.partials.product-price', [
+                                'product' => $var,
+                                'priceSize' => 'fs-16',
+                                'priceWrapClass' => 'ws-product-variation-price text-primary fw-600 small',
+                            ])
                         </div>
                     </a>
                 @endforeach

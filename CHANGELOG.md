@@ -1,3 +1,139 @@
+## [1.1.8] - 2026-09-11
+### Minden azonosító angolra
+- a magyar nevű PHP változók, metódusok és tömbkulcsok angolra íródtak át az
+  egész csomagban; a KOMMENTEK maradtak magyarul
+- érintett többek között a `WebshopStockService` teljes API-ja
+  (`kezelesAktiv` → `managementEnabled`, `levon` → `reserve`,
+  `visszair` → `restore`, `kosarEllenorzes` → `checkCart`, …), a
+  `WebshopOrder::priceBreakdown()` tömbkulcsai
+  (`tetelek/szallitas/utanvet/kedvezmeny/egyeb` → `items/shipping/cod/discount/other`)
+  és a `WebshopInvoiceRequestFactory` `EXTRA_LINES` kulcsai
+  (`forras` → `source`, `elojel` → `sign`)
+- a `priceBreakdown()` mind a NÉGY fogyasztója (admin rendelés-szerkesztő,
+  rendelés-részletek, visszaigazoló e-mail, pénztári összesítő) együtt módosult;
+  mind a 31 meglévő rendelésre ellenőrizve, hogy a bontás továbbra is pontosan
+  kiadja a végösszeget, és hogy a számla tételei is
+
+### Javítás: callbackként átadott függvénynév az átnevezésnél
+- a kuponaktiváló gomb eseménykezelője a függvényt REFERENCIAKÉNT kapja
+  (`on('click', wsApplyCoupon)`), nem hívásként — az átnevezés első köre ezt
+  kihagyta, így a gomb egy már nem létező függvényre mutatott, és a kupon némán
+  nem aktiválódott
+- élőben ellenőrizve: a kupon aktiválódik, a kedvezmény és a fizetendő is frissül
+
+## [1.1.7] - 2026-09-10
+### Készletkezelés (a beállítás eddig nem csinált semmit)
+- új `WebshopStockService`: a készlet KÉT kapcsolón múlik – a bolt szintű
+  `product_stock_enabled` és a terméken lévő `stock_enabled` –, és mindkettőnek
+  állnia kell, különben a termék korlátlanul rendelhető
+- a levonás a rendelés LEADÁSAKOR történik, a rendelést létrehozó tranzakción
+  belül, `SELECT ... FOR UPDATE` sorzárolással: két egyidejű vásárló közül a
+  második már a csökkentett készletet látja
+- új `stock_applied` oszlop a rendelésen: enélkül egy kétszer lemondott rendelés
+  kétszer adná vissza ugyanazokat a darabokat
+- a törölt / meghiúsult rendelés készlete visszakerül a raktárba, a
+  visszaállítotté újra lefoglalódik – ezt MINDHÁROM státuszt író végpont
+  elvégzi: a szerkesztő űrlap, a lista gyors legördülője és a
+  teljesítés-kapcsoló is
+- kosárba tételkor a kért mennyiség a készlethez vágódik (elutasítás helyett),
+  a vásárló pedig megkapja az okát: „Készlethiány miatt csak N db került a
+  kosárba."
+- a pénztár a rendelés létrehozása ELŐTT ellenőrzi a kosarat, hogy a vásárló
+  érthető hibaüzenetet kapjon, ne egy visszagörgetett tranzakciót
+- terméklapon készlet-jelzés (Raktáron / Utolsó N db / Elfogyott), a mennyiség
+  legördülő a készletig megy, elfogyott terméknél a gomb tiltott
+- a terméklista kártyáin ugyanez: „Utolsó N db" jelzés és tiltott gomb
+
+### Variációk a terméklistán
+- ha a variációk össze vannak vonva, a listába a csoportból csak a képviselő
+  kerül – de a kártyán ott a „N változat" jelzés, hogy a vásárló tudjon a
+  többiről (új `variationRepresentative()` scope + `withCount`)
+- a hasonló termékek közül kiesik a saját variációcsoport
+- a terméklap variációs blokkja a TELJES csoportot mutatja, a jelenlegi
+  terméket is – eddig a vásárló nem látta, melyik változatot nézi éppen
+
+### Másodlagos galéria: oldal széles, görgethető szalag
+- a kártyába zárt, hatosával tördelt bélyegkép-rács helyett a lap teljes
+  szélességét kitöltő, vízszintesen görgethető galéria (a projekt saját
+  `.scroll-container` mintája, nyilakkal)
+- a csempe mérete fix, a kép `object-fit: contain`-nel ül bele: a lusta
+  betöltés így nem tudja 0 szélesre ejteni a szalagot, a nyilak pontosan egy
+  képet léptetnek, és semmi nincs levágva
+- a NAGY kép megy ki (1000 px), nem a 150 px-es bélyegkép – ekkora
+  megjelenítésnél az utóbbi láthatóan pixeles lenne
+
+### Az extra galéria címe átírható, a szekciónak nincs függőleges térköze
+- új beállítás: „Az extra galéria címe" (Webshop beállítások → Extra látvány
+  galéria alatt)
+- a cím `h2`, középre rendezve jelenik meg a képsáv fölött
+- üresen hagyva NEM csak a szöveg marad el, hanem a konténere is: egy üres
+  címsor a saját alsó margójával és a konténer belső térközével ugyanúgy hézagot
+  hagyna a képsáv fölött, csak épp láthatatlanul
+- a szekció `py-0 my-0` utility osztályokat visel: a képsáv körül nincs saját
+  függőleges térköz, a szomszédos blokkok adják a ritmust
+- a SCSS-ből kikerült a szekció margin-szabálya: a utility osztályok
+  !important-ja úgyis felülírta volna, tehát néma halott kód lett volna
+### Rövid leírás a terméklapon
+- az adminban kitölthető `short_desc` eddig SEHOL nem jelent meg a boltban,
+  tehát írás-only mező volt
+- mostantól a tulajdonságok FÖLÖTT jelenik meg, saját „Rövid leírás" cím alatt
+- a „Terméklistán rövid leírás a tulajdonságok helyett" kapcsoló felirata
+  egyértelműsítve: az a LISTA kártyáira vonatkozik, nem a terméklapra
+
+### Javítás: kikapcsolt tulajdonság még látszott a terméklista kártyáin
+- a terméklapi aktív-szűrés (szűrt eager load) nem ért el a kártyáig: az a nézet
+  saját, szűretlen lekérdezéssel dolgozott, így a kikapcsolt tulajdonság-kategória
+  és a kikapcsolt ÉRTÉK is megjelent
+- a kártya mostantól ugyanazt a feltételt használja, mint a terméklap, és
+  kategóriánként egy helyett EGY lekérdezéssel dolgozik (a listában kártyánként
+  hívódik, ott az N+1 gyorsan összeadódik)
+
+### Javítás: a kosár némán utasított el
+- a kosárba-tétel JS-ében az `if (res.success)` ágnak nem volt `else` párja: ha a
+  szerver elutasította a kérést, semmi nem történt – a vásárló kattintott, és nem
+  tudta meg, miért nem került be semmi
+- a válasz mostantól `level` mezőt is hordoz (siker / figyelmeztetés / hiba), mert
+  három eset van, nem kettő: a kérés SIKERES lehet úgy is, hogy közben a
+  mennyiséget a készlethez vágtuk
+- a mennyiség-vágásról szóló figyelmeztetés a kapcsolódó termékek modalja MELLETT
+  is megjelenik; eddig a modal elnyelte
+
+### Javítás: a pénztárban a mennyiség mező a kért, nem a beállított darabszámot mutatta
+- a JS optimistán beírta a kattintott értéket, és sosem korrigálta a szerver
+  válaszából: 5 db-os készletnél a mező 7-et mutatott, miközben az összeg 5 db-ról
+  szólt
+- a szerver visszaadja a ténylegesen beállított mennyiséget, a mező arra áll be,
+  és a vásárló megkapja az okát is
+### Javítás: a kategórialap terméklistája üresen maradt
+- a `product-card.blade.php`-ban egy egysoros `@php(...)` ELŐBB állt, mint egy
+  `@php ... @endphp` blokk. A Blade a blokkokat a fordítás legelején, egy
+  nem-mohó regexszel emeli ki, ami nem különbözteti meg a kettőt: a köztük lévő
+  EGÉSZ szakaszt PHP-kódnak vette, a benne lévő `@if/@endif` párok le sem
+  fordultak, a nézet pedig „unexpected endif"-fel elszállt
+- a lista AJAX-szal töltődik, ezért a hiba csak egy örökké pörgő töltőjelként
+  látszott
+- a fájlban mostantól egyetlen `@php` stílus van, így a csapda nem térhet vissza
+
+### Javítás: a pénztárban a mennyiség módosítása kitörölte a kitöltött űrlapot
+- a mennyiség-módosítás újratöltötte az oldalt, tehát a vevő minden beírt adata
+  elveszett; mostantól a DOM frissül, a kupon pedig újraszámolódik
+
+### Javítás: a szűrés utáni Vissza gomb
+- a kezdő betöltés `pushState` helyett `replaceState`-tel megy, így nem jön
+  létre felesleges második history-bejegyzés ugyanarra az állapotra – eddig a
+  Vissza gomb először „nem csinált semmit"
+
+### További javítások a tesztjelentés alapján
+- inaktivált tulajdonság nem jelenik meg többé az éles terméklapon
+- a Vélemények fülnek van GOMBJA (darabszám-jelzéssel); a tartalma eddig is
+  kirenderelődött, de semmi nem tudta aktiválni
+- rejtett árnál nem marad üres, helyet foglaló `<div>` a kártyán
+- a kapcsolódó kategóriák blokk a kategórialap alján, érthető beállítás-felirat
+- a CRM azonosító mező felirata megmondja, mire való
+- a galéria húzogatásához: a hiányzó CSRF meta miatt MINDEN admin AJAX POST
+  419-cel szállt el; a JS mostantól az űrlap `_token` mezőjéből is kiolvassa,
+  a rács rendezése pedig `intersect` toleranciával, containment nélkül megy
+
 ## [1.1.6] - 2026-09-07
 ### Javítás: friss adatbázison hibára futott a migráció
 - a `2026_09_04_WEBSHOP_add_design_to_home_blocks` fájlnév ÁBÉCÉBEN megelőzte a

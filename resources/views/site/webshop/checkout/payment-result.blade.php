@@ -175,7 +175,7 @@
                     }
                 }
 
-                function idotullepes() {
+                function onTimeout() {
                     var jelzes = panel.querySelector('.ws-payment-poll-note');
                     if (jelzes) {
                         jelzes.innerHTML = 'A fizetés visszaigazolása még folyamatban van. ' +
@@ -186,7 +186,7 @@
                 function ellenoriz() {
                     if (Date.now() > hatarido) {
                         leall();
-                        idotullepes();
+                        onTimeout();
                         return;
                     }
 

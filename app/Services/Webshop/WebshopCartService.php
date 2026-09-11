@@ -9,15 +9,30 @@ class WebshopCartService
 {
     private const SESSION_KEY = 'webshop_cart';
 
-    public static function add(int $productId, int $quantity = 1): void
+    /**
+     * @return int a ténylegesen kosárba tett mennyiség (készlethiánynál kevesebb lehet)
+     */
+    public static function add(int $productId, int $quantity = 1): int
     {
         $cart = self::getContent();
+        $product = WebshopProduct::active()->find($productId);
+
+        // Készlethatár: a MÁR kosárban lévő mennyiséggel együtt nézzük, különben
+        // többszöri "Kosárba" kattintással túl lehetne lépni a raktárkészletet.
+        $alreadyInCart = (int) ($cart[$productId]['quantity'] ?? 0);
+        $kertOsszesen = $alreadyInCart + $quantity;
+        $engedett = WebshopStockService::acceptableQuantity($product, $kertOsszesen);
+        $quantity = max(0, $engedett - $alreadyInCart);
+
+        if ($quantity <= 0) {
+            return 0;
+        }
 
         if (isset($cart[$productId])) {
             $cart[$productId]['quantity'] += $quantity;
         } else {
-            $product = WebshopProduct::active()->find($productId);
-            if (!$product) return;
+            $product = $product;
+            if (!$product) return 0;
 
             $cart[$productId] = [
                 'product_id' => $product->id,
@@ -34,19 +49,38 @@ class WebshopCartService
         }
 
         self::save($cart);
+
+        return $quantity;
     }
 
-    public static function update(int $productId, int $quantity): void
+    /**
+     * @return int a beallitott mennyiseg (keszlethianynal kevesebb lehet)
+     */
+    public static function update(int $productId, int $quantity): int
     {
         $cart = self::getContent();
-        if (isset($cart[$productId])) {
-            if ($quantity <= 0) {
-                self::remove($productId);
-            } else {
-                $cart[$productId]['quantity'] = $quantity;
-                self::save($cart);
-            }
+
+        if (!isset($cart[$productId])) {
+            return 0;
         }
+
+        if ($quantity <= 0) {
+            self::remove($productId);
+            return 0;
+        }
+
+        // Keszlethatar: tobbet nem lehet beallitani, mint amennyi raktaron van
+        $quantity = WebshopStockService::acceptableQuantity(WebshopProduct::find($productId), $quantity);
+
+        if ($quantity <= 0) {
+            self::remove($productId);
+            return 0;
+        }
+
+        $cart[$productId]['quantity'] = $quantity;
+        self::save($cart);
+
+        return $quantity;
     }
 
     public static function remove(int $productId): void

@@ -223,7 +223,7 @@ class WebshopExtraSettingController extends AdminExtendedController
      */
     public function categoryMenu()
     {
-        $this->kategoriaMenuVagyHiba();
+        $this->categoryMenuOrFail();
 
         $kategoriak = WebshopCategory::ordered()->get();
 
@@ -243,10 +243,10 @@ class WebshopExtraSettingController extends AdminExtendedController
     public function toggleCategoryMenuItem(Request $request)
     {
         $kategoria = WebshopCategory::findOrFail($request->input('id'));
-        $ertek = $request->input('is_active');
+        $value = $request->input('is_active');
 
         $kategoria->update([
-            'show_in_sticky_header' => $ertek === 'true' || $ertek === true || $ertek === '1',
+            'show_in_sticky_header' => $value === 'true' || $value === true || $value === '1',
         ]);
 
         return response()->json(['success' => true, 'message' => 'Menüsor frissítve.']);
@@ -259,34 +259,34 @@ class WebshopExtraSettingController extends AdminExtendedController
      * tesszük, nem dobjuk el: különben némán eltűnnének a szerkesztőből, és a
      * felhasználó nem értené, hova lett a kategóriája.
      */
-    protected static function fabaRendez($kategoriak, $szuloId = null, int $szint = 0, ?array $letezoIdk = null): array
+    protected static function fabaRendez($kategoriak, $szuloId = null, int $level = 0, ?array $letezoIdk = null): array
     {
         if ($letezoIdk === null) {
             $letezoIdk = $kategoriak->pluck('id')->all();
         }
 
-        $eredmeny = [];
+        $result = [];
 
         foreach ($kategoriak as $kategoria) {
-            $sajatSzulo = $kategoria->parent_id;
+            $ownParent = $kategoria->parent_id;
 
             // Árva: a szülője nincs a listában -> a gyökérszinten jelenjen meg
-            if ($sajatSzulo !== null && !in_array($sajatSzulo, $letezoIdk, true)) {
-                $sajatSzulo = null;
+            if ($ownParent !== null && !in_array($ownParent, $letezoIdk, true)) {
+                $ownParent = null;
             }
 
-            if ($sajatSzulo !== $szuloId) {
+            if ($ownParent !== $szuloId) {
                 continue;
             }
 
-            $eredmeny[] = [
+            $result[] = [
                 'category' => $kategoria,
-                'level' => $szint,
-                'children' => self::fabaRendez($kategoriak, $kategoria->id, $szint + 1, $letezoIdk),
+                'level' => $level,
+                'children' => self::fabaRendez($kategoriak, $kategoria->id, $level + 1, $letezoIdk),
             ];
         }
 
-        return $eredmeny;
+        return $result;
     }
 
     /**
@@ -294,7 +294,7 @@ class WebshopExtraSettingController extends AdminExtendedController
      * Enélkül a beállítás kikapcsolása után is szerkeszthető maradna egy olyan
      * menü, ami a site-on meg sem jelenik.
      */
-    protected function kategoriaMenuVagyHiba(): void
+    protected function categoryMenuOrFail(): void
     {
         $bekapcsolva = WebshopSettingsService::getBool('category_parent_enabled')
             && WebshopSettingsService::getBool('category_custom_menu_enabled');

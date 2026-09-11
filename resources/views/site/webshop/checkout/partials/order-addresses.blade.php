@@ -8,22 +8,22 @@
     $wsBilling = $order->billing_data ?? [];
     $wsShipping = $order->shipping_data ?? [];
 
-    $wsCim = function (array $adat) {
-        $sor = trim(implode(' ', array_filter([
+    $wsAddress = function (array $adat) {
+        $line = trim(implode(' ', array_filter([
             $adat['zip'] ?? null,
             $adat['city'] ?? null,
             $adat['address'] ?? null,
         ])));
 
-        return $sor !== '' ? $sor : null;
+        return $line !== '' ? $line : null;
     };
 
-    $wsBillingCim = $wsCim($wsBilling);
-    $wsShippingCim = $wsCim($wsShipping);
+    $wsBillingAddress = $wsAddress($wsBilling);
+    $wsShippingAddress = $wsAddress($wsShipping);
 
     // Átvevőpontos szállításnál a csomag nem a vevő címére megy
     $wsAtvevopont = $wsShipping['parcel_shop_name'] ?? null;
-    $wsAtvevopontCim = trim(implode(' ', array_filter([
+    $wsPickupPointAddress = trim(implode(' ', array_filter([
         $wsShipping['parcel_shop_zip'] ?? null,
         $wsShipping['parcel_shop_city'] ?? null,
         $wsShipping['parcel_shop_address'] ?? null,
@@ -57,13 +57,13 @@
                         <dd class="col-sm-8 py-1">{{ $order->customer_tax_number }}</dd>
                     @endif
 
-                    @if($wsBillingCim)
+                    @if($wsBillingAddress)
                         <dt class="col-sm-4 py-1">Számlázási cím</dt>
                         <dd class="col-sm-8 py-1 mb-0">
                             @if(!empty($wsBilling['name']) && $wsBilling['name'] !== $order->customer_name)
                                 {{ $wsBilling['name'] }}<br>
                             @endif
-                            {{ $wsBillingCim }}
+                            {{ $wsBillingAddress }}
                         </dd>
                     @endif
                 </dl>
@@ -75,18 +75,18 @@
         <div class="card shadow-sm border-0 h-100">
             <div class="card-header bg-primary text-white font-weight-bold h5">Átvétel</div>
             <div class="card-body">
-                @if($wsAtvevopont || $wsAtvevopontCim)
+                @if($wsAtvevopont || $wsPickupPointAddress)
                     <p class="mb-1 font-weight-bold">{{ $wsAtvevopont ?: 'Átvevőpont' }}</p>
-                    @if($wsAtvevopontCim)
-                        <p class="mb-0 text-muted">{{ $wsAtvevopontCim }}</p>
+                    @if($wsPickupPointAddress)
+                        <p class="mb-0 text-muted">{{ $wsPickupPointAddress }}</p>
                     @endif
-                @elseif($wsShippingCim)
+                @elseif($wsShippingAddress)
                     <p class="mb-1 font-weight-bold">Szállítási cím</p>
                     <p class="mb-0 text-muted">
                         @if(!empty($wsShipping['name']))
                             {{ $wsShipping['name'] }}<br>
                         @endif
-                        {{ $wsShippingCim }}
+                        {{ $wsShippingAddress }}
                     </p>
                 @else
                     <p class="mb-0 text-muted">

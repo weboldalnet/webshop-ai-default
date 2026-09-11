@@ -7,10 +7,10 @@
     confignál a csomag merge-elt kulcsai kimaradnak.
 --}}
 <div class="form-row">
-    @foreach($imageSizes as $mezo => $meret)
+    @foreach($imageSizes as $mezo => $size)
         @php($jelenlegi = $block->{$mezo})
         <div class="col-lg-4 form-group">
-            <label class="font-weight-bold">{{ $meret['label'] }} ({{ $meret['width'] }} px széles)</label>
+            <label class="font-weight-bold">{{ $size['label'] }} ({{ $size['width'] }} px széles)</label>
 
             @if($jelenlegi)
                 <div class="cip mb-2">
@@ -35,14 +35,14 @@
                            accept=".jpg,.jpeg,.png"
                            id="hb-{{ $mezo }}-{{ $block->id }}"
                            name="{{ $mezo }}"
-                           data-width="{{ $meret['width'] }}">
+                           data-width="{{ $size['width'] }}">
                     <label class="custom-file-label text-muted">Kép kiválasztása</label>
                 </div>
             </div>
             <p class="cropper-validator d-none">
                 <i class="fa fa-exclamation-triangle"></i> Nem megfelelő képméret! A kép túl kicsi!
             </p>
-            <span class="text-muted fs-14">Minimális szélesség: {{ $meret['width'] }} px, magasság szabad.</span>
+            <span class="text-muted fs-14">Minimális szélesség: {{ $size['width'] }} px, magasság szabad.</span>
         </div>
     @endforeach
 </div>

@@ -168,9 +168,9 @@ class WebshopHomePageController extends AdminExtendedController
      */
     public function sortBlocks(Request $request)
     {
-        $sorrend = 1;
+        $position = 1;
         foreach ($request->input('orderedIds', []) as $id) {
-            WebshopHomeBlock::where('id', $id)->update(['sort_order' => $sorrend++]);
+            WebshopHomeBlock::where('id', $id)->update(['sort_order' => $position++]);
         }
 
         return response()->json(['success' => true, 'message' => 'Sorrend mentve.']);
@@ -183,9 +183,9 @@ class WebshopHomePageController extends AdminExtendedController
     public function toggleBlockActive(Request $request)
     {
         $block = WebshopHomeBlock::findOrFail($request->input('id'));
-        $ertek = $request->input('is_active');
+        $value = $request->input('is_active');
 
-        $block->update(['is_active' => $ertek === 'true' || $ertek === true || $ertek === '1']);
+        $block->update(['is_active' => $value === 'true' || $value === true || $value === '1']);
 
         return response()->json(['success' => true, 'message' => 'Állapot mentve.']);
     }
@@ -233,7 +233,7 @@ class WebshopHomePageController extends AdminExtendedController
     {
         $valtozas = [];
 
-        foreach (WebshopHomeBlock::IMAGE_SIZES as $mezo => $meret) {
+        foreach (WebshopHomeBlock::IMAGE_SIZES as $mezo => $size) {
             // Külön jelölőnégyzet a meglévő kép eltávolításához
             if ($request->boolean($mezo . '_delete')) {
                 WebshopFileService::deleteHomeBlockImage($block->{$mezo});
@@ -250,7 +250,7 @@ class WebshopHomePageController extends AdminExtendedController
             $valtozas[$mezo] = WebshopFileService::saveHomeBlockImage(
                 $request->file($mezo),
                 'home-' . $block->id . '-' . $mezo,
-                $meret['width']
+                $size['width']
             );
 
             WebshopFileService::deleteHomeBlockImage($regi);
@@ -265,27 +265,27 @@ class WebshopHomePageController extends AdminExtendedController
      * Az érték a site-on inline style-ba kerül, ezért csak valódi HEX-et
      * engedünk át – így nem lehet a stíluson keresztül tetszőleges CSS-t beadni.
      */
-    protected static function hexSzin($ertek): ?string
+    protected static function hexSzin($value): ?string
     {
-        $ertek = trim((string) $ertek);
+        $value = trim((string) $value);
 
-        if ($ertek === '') {
+        if ($value === '') {
             return null;
         }
 
-        return preg_match('/^#[0-9a-fA-F]{3,8}$/', $ertek) ? $ertek : null;
+        return preg_match('/^#[0-9a-fA-F]{3,8}$/', $value) ? $value : null;
     }
 
     /** Beérkező azonosítólista tisztítása: csak pozitív egészek, duplikátum nélkül */
-    protected static function intLista($ertekek): array
+    protected static function intLista($values): array
     {
-        if (!is_array($ertekek)) {
+        if (!is_array($values)) {
             return [];
         }
 
         $tisztitott = [];
-        foreach ($ertekek as $ertek) {
-            $id = (int) $ertek;
+        foreach ($values as $value) {
+            $id = (int) $value;
             if ($id > 0 && !in_array($id, $tisztitott, true)) {
                 $tisztitott[] = $id;
             }
@@ -306,10 +306,10 @@ class WebshopHomePageController extends AdminExtendedController
 
         $lista = [];
 
-        $bejar = function ($szuloId, $szint) use (&$bejar, $gyerekek, &$lista) {
+        $bejar = function ($szuloId, $level) use (&$bejar, $gyerekek, &$lista) {
             foreach ($gyerekek->get($szuloId, collect()) as $kategoria) {
-                $lista[$kategoria->id] = str_repeat('— ', $szint) . $kategoria->name_singular;
-                $bejar($kategoria->id, $szint + 1);
+                $lista[$kategoria->id] = str_repeat('— ', $level) . $kategoria->name_singular;
+                $bejar($kategoria->id, $level + 1);
             }
         };
 

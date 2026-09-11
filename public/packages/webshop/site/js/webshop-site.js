@@ -33,17 +33,38 @@ const WebshopSite = {
                 show_related_modal: showRelatedModal ? 1 : 0
             }, function(res) {
                 btn.prop('disabled', false).find('.fa-spinner').remove();
-                if (res.success) {
-                    $('.js-cart-count').text(res.count);
-                    self.updateCartDropdown();
 
-                    if (res.related_html) {
-                        $('#related-products-modal-container').remove();
-                        $('body').append('<div id="related-products-modal-container">' + res.related_html + '</div>');
-                        $('#relatedProductsModal').modal('show');
-                    } else {
-                        self.showToast('success', res.message);
+                /*
+                    A számlálót SIKERTELEN kérésnél is frissítjük: a szerver a kosár
+                    tényleges állapotát küldi vissza, és ha egy másik lapon időközben
+                    változott, itt kell helyre állnia.
+                */
+                $('.js-cart-count').text(res.count);
+
+                if (!res.success) {
+                    // Elutasítás (elfogyott termék). Enélkül a gomb némán nem csinál
+                    // semmit, és a vásárló nem tudja meg, miért.
+                    self.showToast(res.level || 'error', res.message);
+                    return;
+                }
+
+                self.updateCartDropdown();
+
+                if (res.related_html) {
+                    $('#related-products-modal-container').remove();
+                    $('body').append('<div id="related-products-modal-container">' + res.related_html + '</div>');
+                    $('#relatedProductsModal').modal('show');
+
+                    /*
+                        A készlet miatti mennyiség-vágásról a modal MELLETT is
+                        szólni kell: ez nem a "sikerült" visszajelzés, hanem egy
+                        eltérés attól, amit a vásárló kért.
+                    */
+                    if (res.level && res.level !== 'success') {
+                        self.showToast(res.level, res.message);
                     }
+                } else {
+                    self.showToast(res.level || 'success', res.message);
                 }
             });
         });
@@ -160,7 +181,7 @@ const WebshopSite = {
             $(`.js-view-mode[data-mode="${savedViewMode}"]`).addClass('active');
         }
 
-        const loadProducts = () => {
+        const loadProducts = (kezdoBetoltes = false) => {
             const formData = $('#ws-filter-form').serializeArray();
             const sort = $('.js-sort-select').val();
             const perPage = $('.js-per-page-select').val();
@@ -236,8 +257,18 @@ const WebshopSite = {
                 $('#product-list-container').html(res.html).css('opacity', 1);
                 $('#pagination-container').html(res.pagination);
 
-                // History API update
-                window.history.pushState({path: newUrl}, '', newUrl);
+                /*
+                    A KEZDŐ betöltés csak SZINKRONIZÁL: az oldal már ezzel az állapottal
+                    töltődött be, ezért replaceState kell. Korábban itt is pushState volt,
+                    ami egy FELESLEGES második history bejegyzést hozott létre ugyanarra az
+                    állapotra - emiatt a böngésző Vissza gombja először "nem csinált semmit",
+                    és csak a második kattintásra hagyta el az oldalt.
+                */
+                if (kezdoBetoltes) {
+                    window.history.replaceState({path: newUrl}, '', newUrl);
+                } else {
+                    window.history.pushState({path: newUrl}, '', newUrl);
+                }
             });
         };
 
@@ -280,7 +311,17 @@ const WebshopSite = {
             }
         });
 
-        loadProducts(); // Initial load
+        loadProducts(true); // Kezdő betöltés (replaceState, nem push)
+
+        /*
+            Vissza/Előre gomb a szűrt állapotok között. Enélkül a böngésző csak az
+            URL-t állította vissza, a terméklista viszont változatlan maradt.
+            Teljes újratöltés, mert a szerver a ;-es URL-ből maga visszaállítja a
+            szűrőket - a JS oldali visszafejtés a szűrő-jelölőnégyzetekre nincs megírva.
+        */
+        window.addEventListener('popstate', function () {
+            window.location.reload();
+        });
     },
 
     initGallery: function() {
@@ -340,6 +381,11 @@ const WebshopSite = {
         });
     },
 
+    /* A PHP hufFormat() parja: ezres tagolas szokozzel */
+    huf: function(amount) {
+        return Math.round(amount).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ' ') + ' Ft';
+    },
+
     initCheckout: function() {
         const self = this;
         $(document).on('click', '.js-qty-plus, .js-qty-minus', function() {
@@ -354,9 +400,45 @@ const WebshopSite = {
 
             input.val(val);
             $.post('/webshop/cart/update', { product_id: id, quantity: val }, function(res) {
-                if (res.success) {
-                    location.reload(); // Egyszerűbb, mint minden árat JS-ből újraszámolni a bonyolult layout miatt
+                if (!res.success) {
+                    return;
                 }
+
+                /*
+                    A mezőt a SZERVER által elfogadott értékre állítjuk vissza.
+
+                    Fentebb optimistán a kért mennyiséget írtuk bele, hogy a kattintás
+                    azonnal látszódjon – de ha a készlet kevesebbet enged, a mező
+                    hazudna: a vásárló 7 db-ot látna, miközben 5 db ára szerepel az
+                    összegben. A figyelmeztetést is meg kell mutatni, különben a
+                    számnak csak "magától" visszaugrik az értéke.
+                */
+                if (res.quantity != null) {
+                    input.val(res.quantity);
+
+                    if (res.level === 'warning' && res.message) {
+                        self.showToast('warning', res.message);
+                    }
+                }
+
+                /*
+                    NINCS location.reload().
+
+                    Korábban itt egy teljes oldalújratöltés volt, ami a PÉNZTÁRON
+                    kitörölte a már kitöltött űrlapot (név, e-mail, szállítási cím,
+                    megjegyzés, kérdőív, elfogadó pipák). A szerver most visszaadja
+                    az újraszámolt összegeket, így elég a DOM-ot frissíteni.
+                */
+                if (res.item_total != null) {
+                    $(`.js-item-total[data-id="${id}"]`).text(self.huf(res.item_total));
+                }
+
+                $('.js-cart-total').text(self.huf(res.total));
+                $('.js-cart-count').text(res.count);
+
+                // A pénztári összesítő a saját scriptjében frissül – ott tudja a
+                // szállítási díjat, az utánvétet és a kupont is.
+                $(document).trigger('ws:cart-updated', [res]);
             });
         });
 
@@ -404,8 +486,10 @@ const WebshopSite = {
     },
 
     showToast: function(type, message) {
-        const alertClass = type === 'success' ? 'alert-success' : 'alert-danger';
-        const icon = type === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle';
+        // Három szint: siker, figyelmeztetés (a kérés teljesült, de nem úgy,
+        // ahogy a vásárló kérte) és hiba.
+        const alertClass = type === 'success' ? 'alert-success' : (type === 'warning' ? 'alert-warning' : 'alert-danger');
+        const icon = type === 'success' ? 'fa-check-circle' : (type === 'warning' ? 'fa-triangle-exclamation' : 'fa-exclamation-circle');
         const $toast = $('<div class="alert ' + alertClass + ' alert-dismissible fade show ws-site-toast" role="alert">' +
             '<i class="fa ' + icon + ' mr-2"></i> ' + message +
             '<button type="button" class="close" data-dismiss="alert"><span>&times;</span></button></div>');

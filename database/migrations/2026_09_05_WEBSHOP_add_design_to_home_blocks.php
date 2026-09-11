@@ -50,9 +50,9 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('public.webshop_home_blocks', function (Blueprint $table) {
-            foreach (['bg_color', 'title_color', 'btn_color', 'btn_align', 'buttons'] as $oszlop) {
-                if (Schema::hasColumn('public.webshop_home_blocks', $oszlop)) {
-                    $table->dropColumn($oszlop);
+            foreach (['bg_color', 'title_color', 'btn_color', 'btn_align', 'buttons'] as $column) {
+                if (Schema::hasColumn('public.webshop_home_blocks', $column)) {
+                    $table->dropColumn($column);
                 }
             }
         });

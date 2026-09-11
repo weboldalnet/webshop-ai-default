@@ -9,6 +9,7 @@ use Weboldalnet\WebshopAiDefault\Models\WebshopOrderItem;
 use Weboldalnet\WebshopAiDefault\Jobs\Commerce\CreateInvoiceForOrder;
 use Weboldalnet\WebshopAiDefault\Jobs\Commerce\CreateShipmentForOrder;
 use Weboldalnet\WebshopAiDefault\Services\Webshop\Commerce\WebshopCommerceService;
+use Weboldalnet\WebshopAiDefault\Services\Webshop\WebshopStockService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -214,11 +215,59 @@ class WebshopOrderController extends AdminExtendedController
         }
 
         $order->update($data);
+
+        $stockError = $this->syncStock($order);
+
+        if ($stockError !== null) {
+            return redirect()->route('admin.webshop.orders.edit', $order)
+                ->with('error', 'A rendelés státusza módosult, de a készlet nem volt levonható: ' . $stockError);
+        }
+
         return redirect()->route('admin.webshop.orders.edit', $order)->with('success', 'Rendelés sikeresen frissítve.');
+    }
+
+    /**
+     * A készlet hozzáigazítása a rendelés AKTUÁLIS státuszához.
+     *
+     * Törölt/meghiúsult rendelés darabjai visszakerülnek a raktárba, minden más
+     * státuszban pedig le vannak foglalva. A stock_applied jelző miatt egyik
+     * irány sem futhat le kétszer, tehát a metódus tetszőlegesen sokszor
+     * meghívható – ezért hívja MINDEN olyan végpont, ami státuszt ír:
+     * a teljes szerkesztő űrlap, a lista gyors legördülője és a
+     * teljesítés-kapcsoló is.
+     *
+     * @return string|null hibaüzenet, ha a visszafoglalás nem fért bele a
+     *                     készletbe; egyébként null
+     */
+    private function syncStock(WebshopOrder $order): ?string
+    {
+        $order->load('items');
+
+        if (in_array($order->status, [WebshopOrder::STATUS_CANCELLED, WebshopOrder::STATUS_FAILED], true)) {
+            WebshopStockService::restore($order);
+
+            return null;
+        }
+
+        if ($order->stock_applied) {
+            return null;
+        }
+
+        try {
+            DB::transaction(fn() => WebshopStockService::reserve($order));
+        } catch (\RuntimeException $exception) {
+            return $exception->getMessage();
+        }
+
+        return null;
     }
 
     public function destroy(WebshopOrder $order)
     {
+        // A törölt rendelés darabjai visszakerülnek a raktárba
+        $order->load('items');
+        WebshopStockService::restore($order);
+
         $order->delete();
         return redirect()->route('admin.webshop.orders.index')->with('success', 'Rendelés sikeresen törölve.');
     }
@@ -245,9 +294,19 @@ class WebshopOrderController extends AdminExtendedController
 
         $order->update($data);
 
+        /*
+           A készletet ITT is szinkronizálni kell, nem csak a teljes szerkesztő
+           űrlapon: a rendeléslista gyors státusz-legördülője ugyanúgy tud
+           lemondani egy rendelést, és az így felszabaduló darabokat ugyanúgy
+           vissza kell adni a raktárnak.
+        */
+        $stockError = $this->syncStock($order);
+
         return response()->json([
             'success' => true,
-            'message' => 'Rendelés státusza sikeresen módosítva.'
+            'message' => $stockError === null
+                ? 'Rendelés státusza sikeresen módosítva.'
+                : 'A státusz módosult, de a készlet nem volt levonható: ' . $stockError,
         ]);
     }
 
@@ -268,7 +327,16 @@ class WebshopOrderController extends AdminExtendedController
         }
 
         $order->save();
-        return response()->json(['success' => true, 'message' => 'Rendelés státusza és teljesítése frissítve.']);
+
+        // A teljesítés-kapcsoló is átírja a státuszt, tehát a készletre is hat
+        $stockError = $this->syncStock($order);
+
+        return response()->json([
+            'success' => true,
+            'message' => $stockError === null
+                ? 'Rendelés státusza és teljesítése frissítve.'
+                : 'A státusz frissült, de a készlet nem volt levonható: ' . $stockError,
+        ]);
     }
 
     /**

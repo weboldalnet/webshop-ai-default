@@ -7,6 +7,7 @@ use Illuminate\Support\Str;
 use Weboldalnet\WebshopAiDefault\Models\WebshopOrder;
 use Weboldalnet\WebshopAiDefault\Models\WebshopOrderItem;
 use Weboldalnet\WebshopAiDefault\Services\Webshop\WebshopCouponService;
+use Weboldalnet\WebshopAiDefault\Services\Webshop\WebshopStockService;
 use Weboldalnet\WebshopAiDefault\Services\Webshop\Commerce\WebshopCommerceService;
 
 class WebshopCheckoutService
@@ -157,6 +158,17 @@ class WebshopCheckoutService
                     'weight' => $item['weight'] ?? null,
                 ]);
             }
+
+            /*
+               Készlet levonása – MÉG a tranzakción belül, sorzárolással.
+
+               Itt, és nem a fizetés után: utánvétnél és előre utalásnál nincs
+               fizetési lépés, tehát a készlet sosem fogyna. Ha időközben elfogyott,
+               a szolgáltatás kivételt dob, és a teljes tranzakció visszagörgetésre
+               kerül – a rendelés sem jön létre, a vásárló érthető üzenetet kap.
+            */
+            $order->load('items');
+            WebshopStockService::reserve($order);
 
             // Commerce-core flow indítása ajánlatkérési módban nem szükséges
             if ($isQuoteMode || !$paymentMethod) {

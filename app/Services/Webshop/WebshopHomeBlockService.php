@@ -86,23 +86,23 @@ class WebshopHomeBlockService
             return [];
         }
 
-        $termekek = WebshopProduct::query()
+        $products = WebshopProduct::query()
             ->whereIn('id', $idk)
             ->with(['category', 'label'])
             ->get()
             ->keyBy('id');
 
-        $eredmeny = [];
+        $result = [];
         foreach ($idk as $id) {
-            if (isset($termekek[$id])) {
-                $eredmeny[] = $termekek[$id];
+            if (isset($products[$id])) {
+                $result[] = $products[$id];
             } elseif ($adminMod) {
                 // Az adminban látszania kell, hogy egy hivatkozott termék eltűnt
-                $eredmeny[] = ['missing' => true, 'id' => $id];
+                $result[] = ['missing' => true, 'id' => $id];
             }
         }
 
-        return $eredmeny;
+        return $result;
     }
 
     /**
@@ -158,16 +158,16 @@ class WebshopHomeBlockService
             ->get()
             ->keyBy('id');
 
-        $eredmeny = [];
+        $result = [];
         foreach ($idk as $id) {
             if (isset($kategoriak[$id])) {
-                $eredmeny[] = $kategoriak[$id];
+                $result[] = $kategoriak[$id];
             } elseif ($adminMod) {
-                $eredmeny[] = ['missing' => true, 'id' => $id];
+                $result[] = ['missing' => true, 'id' => $id];
             }
         }
 
-        return $eredmeny;
+        return $result;
     }
 
     /**

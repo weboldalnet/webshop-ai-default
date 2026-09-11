@@ -52,44 +52,44 @@
                         {{-- Fizetendő bontása. A tételek összege önmagában nem adja ki a
                              végösszeget (szállítás, kupon), ezért mindkettőt kiírjuk –
                              enélkül a levont kedvezmény nyomtalanul eltűnne a levélből. --}}
-                        @php $wsBontas = $order->priceBreakdown(); @endphp
+                        @php $wsBreakdown = $order->priceBreakdown(); @endphp
                         <tfoot>
                             <tr>
                                 <td colspan="3" style="border: 1px solid #ddd; padding: 8px; text-align: right;">Termékek összesen:</td>
-                                <td style="border: 1px solid #ddd; padding: 8px; text-align: right;">{{ number_format($wsBontas['tetelek'], 0, '.', ' ') }} {{ $order->currency }}</td>
+                                <td style="border: 1px solid #ddd; padding: 8px; text-align: right;">{{ number_format($wsBreakdown['items'], 0, '.', ' ') }} {{ $order->currency }}</td>
                             </tr>
 
                             @if($order->shipping_method)
                                 <tr>
                                     <td colspan="3" style="border: 1px solid #ddd; padding: 8px; text-align: right;">Szállítási díj:</td>
                                     <td style="border: 1px solid #ddd; padding: 8px; text-align: right;">
-                                        {{ $wsBontas['szallitas'] > 0 ? number_format($wsBontas['szallitas'], 0, '.', ' ') . ' ' . $order->currency : 'Ingyenes' }}
+                                        {{ $wsBreakdown['shipping'] > 0 ? number_format($wsBreakdown['shipping'], 0, '.', ' ') . ' ' . $order->currency : 'Ingyenes' }}
                                     </td>
                                 </tr>
                             @endif
 
-                            @if($wsBontas['kedvezmeny'] > 0)
+                            @if($wsBreakdown['discount'] > 0)
                                 <tr>
                                     <td colspan="3" style="border: 1px solid #ddd; padding: 8px; text-align: right;">
                                         Kuponkedvezmény{{ $order->coupon_code ? ' (' . $order->coupon_code . ')' : '' }}:
                                     </td>
                                     <td style="border: 1px solid #ddd; padding: 8px; text-align: right; color: #1e7e34;">
-                                        -{{ number_format($wsBontas['kedvezmeny'], 0, '.', ' ') }} {{ $order->currency }}
+                                        -{{ number_format($wsBreakdown['discount'], 0, '.', ' ') }} {{ $order->currency }}
                                     </td>
                                 </tr>
                             @endif
 
-                            @if($wsBontas['utanvet'] > 0)
+                            @if($wsBreakdown['cod'] > 0)
                                 <tr>
                                     <td colspan="3" style="border: 1px solid #ddd; padding: 8px; text-align: right;">Utánvét díja:</td>
-                                    <td style="border: 1px solid #ddd; padding: 8px; text-align: right;">{{ number_format($wsBontas['utanvet'], 0, '.', ' ') }} {{ $order->currency }}</td>
+                                    <td style="border: 1px solid #ddd; padding: 8px; text-align: right;">{{ number_format($wsBreakdown['cod'], 0, '.', ' ') }} {{ $order->currency }}</td>
                                 </tr>
                             @endif
 
-                            @if($wsBontas['egyeb'] > 0)
+                            @if($wsBreakdown['other'] > 0)
                                 <tr>
                                     <td colspan="3" style="border: 1px solid #ddd; padding: 8px; text-align: right;">Egyéb díjak:</td>
-                                    <td style="border: 1px solid #ddd; padding: 8px; text-align: right;">{{ number_format($wsBontas['egyeb'], 0, '.', ' ') }} {{ $order->currency }}</td>
+                                    <td style="border: 1px solid #ddd; padding: 8px; text-align: right;">{{ number_format($wsBreakdown['other'], 0, '.', ' ') }} {{ $order->currency }}</td>
                                 </tr>
                             @endif
 

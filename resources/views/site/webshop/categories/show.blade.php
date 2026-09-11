@@ -56,6 +56,37 @@
                 </div>
             </div>
 
+            {{-- Kapcsolódó kategóriák.
+
+                 Ez a blokk eddig HIÁNYZOTT: az admin mentette a kapcsolatot
+                 (category_related_enabled), de a bolt sehol nem mutatta meg, így a
+                 beállítás látszólag nem csinált semmit.
+
+                 Csak AKTÍV kapcsolt kategóriákat mutatunk – egy inaktív kategória
+                 oldala 404-et adna. --}}
+            @if(($ws['category_related_enabled'] ?? 'false') === 'true')
+                @php($wsRelatedCats = $category->relatedCategories()->where('is_active', true)->orderBy('sort_order')->get())
+
+                @if($wsRelatedCats->isNotEmpty())
+                    <div class="row mt-5">
+                        <div class="col-lg-12">
+                            <h2 class="h4 font-weight-bold mb-3">Kapcsolódó kategóriák</h2>
+                            <div class="ws-related-categories d-flex flex-wrap">
+                                @foreach($wsRelatedCats as $wsRelCat)
+                                    <a href="{{ route('site.webshop.categories.show', $wsRelCat) }}"
+                                       class="ws-related-category d-inline-flex align-items-center mr-2 mb-2 px-3 py-2 bg-white border rounded shadow-sm">
+                                        @if($wsRelCat->icon)
+                                            <img src="{{ $wsRelCat->icon }}" alt="" class="ws-related-category-icon mr-2">
+                                        @endif
+                                        <span class="font-weight-bold">{{ $wsRelCat->name_singular }}</span>
+                                    </a>
+                                @endforeach
+                            </div>
+                        </div>
+                    </div>
+                @endif
+            @endif
+
             @if($category->description)
                 <div class="row mt-5">
                     <div class="col-lg-12">
