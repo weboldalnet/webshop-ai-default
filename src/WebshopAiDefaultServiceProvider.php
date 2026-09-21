@@ -91,16 +91,16 @@ class WebshopAiDefaultServiceProvider extends ServiceProvider
                 // Enélkül egy inaktív vagy a menüsorból kikapcsolt alkategória is
                 // megjelenne a lenyílóban – az adminban kikapcsolnád, és mégis kint
                 // maradna. A closure a rendezést is szintenként elvégzi.
-                $wsMenuSzuro = function ($query) {
+                $wsMenuFilter = function ($query) {
                     $query->where('is_active', true)
                         ->where('show_in_sticky_header', true)
                         ->orderBy('sort_order');
                 };
 
                 $view->with('stickyCategories', WebshopCategory::active()->stickyHeader()->ordered()
-                    ->with(['children' => function ($query) use ($wsMenuSzuro) {
-                        $wsMenuSzuro($query);
-                        $query->with(['children' => $wsMenuSzuro]);
+                    ->with(['children' => function ($query) use ($wsMenuFilter) {
+                        $wsMenuFilter($query);
+                        $query->with(['children' => $wsMenuFilter]);
                     }])
                     ->get());
                 $view->with('cartCount', WebshopCartService::getCount());

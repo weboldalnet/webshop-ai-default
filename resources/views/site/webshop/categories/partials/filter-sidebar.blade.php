@@ -3,8 +3,39 @@
         <i class="fa fa-filter"></i> Szűrők
     </div>
     <div class="card-body">
+        @php
+            /*
+               Csak azok a szűrő-értékek jelennek meg, amelyek a kategória legalább egy AKTÍV
+               termékén szerepelnek. Korábban a tulajdonság-csoport ÖSSZES értéke listázódott
+               (pl. a Mosószerek között "Spray" és "WC" is), és ezekre a szűrés mindig 0
+               találatot adott. A már bejelölt érték (pl. egy megosztott, szűrt URL-ből) mindig
+               látszik; a csoport akkor marad ki, ha egyetlen megjeleníthető értéke sincs.
+            */
+            $filterProductIds = $category->products()->active()->select('id');
+            $usedPropertyIds = \Weboldalnet\WebshopAiDefault\Models\WebshopProductProperty::query()
+                ->whereIn('product_id', $filterProductIds)
+                ->whereNotNull('property_id')
+                ->distinct()
+                ->pluck('property_id')
+                ->all();
+            $usedNumberGroupIds = \Weboldalnet\WebshopAiDefault\Models\WebshopProductProperty::query()
+                ->whereIn('product_id', $filterProductIds)
+                ->whereNotNull('number_value')
+                ->distinct()
+                ->pluck('property_category_id')
+                ->all();
+        @endphp
         <form id="ws-filter-form">
             @foreach($category->propertyCategories()->where('filter_enabled', true)->orderBy('sort_order')->get() as $pc)
+                @php
+                    $selectedValues = (array) request("f.{$pc->id}");
+                    $visibleProperties = $pc->filter_type === 'number'
+                        ? collect()
+                        : $pc->properties()->active()->ordered()->get()
+                            ->filter(fn($prop) => in_array($prop->id, $usedPropertyIds) || in_array($prop->id, $selectedValues));
+                @endphp
+                @continue($pc->filter_type !== 'number' && $visibleProperties->isEmpty())
+                @continue($pc->filter_type === 'number' && !in_array($pc->id, $usedNumberGroupIds) && request("n.{$pc->id}") === null)
                 <div class="ws-filter-group mb-4">
                     <h6 class="font-weight-bold border-bottom pb-2">{{ $pc->name }} @if($pc->suffix)<small class="text-muted">({{ $pc->suffix }})</small>@endif</h6>
 
@@ -18,7 +49,7 @@
                             </div>
                         </div>
                     @else
-                        @foreach($pc->properties()->active()->ordered()->get() as $prop)
+                        @foreach($visibleProperties as $prop)
                             <div class="custom-control custom-{{ $pc->filter_type === 'radio' ? 'radio' : 'checkbox' }} mb-1">
                                 <input type="{{ $pc->filter_type === 'radio' ? 'radio' : 'checkbox' }}"
                                        class="custom-control-input js-filter-input"

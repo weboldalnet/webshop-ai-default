@@ -8,11 +8,11 @@
     $wsBilling = $order->billing_data ?? [];
     $wsShipping = $order->shipping_data ?? [];
 
-    $wsAddress = function (array $adat) {
+    $wsAddress = function (array $address) {
         $line = trim(implode(' ', array_filter([
-            $adat['zip'] ?? null,
-            $adat['city'] ?? null,
-            $adat['address'] ?? null,
+            $address['zip'] ?? null,
+            $address['city'] ?? null,
+            $address['address'] ?? null,
         ])));
 
         return $line !== '' ? $line : null;
@@ -22,7 +22,7 @@
     $wsShippingAddress = $wsAddress($wsShipping);
 
     // Átvevőpontos szállításnál a csomag nem a vevő címére megy
-    $wsAtvevopont = $wsShipping['parcel_shop_name'] ?? null;
+    $wsPickupPoint = $wsShipping['parcel_shop_name'] ?? null;
     $wsPickupPointAddress = trim(implode(' ', array_filter([
         $wsShipping['parcel_shop_zip'] ?? null,
         $wsShipping['parcel_shop_city'] ?? null,
@@ -75,8 +75,8 @@
         <div class="card shadow-sm border-0 h-100">
             <div class="card-header bg-primary text-white font-weight-bold h5">Átvétel</div>
             <div class="card-body">
-                @if($wsAtvevopont || $wsPickupPointAddress)
-                    <p class="mb-1 font-weight-bold">{{ $wsAtvevopont ?: 'Átvevőpont' }}</p>
+                @if($wsPickupPoint || $wsPickupPointAddress)
+                    <p class="mb-1 font-weight-bold">{{ $wsPickupPoint ?: 'Átvevőpont' }}</p>
                     @if($wsPickupPointAddress)
                         <p class="mb-0 text-muted">{{ $wsPickupPointAddress }}</p>
                     @endif

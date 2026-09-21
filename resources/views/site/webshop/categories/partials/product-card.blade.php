@@ -108,7 +108,7 @@
                         @if($pp->property)
                             <span class="badge badge-secondary mb-1" title="{{ $pc->name }}">{{ $pp->property->name }}</span>
                         @elseif($pp->number_value !== null)
-                            <span class="badge badge-info mb-1" title="{{ $pc->name }}">{{ (float)$pp->number_value }}{{ $pc->suffix }}</span>
+                            <span class="badge badge-info mb-1" title="{{ $pc->name }}">{{ $pc->formatNumberValue($pp->number_value) }}</span>
                         @endif
                     @endforeach
                 @endforeach

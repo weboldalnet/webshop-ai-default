@@ -3,6 +3,7 @@
 namespace Weboldalnet\WebshopAiDefault\Http\Controllers\Admin\Webshop;
 
 use App\Http\Controllers\Admin\AdminExtendedController;
+use App\Services\ImageService;
 use Weboldalnet\WebshopAiDefault\Models\WebshopCategory;
 use Weboldalnet\WebshopAiDefault\Models\WebshopPropertyCategory;
 use Weboldalnet\WebshopAiDefault\Services\Webshop\WebshopFileService;
@@ -71,19 +72,15 @@ class WebshopCategoryController extends AdminExtendedController
             }
 
             if ($request->hasFile('list_image_cropped_upload')) {
-                $file = $request->file('list_image_cropped_upload');
-                $imageFile = is_array($file) ? $file['img'] : $file;
-                $filename = getTransformedString($data['name_singular']) . '-list-cropped-' . time() . '.' . $imageFile->getClientOriginalExtension();
-                $path = $imageFile->storeAs('webshop/categories/list', $filename, 'public');
-                $data['list_image_cropped_path'] = '/storage/' . $path;
+                $data['list_image_cropped_path'] = $this->saveCroppedListImage(
+                    $request, 'list_image_cropped_upload', $data['name_singular'] . '-list', 1
+                );
             }
 
             if ($request->hasFile('list_image_cropped_upload_wide')) {
-                $file = $request->file('list_image_cropped_upload_wide');
-                $imageFile = is_array($file) ? $file['img'] : $file;
-                $filename = getTransformedString($data['name_singular']) . '-list-cropped-wide-' . time() . '.' . $imageFile->getClientOriginalExtension();
-                $path = $imageFile->storeAs('webshop/categories/list', $filename, 'public');
-                $data['list_image_cropped_path_wide'] = '/storage/' . $path;
+                $data['list_image_cropped_path_wide'] = $this->saveCroppedListImage(
+                    $request, 'list_image_cropped_upload_wide', $data['name_singular'] . '-list-wide', (int) ($data['card_width_units'] ?? 2)
+                );
             }
         }
 
@@ -144,19 +141,15 @@ class WebshopCategoryController extends AdminExtendedController
             }
 
             if ($request->hasFile('list_image_cropped_upload')) {
-                $file = $request->file('list_image_cropped_upload');
-                $imageFile = is_array($file) ? $file['img'] : $file;
-                $filename = getTransformedString($data['name_singular']) . '-list-cropped-' . time() . '.' . $imageFile->getClientOriginalExtension();
-                $path = $imageFile->storeAs('webshop/categories/list', $filename, 'public');
-                $data['list_image_cropped_path'] = '/storage/' . $path;
+                $data['list_image_cropped_path'] = $this->saveCroppedListImage(
+                    $request, 'list_image_cropped_upload', $data['name_singular'] . '-list', 1
+                );
             }
 
             if ($request->hasFile('list_image_cropped_upload_wide')) {
-                $file = $request->file('list_image_cropped_upload_wide');
-                $imageFile = is_array($file) ? $file['img'] : $file;
-                $filename = getTransformedString($data['name_singular']) . '-list-cropped-wide-' . time() . '.' . $imageFile->getClientOriginalExtension();
-                $path = $imageFile->storeAs('webshop/categories/list', $filename, 'public');
-                $data['list_image_cropped_path_wide'] = '/storage/' . $path;
+                $data['list_image_cropped_path_wide'] = $this->saveCroppedListImage(
+                    $request, 'list_image_cropped_upload_wide', $data['name_singular'] . '-list-wide', (int) ($data['card_width_units'] ?? 2)
+                );
             }
         }
 
@@ -204,5 +197,25 @@ class WebshopCategoryController extends AdminExtendedController
             $syncData[$pcId] = ['show_on_product_card' => in_array($pcId, $showOnCard), 'sort_order' => $order++];
         }
         $category->propertyCategories()->sync($syncData);
+    }
+
+    /**
+     * A képmetszővel vágott listakép mentése a CÉLMÉRETRE méretezve (webp).
+     *
+     * A képmetsző a forrás teljes felbontásán vág; a célméretet a config
+     * (webshop.category_list_image_crop_sizes) adja, a kártya-szélesség egységszáma szerint.
+     * Ha a kérésben is érkezik méret (a mező rejtett width/height értéke), az az elsődleges.
+     */
+    private function saveCroppedListImage(Request $request, string $key, string $name, int $units): string
+    {
+        $file = $request->file($key);
+        $imageFile = is_array($file) ? $file['img'] : $file;
+
+        $defaults = config('webshop.category_list_image_crop_sizes.' . max(1, min(4, $units)))
+            ?? ['width' => 400, 'height' => 300];
+        $width = (int) ($request->input($key . '.width') ?: $defaults['width']);
+        $height = (int) ($request->input($key . '.height') ?: $defaults['height']);
+
+        return ImageService::saveCustomImage($imageFile, 'webshop/categories/list', getTransformedString($name), $width, $height);
     }
 }

@@ -142,50 +142,50 @@
 
                 var url = panel.getAttribute('data-status-url');
                 var body = document.getElementById('ws-payment-state-body');
-                var FIGYELES_MP = 30;
-                var KERDEZES_MP = 3;
-                var hatarido = Date.now() + FIGYELES_MP * 1000;
-                var idozito = null;
+                var WATCH_SECONDS = 30;
+                var POLL_INTERVAL_SECONDS = 3;
+                var deadline = Date.now() + WATCH_SECONDS * 1000;
+                var timer = null;
 
-                function leall() {
-                    if (idozito) {
-                        clearInterval(idozito);
-                        idozito = null;
+                function stopPolling() {
+                    if (timer) {
+                        clearInterval(timer);
+                        timer = null;
                     }
                 }
 
-                function sikeresre(adat) {
-                    var datum = adat.paid_at
-                        ? '<p class="text-muted small">Fizetés dátuma: ' + adat.paid_at + '</p>'
+                function showSuccess(payload) {
+                    var paidAtHtml = payload.paid_at
+                        ? '<p class="text-muted small">Fizetés dátuma: ' + payload.paid_at + '</p>'
                         : '';
 
                     body.innerHTML =
                         '<div class="text-success mb-3"><i class="fa fa-check-circle fs-28"></i></div>' +
                         '<h2 class="font-weight-bold text-success">Sikeres fizetés!</h2>' +
-                        '<p class="text-muted">A fizetés sikeresen megtörtént.</p>' + datum;
+                        '<p class="text-muted">A fizetés sikeresen megtörtént.</p>' + paidAtHtml;
 
-                    var fizStatusz = document.getElementById('ws-payment-status-label');
-                    if (fizStatusz && adat.status_label) {
-                        fizStatusz.textContent = adat.status_label;
+                    var paymentStatusLabel = document.getElementById('ws-payment-status-label');
+                    if (paymentStatusLabel && payload.status_label) {
+                        paymentStatusLabel.textContent = payload.status_label;
                     }
 
-                    var rendStatusz = document.getElementById('ws-order-status-label');
-                    if (rendStatusz && adat.order_status_label) {
-                        rendStatusz.textContent = adat.order_status_label;
+                    var orderStatusLabel = document.getElementById('ws-order-status-label');
+                    if (orderStatusLabel && payload.order_status_label) {
+                        orderStatusLabel.textContent = payload.order_status_label;
                     }
                 }
 
                 function onTimeout() {
-                    var jelzes = panel.querySelector('.ws-payment-poll-note');
-                    if (jelzes) {
-                        jelzes.innerHTML = 'A fizetés visszaigazolása még folyamatban van. ' +
+                    var notice = panel.querySelector('.ws-payment-poll-note');
+                    if (notice) {
+                        notice.innerHTML = 'A fizetés visszaigazolása még folyamatban van. ' +
                             'Amint megérkezik, e-mailben értesítünk – az oldalt is frissítheted.';
                     }
                 }
 
-                function ellenoriz() {
-                    if (Date.now() > hatarido) {
-                        leall();
+                function checkStatus() {
+                    if (Date.now() > deadline) {
+                        stopPolling();
                         onTimeout();
                         return;
                     }
@@ -194,15 +194,15 @@
                         headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' },
                         credentials: 'same-origin'
                     })
-                        .then(function (valasz) { return valasz.json(); })
-                        .then(function (adat) {
-                            if (adat.paid) {
-                                leall();
-                                sikeresre(adat);
-                            } else if (adat.failed || adat.cancelled) {
+                        .then(function (response) { return response.json(); })
+                        .then(function (payload) {
+                            if (payload.paid) {
+                                stopPolling();
+                                showSuccess(payload);
+                            } else if (payload.failed || payload.cancelled) {
                                 // Végállapot, de nem sikeres: itt már az újrapróbálás
                                 // gomb is kell, ezért a szerver rendereli újra a lapot.
-                                leall();
+                                stopPolling();
                                 window.location.reload();
                             }
                         })
@@ -211,8 +211,8 @@
                         });
                 }
 
-                idozito = setInterval(ellenoriz, KERDEZES_MP * 1000);
-                ellenoriz();
+                timer = setInterval(checkStatus, POLL_INTERVAL_SECONDS * 1000);
+                checkStatus();
             })();
         </script>
     @endpush

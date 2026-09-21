@@ -225,10 +225,10 @@ class WebshopExtraSettingController extends AdminExtendedController
     {
         $this->categoryMenuOrFail();
 
-        $kategoriak = WebshopCategory::ordered()->get();
+        $categories = WebshopCategory::ordered()->get();
 
         return view('admin.webshop.extra-settings.category-menu', [
-            'categoryTree' => self::fabaRendez($kategoriak),
+            'categoryTree' => self::buildTree($categories),
             'ws' => WebshopSettingsService::all(),
         ]);
     }
@@ -242,10 +242,10 @@ class WebshopExtraSettingController extends AdminExtendedController
      */
     public function toggleCategoryMenuItem(Request $request)
     {
-        $kategoria = WebshopCategory::findOrFail($request->input('id'));
+        $category = WebshopCategory::findOrFail($request->input('id'));
         $value = $request->input('is_active');
 
-        $kategoria->update([
+        $category->update([
             'show_in_sticky_header' => $value === 'true' || $value === true || $value === '1',
         ]);
 
@@ -259,30 +259,30 @@ class WebshopExtraSettingController extends AdminExtendedController
      * tesszük, nem dobjuk el: különben némán eltűnnének a szerkesztőből, és a
      * felhasználó nem értené, hova lett a kategóriája.
      */
-    protected static function fabaRendez($kategoriak, $szuloId = null, int $level = 0, ?array $letezoIdk = null): array
+    protected static function buildTree($categories, $parentId = null, int $level = 0, ?array $existingIds = null): array
     {
-        if ($letezoIdk === null) {
-            $letezoIdk = $kategoriak->pluck('id')->all();
+        if ($existingIds === null) {
+            $existingIds = $categories->pluck('id')->all();
         }
 
         $result = [];
 
-        foreach ($kategoriak as $kategoria) {
-            $ownParent = $kategoria->parent_id;
+        foreach ($categories as $category) {
+            $ownParent = $category->parent_id;
 
             // Árva: a szülője nincs a listában -> a gyökérszinten jelenjen meg
-            if ($ownParent !== null && !in_array($ownParent, $letezoIdk, true)) {
+            if ($ownParent !== null && !in_array($ownParent, $existingIds, true)) {
                 $ownParent = null;
             }
 
-            if ($ownParent !== $szuloId) {
+            if ($ownParent !== $parentId) {
                 continue;
             }
 
             $result[] = [
-                'category' => $kategoria,
+                'category' => $category,
                 'level' => $level,
-                'children' => self::fabaRendez($kategoriak, $kategoria->id, $level + 1, $letezoIdk),
+                'children' => self::buildTree($categories, $category->id, $level + 1, $existingIds),
             ];
         }
 
@@ -296,9 +296,9 @@ class WebshopExtraSettingController extends AdminExtendedController
      */
     protected function categoryMenuOrFail(): void
     {
-        $bekapcsolva = WebshopSettingsService::getBool('category_parent_enabled')
+        $isEnabled = WebshopSettingsService::getBool('category_parent_enabled')
             && WebshopSettingsService::getBool('category_custom_menu_enabled');
 
-        abort_unless($bekapcsolva, 404);
+        abort_unless($isEnabled, 404);
     }
 }

@@ -96,12 +96,12 @@
            Külön osztálynevek (.js-hb-item*), hogy a blokk-sortable-lel ne
            keveredjen; a sorrend a rejtett inputok DOM-sorrendje, az űrlappal megy.
            -------------------------------------------------------------- */
-        function initItemSortable($lista) {
-            if (!$.fn.sortable || $lista.data('hbSortable')) {
+        function initItemSortable($list) {
+            if (!$.fn.sortable || $list.data('hbSortable')) {
                 return;
             }
-            $lista.data('hbSortable', true);
-            $lista.sortable({
+            $list.data('hbSortable', true);
+            $list.sortable({
                 items: '> .js-hb-item',
                 handle: '.js-hb-item-handle',
                 axis: 'y',
@@ -117,32 +117,32 @@
             $(this).closest('.js-hb-item').remove();
         });
 
-        function itemRow(id, nev, kepUrl, mezoNev) {
-            var kep = kepUrl
-                ? '<img src="' + kepUrl + '" alt="" class="mr-2 rounded border" style="width:40px;height:40px;object-fit:cover;">'
+        function itemRow(id, name, imageUrl, fieldName) {
+            var imageHtml = imageUrl
+                ? '<img src="' + imageUrl + '" alt="" class="mr-2 rounded border" style="width:40px;height:40px;object-fit:cover;">'
                 : '';
 
             return $(
                 '<div class="d-flex align-items-center border rounded p-2 mb-1 js-hb-item">' +
                 '<span class="js-hb-item-handle mr-2 text-muted" style="cursor:move;"><i class="fa fa-grip-vertical"></i></span>' +
-                kep +
+                imageHtml +
                 '<span class="mr-auto"></span>' +
-                '<input type="hidden" name="' + mezoNev + '" value="' + id + '">' +
+                '<input type="hidden" name="' + fieldName + '" value="' + id + '">' +
                 '<button type="button" class="btn btn-sm btn-outline-danger js-hb-item-remove"><i class="fa fa-times"></i></button>' +
                 '</div>'
-            ).find('.mr-auto').text(nev).end();   // .text() -> nem lehet HTML-injektálás a névből
+            ).find('.mr-auto').text(name).end();   // .text() -> nem lehet HTML-injektálás a névből
         }
 
-        function listaBlokkhoz(blockId) {
+        function listForBlock(blockId) {
             return $('.js-hb-list[data-block="' + blockId + '"]');
         }
 
-        function alreadyContains($lista, id) {
-            var talalt = false;
-            $lista.find('input[type=hidden]').each(function () {
-                if (String(this.value) === String(id)) { talalt = true; }
+        function alreadyContains($list, id) {
+            var found = false;
+            $list.find('input[type=hidden]').each(function () {
+                if (String(this.value) === String(id)) { found = true; }
             });
-            return talalt;
+            return found;
         }
 
         /* Kategória hozzáadása */
@@ -153,41 +153,41 @@
 
             if (!id) { return; }
 
-            var $lista = listaBlokkhoz(blockId);
-            if (alreadyContains($lista, id)) { return; }
+            var $list = listForBlock(blockId);
+            if (alreadyContains($list, id)) { return; }
 
-            $lista.append(itemRow(id, $select.find('option:selected').text().trim(), null, 'category_ids[]'));
-            initItemSortable($lista);
+            $list.append(itemRow(id, $select.find('option:selected').text().trim(), null, 'category_ids[]'));
+            initItemSortable($list);
             $select.val('');
         });
 
         /* Termékkereső */
-        var keresoIdozito = null;
+        var searchTimer = null;
 
         $(document).on('input', '.js-hb-prod-search', function () {
-            var $mezo = $(this);
-            var blockId = $mezo.data('block');
+            var $field = $(this);
+            var blockId = $field.data('block');
             var $results = $('.js-hb-prod-results[data-block="' + blockId + '"]');
-            var kifejezes = $mezo.val().trim();
+            var term = $field.val().trim();
 
-            clearTimeout(keresoIdozito);
+            clearTimeout(searchTimer);
 
-            if (kifejezes.length < 2) {
+            if (term.length < 2) {
                 $results.addClass('d-none').empty();
                 return;
             }
 
-            keresoIdozito = setTimeout(function () {
-                $.get($mezo.data('url'), { q: kifejezes }).done(function (termekek) {
+            searchTimer = setTimeout(function () {
+                $.get($field.data('url'), { q: term }).done(function (products) {
                     $results.empty();
 
-                    if (!termekek || !termekek.length) {
+                    if (!products || !products.length) {
                         $results.append($('<div class="list-group-item text-muted"></div>').text('Nincs találat.'));
                         $results.removeClass('d-none');
                         return;
                     }
 
-                    termekek.forEach(function (t) {
+                    products.forEach(function (t) {
                         var $row = $('<button type="button" class="list-group-item list-group-item-action d-flex align-items-center"></button>');
 
                         if (t.primary_image) {
@@ -196,12 +196,12 @@
 
                         $row.append($('<span></span>').text(t.name + (t.sku ? ' (' + t.sku + ')' : '')));
                         $row.on('click', function () {
-                            var $lista = listaBlokkhoz(blockId);
-                            if (!alreadyContains($lista, t.id)) {
-                                $lista.append(itemRow(t.id, t.name, t.primary_image, 'product_ids[]'));
-                                initItemSortable($lista);
+                            var $list = listForBlock(blockId);
+                            if (!alreadyContains($list, t.id)) {
+                                $list.append(itemRow(t.id, t.name, t.primary_image, 'product_ids[]'));
+                                initItemSortable($list);
                             }
-                            $mezo.val('');
+                            $field.val('');
                             $results.addClass('d-none').empty();
                         });
 

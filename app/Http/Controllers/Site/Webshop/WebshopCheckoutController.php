@@ -200,9 +200,9 @@ class WebshopCheckoutController extends Controller
         $stockErrors = WebshopStockService::checkCart(WebshopCartService::getContent());
 
         if ($stockErrors) {
-            $reszletek = [];
+            $details = [];
             foreach ($stockErrors as $productName => $available) {
-                $reszletek[] = $available > 0
+                $details[] = $available > 0
                     ? $productName . ' (már csak ' . $available . ' db)'
                     : $productName . ' (elfogyott)';
             }
@@ -210,7 +210,7 @@ class WebshopCheckoutController extends Controller
             return back()->withInput()->with(
                 'error',
                 'A kosaradban lévő termékek közül időközben elfogyott: '
-                . implode(', ', $reszletek) . '. Kérjük, módosítsd a mennyiséget.'
+                . implode(', ', $details) . '. Kérjük, módosítsd a mennyiséget.'
             );
         }
 

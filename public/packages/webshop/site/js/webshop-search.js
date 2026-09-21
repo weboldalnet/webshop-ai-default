@@ -23,83 +23,83 @@
 (function () {
     'use strict';
 
-    var MIN_HOSSZ = 3;
-    var VARAKOZAS_MS = 250;
+    var MIN_LENGTH = 3;
+    var DEBOUNCE_MS = 250;
 
-    function bekot(konteneur) {
-        var mezo = konteneur.querySelector('.ws-search-input');
-        var doboz = konteneur.querySelector('.ws-search-results');
-        var url = konteneur.getAttribute('data-url');
+    function bind(container) {
+        var input = container.querySelector('.ws-search-input');
+        var resultsBox = container.querySelector('.ws-search-results');
+        var url = container.getAttribute('data-url');
 
-        if (!mezo || !doboz || !url) {
+        if (!input || !resultsBox || !url) {
             return;
         }
 
-        var idozito = null;
-        var utolsoKeres = 0;
+        var timer = null;
+        var latestRequest = 0;
 
-        function elrejt() {
-            doboz.classList.add('d-none');
-            doboz.innerHTML = '';
+        function hide() {
+            resultsBox.classList.add('d-none');
+            resultsBox.innerHTML = '';
         }
 
-        function keres() {
-            var kifejezes = mezo.value.trim();
+        function search() {
+            var term = input.value.trim();
 
-            if (kifejezes.length < MIN_HOSSZ) {
-                elrejt();
+            if (term.length < MIN_LENGTH) {
+                hide();
                 return;
             }
 
             // Sorszám: a lassabb, korábbi válasz ne írja felül a frissebbet
-            var sajatSorszam = ++utolsoKeres;
+            var requestNumber = ++latestRequest;
 
-            fetch(url + '?q=' + encodeURIComponent(kifejezes), {
+            fetch(url + '?q=' + encodeURIComponent(term), {
                 headers: { 'X-Requested-With': 'XMLHttpRequest' },
                 credentials: 'same-origin'
             })
-                .then(function (valasz) { return valasz.ok ? valasz.text() : ''; })
+                .then(function (response) { return response.ok ? response.text() : ''; })
                 .then(function (html) {
-                    if (sajatSorszam !== utolsoKeres) {
+                    if (requestNumber !== latestRequest) {
                         return;
                     }
 
                     if (!html) {
-                        elrejt();
+                        hide();
                         return;
                     }
 
-                    doboz.innerHTML = html;
-                    doboz.classList.remove('d-none');
+                    resultsBox.innerHTML = html;
+                    resultsBox.classList.remove('d-none');
                 })
                 .catch(function () {
                     // Átmeneti hálózati hiba: a következő gépelésnél újrapróbáljuk
                 });
         }
 
-        mezo.addEventListener('input', function () {
-            clearTimeout(idozito);
-            idozito = setTimeout(keres, VARAKOZAS_MS);
+        input.addEventListener('input', function () {
+            clearTimeout(timer);
+            timer = setTimeout(search, DEBOUNCE_MS);
         });
 
         // Visszatéréskor a korábbi találatok újra megjelenjenek
-        mezo.addEventListener('focus', function () {
-            if (mezo.value.trim().length >= MIN_HOSSZ && doboz.innerHTML.trim()) {
-                doboz.classList.remove('d-none');
+        input.addEventListener('focus', function () {
+            if (input.value.trim().length >= MIN_LENGTH && resultsBox.innerHTML.trim()) {
+                resultsBox.classList.remove('d-none');
             }
         });
 
         // Kattintás a keresőn kívülre bezárja a lenyílót
         document.addEventListener('click', function (e) {
-            if (!konteneur.contains(e.target)) {
-                doboz.classList.add('d-none');
+            if (!container.contains(e.target)) {
+                resultsBox.classList.add('d-none');
             }
         });
 
-        mezo.addEventListener('keydown', function (e) {
+        input.addEventListener('keydown', function (e) {
             if (e.key === 'Escape') {
-                doboz.classList.add('d-none');
-                mezo.blur();
+                resultsBox.classList.add('d-none');
+                input.blur();
             }
         });
     }
@@ -112,14 +112,14 @@
      * A már bekötött konténert megjelöljük, hogy kétszer ne fusson – így a
      * fájl akkor sem okoz dupla eseménykezelőt, ha valamiért kétszer töltődne be.
      */
-    function inditas() {
-        document.querySelectorAll('.ws-search-container').forEach(function (konteneur) {
-            if (konteneur.dataset.wsSearchBound) {
+    function init() {
+        document.querySelectorAll('.ws-search-container').forEach(function (container) {
+            if (container.dataset.wsSearchBound) {
                 return;
             }
 
-            konteneur.dataset.wsSearchBound = '1';
-            bekot(konteneur);
+            container.dataset.wsSearchBound = '1';
+            bind(container);
         });
     }
 
@@ -128,8 +128,8 @@
         nincs kész. A defer/DOMContentLoaded ág lefedi mindkét esetet.
     */
     if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', inditas);
+        document.addEventListener('DOMContentLoaded', init);
     } else {
-        inditas();
+        init();
     }
 })();

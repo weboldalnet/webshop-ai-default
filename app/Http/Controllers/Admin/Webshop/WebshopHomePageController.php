@@ -106,13 +106,13 @@ class WebshopHomePageController extends AdminExtendedController
         $btnColor = $request->input('btn_color');
         $btnAlign = $request->input('btn_align');
 
-        $adatok = [
+        $data = [
             'title' => $request->input('title') ?: null,
             'settings' => $this->buildSettings($request, $block),
 
             // Szabad HEX színek; üresen hagyva nincs egyedi szín
-            'bg_color' => self::hexSzin($request->input('bg_color')),
-            'title_color' => self::hexSzin($request->input('title_color')),
+            'bg_color' => self::hexColor($request->input('bg_color')),
+            'title_color' => self::hexColor($request->input('title_color')),
 
             // A színt és az igazítást osztálynévbe tesszük a site-on, ezért whitelist
             'btn_color' => array_key_exists($btnColor, WebshopHomeBlock::BTN_COLORS) ? $btnColor : 'main',
@@ -129,7 +129,7 @@ class WebshopHomePageController extends AdminExtendedController
 
         if ($block->hasLayoutChoice()) {
             $layout = $request->input('layout');
-            $adatok['layout'] = array_key_exists($layout, WebshopHomeBlock::LAYOUTS)
+            $data['layout'] = array_key_exists($layout, WebshopHomeBlock::LAYOUTS)
                 ? $layout
                 : WebshopHomeBlock::LAYOUT_MULTI_ROW;
         }
@@ -137,12 +137,12 @@ class WebshopHomePageController extends AdminExtendedController
         // A link_url már csak a banneré: ott a TELJES kép kattintható, ami más,
         // mint egy gomb. A blokkok gombjai a buttons mezőbe kerülnek.
         if ($block->type === WebshopHomeBlock::TYPE_BANNER) {
-            $adatok['link_url'] = $request->input('link_url') ?: null;
-            $adatok['img_alt'] = $request->input('img_alt') ?: null;
-            $adatok = array_merge($adatok, $this->handleBannerImages($request, $block));
+            $data['link_url'] = $request->input('link_url') ?: null;
+            $data['img_alt'] = $request->input('img_alt') ?: null;
+            $data = array_merge($data, $this->handleBannerImages($request, $block));
         }
 
-        $block->update($adatok);
+        $block->update($data);
 
         return redirect()->back()
             ->with('success', 'Blokk elmentve.')
@@ -153,8 +153,8 @@ class WebshopHomePageController extends AdminExtendedController
     {
         $block = WebshopHomeBlock::findOrFail($block);
 
-        foreach (array_keys(WebshopHomeBlock::IMAGE_SIZES) as $mezo) {
-            WebshopFileService::deleteHomeBlockImage($block->{$mezo});
+        foreach (array_keys(WebshopHomeBlock::IMAGE_SIZES) as $field) {
+            WebshopFileService::deleteHomeBlockImage($block->{$field});
         }
 
         $block->delete();
@@ -198,7 +198,7 @@ class WebshopHomePageController extends AdminExtendedController
     {
         switch ($block->type) {
             case WebshopHomeBlock::TYPE_PRODUCTS_MANUAL:
-                return ['product_ids' => self::intLista($request->input('product_ids', []))];
+                return ['product_ids' => self::intList($request->input('product_ids', []))];
 
             case WebshopHomeBlock::TYPE_PRODUCTS_CATEGORY:
                 $limit = (int) $request->input('limit', 8);
@@ -211,7 +211,7 @@ class WebshopHomePageController extends AdminExtendedController
                 ];
 
             case WebshopHomeBlock::TYPE_CATEGORIES:
-                return ['category_ids' => self::intLista($request->input('category_ids', []))];
+                return ['category_ids' => self::intList($request->input('category_ids', []))];
 
             case WebshopHomeBlock::TYPE_TEXT:
                 return ['content' => $request->input('content') ?? ''];
@@ -231,32 +231,32 @@ class WebshopHomePageController extends AdminExtendedController
      */
     protected function handleBannerImages(Request $request, WebshopHomeBlock $block): array
     {
-        $valtozas = [];
+        $changes = [];
 
-        foreach (WebshopHomeBlock::IMAGE_SIZES as $mezo => $size) {
+        foreach (WebshopHomeBlock::IMAGE_SIZES as $field => $size) {
             // Külön jelölőnégyzet a meglévő kép eltávolításához
-            if ($request->boolean($mezo . '_delete')) {
-                WebshopFileService::deleteHomeBlockImage($block->{$mezo});
-                $valtozas[$mezo] = null;
+            if ($request->boolean($field . '_delete')) {
+                WebshopFileService::deleteHomeBlockImage($block->{$field});
+                $changes[$field] = null;
                 continue;
             }
 
-            if (!$request->hasFile($mezo)) {
+            if (!$request->hasFile($field)) {
                 continue;
             }
 
-            $regi = $block->{$mezo};
+            $oldImage = $block->{$field};
 
-            $valtozas[$mezo] = WebshopFileService::saveHomeBlockImage(
-                $request->file($mezo),
-                'home-' . $block->id . '-' . $mezo,
+            $changes[$field] = WebshopFileService::saveHomeBlockImage(
+                $request->file($field),
+                'home-' . $block->id . '-' . $field,
                 $size['width']
             );
 
-            WebshopFileService::deleteHomeBlockImage($regi);
+            WebshopFileService::deleteHomeBlockImage($oldImage);
         }
 
-        return $valtozas;
+        return $changes;
     }
 
     /**
@@ -265,7 +265,7 @@ class WebshopHomePageController extends AdminExtendedController
      * Az érték a site-on inline style-ba kerül, ezért csak valódi HEX-et
      * engedünk át – így nem lehet a stíluson keresztül tetszőleges CSS-t beadni.
      */
-    protected static function hexSzin($value): ?string
+    protected static function hexColor($value): ?string
     {
         $value = trim((string) $value);
 
@@ -277,21 +277,21 @@ class WebshopHomePageController extends AdminExtendedController
     }
 
     /** Beérkező azonosítólista tisztítása: csak pozitív egészek, duplikátum nélkül */
-    protected static function intLista($values): array
+    protected static function intList($values): array
     {
         if (!is_array($values)) {
             return [];
         }
 
-        $tisztitott = [];
+        $cleaned = [];
         foreach ($values as $value) {
             $id = (int) $value;
-            if ($id > 0 && !in_array($id, $tisztitott, true)) {
-                $tisztitott[] = $id;
+            if ($id > 0 && !in_array($id, $cleaned, true)) {
+                $cleaned[] = $id;
             }
         }
 
-        return $tisztitott;
+        return $cleaned;
     }
 
     /**
@@ -301,20 +301,20 @@ class WebshopHomePageController extends AdminExtendedController
      */
     protected static function categoryOptions(): array
     {
-        $kategoriak = WebshopCategory::ordered()->get();
-        $gyerekek = $kategoriak->groupBy('parent_id');
+        $categories = WebshopCategory::ordered()->get();
+        $childrenByParent = $categories->groupBy('parent_id');
 
-        $lista = [];
+        $options = [];
 
-        $bejar = function ($szuloId, $level) use (&$bejar, $gyerekek, &$lista) {
-            foreach ($gyerekek->get($szuloId, collect()) as $kategoria) {
-                $lista[$kategoria->id] = str_repeat('— ', $level) . $kategoria->name_singular;
-                $bejar($kategoria->id, $level + 1);
+        $walk = function ($parentId, $level) use (&$walk, $childrenByParent, &$options) {
+            foreach ($childrenByParent->get($parentId, collect()) as $category) {
+                $options[$category->id] = str_repeat('— ', $level) . $category->name_singular;
+                $walk($category->id, $level + 1);
             }
         };
 
-        $bejar(null, 0);
+        $walk(null, 0);
 
-        return $lista;
+        return $options;
     }
 }

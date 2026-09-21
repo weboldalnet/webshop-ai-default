@@ -386,9 +386,12 @@
             </div>
             @endif
 
-            {{-- Kapcsolódó termékek --}}
-            @if(($ws['product_related_enabled'] ?? 'false') === 'true')
+            {{-- Kapcsolódó termékek + Variációk — közös sor, de a két oszlop EGYMÁSTÓL FÜGGETLEN.
+                 Korábban a variáció-szerkesztő a kapcsolódó termékek feltételén belül ült: ha a
+                 kapcsolódó termékek ki voltak kapcsolva, a variációkat sem lehetett kezelni. --}}
+            @if(($ws['product_related_enabled'] ?? 'false') === 'true' || ($ws['product_variations_enabled'] ?? 'false') === 'true')
             <div class="row">
+                @if(($ws['product_related_enabled'] ?? 'false') === 'true')
                 <div class="col-lg-6 mb-3">
                     <h3 class="header-box product-info mb-1">Kapcsolódó termékek</h3>
                     <div class="content-box bordered mb-3">
@@ -421,6 +424,7 @@
                         </div>
                     </div>
                 </div>
+                @endif
 
                 {{-- Variációk --}}
                 @if(($ws['product_variations_enabled'] ?? 'false') === 'true')

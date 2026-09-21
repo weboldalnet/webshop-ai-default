@@ -7,19 +7,19 @@
     confignál a csomag merge-elt kulcsai kimaradnak.
 --}}
 <div class="form-row">
-    @foreach($imageSizes as $mezo => $size)
-        @php($jelenlegi = $block->{$mezo})
+    @foreach($imageSizes as $field => $size)
+        @php($currentImage = $block->{$field})
         <div class="col-lg-4 form-group">
             <label class="font-weight-bold">{{ $size['label'] }} ({{ $size['width'] }} px széles)</label>
 
-            @if($jelenlegi)
+            @if($currentImage)
                 <div class="cip mb-2">
-                    <img src="{{ $jelenlegi }}" class="w-100 d-block border rounded" alt="">
+                    <img src="{{ $currentImage }}" class="w-100 d-block border rounded" alt="">
                 </div>
                 <div class="custom-control custom-checkbox mb-2">
                     <input type="checkbox" class="custom-control-input"
-                           id="hb-{{ $mezo }}-del-{{ $block->id }}" name="{{ $mezo }}_delete" value="1">
-                    <label class="custom-control-label text-danger" for="hb-{{ $mezo }}-del-{{ $block->id }}">
+                           id="hb-{{ $field }}-del-{{ $block->id }}" name="{{ $field }}_delete" value="1">
+                    <label class="custom-control-label text-danger" for="hb-{{ $field }}-del-{{ $block->id }}">
                         Kép eltávolítása
                     </label>
                 </div>
@@ -33,8 +33,8 @@
                     <input type="file"
                            class="custom-file-input js-crop"
                            accept=".jpg,.jpeg,.png"
-                           id="hb-{{ $mezo }}-{{ $block->id }}"
-                           name="{{ $mezo }}"
+                           id="hb-{{ $field }}-{{ $block->id }}"
+                           name="{{ $field }}"
                            data-width="{{ $size['width'] }}">
                     <label class="custom-file-label text-muted">Kép kiválasztása</label>
                 </div>

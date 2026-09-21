@@ -11,7 +11,10 @@
         ->values();
 @endphp
 
-@if($variations->isNotEmpty())
+{{-- Csak ha a jelenlegi terméken kívül legalább egy AKTÍV változat is van: a lista a terméket
+     mindig tartalmazza (push), így az isNotEmpty() mindig igaz volt, és a variáció nélküli
+     termék oldalán is megjelent egy egyelemű "Variációk" doboz. --}}
+@if($variations->count() > 1)
     <div class="card shadow-sm mt-3 ws-product-variations">
         <div class="card-body">
             <h5 class="font-weight-bold mb-3 border-bottom pb-2">Variációk</h5>

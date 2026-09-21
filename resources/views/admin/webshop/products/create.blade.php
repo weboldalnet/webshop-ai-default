@@ -2,6 +2,11 @@
 @section('title', 'Új termék')
 
 @section('content')
+    {{-- A "Leírás" mező js-tinymce osztályú, de a szerkesztő betöltése eddig csak az edit
+         oldalon volt meg — itt sima szövegdoboz maradt, a formázás nélkül beírt szöveg
+         bekezdések nélkül mentődött. --}}
+    @include('admin.commons.tinymce-img-upload', ['tinyHeight' => 300])
+
     <div class="container mw-600 mt-3 mb-150">
         @include('admin.webshop.partials.alerts')
         @include('admin.webshop.partials.form-errors')

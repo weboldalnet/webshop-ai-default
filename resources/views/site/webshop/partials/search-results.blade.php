@@ -6,7 +6,7 @@
     vezérli, mint a termékkártyákon.
 --}}
 @php
-    $wsArakLathatok = ($ws['site_product_prices_visible'] ?? 'true') === 'true';
+    $wsPricesVisible = ($ws['site_product_prices_visible'] ?? 'true') === 'true';
 @endphp
 
 @if($products->count())
@@ -33,7 +33,7 @@
                         <span class="badge badge-light border">{{ $wsProduct->category->name_singular }}</span>
                     @endif
 
-                    @if($wsArakLathatok)
+                    @if($wsPricesVisible)
                         <span class="ws-search-item-price">
                             @if($wsProduct->sale_price)
                                 <s class="text-muted mr-1">{{ hufFormat($wsProduct->price) }}</s>{{ hufFormat($wsProduct->sale_price) }}

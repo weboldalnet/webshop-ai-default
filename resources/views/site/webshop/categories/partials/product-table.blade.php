@@ -67,7 +67,7 @@
                             @if($pp->property)
                                 <div class="small">{{ $pp->property->name }}</div>
                             @elseif($pp->number_value !== null)
-                                <div class="small">{{ (float)$pp->number_value }}{{ $pc->suffix }}</div>
+                                <div class="small">{{ $pc->formatNumberValue($pp->number_value) }}</div>
                             @endif
                         @endforeach
                     </td>

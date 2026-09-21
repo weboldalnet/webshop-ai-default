@@ -136,21 +136,21 @@
             A kupon kedvezményét is a szerver adja: a kosár változásával az
             összege is változik, és akár érvénytelenné is válhat.
         */
-        $(document).on('ws:cart-updated', function (esemeny, valasz) {
-            wsCartTotal = Number(valasz.total) || 0;
+        $(document).on('ws:cart-updated', function (event, response) {
+            wsCartTotal = Number(response.total) || 0;
             $('#ws-sum-items').text(wsHuf(wsCartTotal));
 
-            if (valasz.coupon) {
-                wsCouponDiscount = Number(valasz.coupon.discount) || 0;
+            if (response.coupon) {
+                wsCouponDiscount = Number(response.coupon.discount) || 0;
 
-                if (valasz.coupon.code) {
-                    $('#ws-sum-coupon-code').text('(' + valasz.coupon.code + ')');
+                if (response.coupon.code) {
+                    $('#ws-sum-coupon-code').text('(' + response.coupon.code + ')');
                 }
 
                 // A kosár módosítása érvénytelenné tehette a kupont
-                if (valasz.coupon.message) {
+                if (response.coupon.message) {
                     var $error = $('#ws-coupon-error');
-                    $error.text(valasz.coupon.message).removeClass('d-none');
+                    $error.text(response.coupon.message).removeClass('d-none');
                     $('#ws-coupon-success').addClass('d-none');
                 }
             }
@@ -179,28 +179,28 @@
             }
 
             function wsApplyCoupon() {
-                var kod = ($wsCouponInput.val() || '').trim();
+                var code = ($wsCouponInput.val() || '').trim();
                 wsHideCouponMessages();
 
-                if (!kod) {
+                if (!code) {
                     $wsCouponError.removeClass('d-none').text('Add meg a kuponkódot.');
                     return;
                 }
 
                 $wsCouponButton.prop('disabled', true);
 
-                $.post($wsCouponInput.data('url'), { code: kod })
-                    .done(function (valasz) {
-                        if (valasz.success) {
-                            wsCouponDiscount = Number(valasz.discount) || 0;
-                            $('#ws-sum-coupon-code').text(' (' + valasz.coupon_code + ')');
+                $.post($wsCouponInput.data('url'), { code: code })
+                    .done(function (response) {
+                        if (response.success) {
+                            wsCouponDiscount = Number(response.discount) || 0;
+                            $('#ws-sum-coupon-code').text(' (' + response.coupon_code + ')');
                             wsUpdateSummary();
 
                             $wsCouponSuccess.removeClass('d-none').text(
-                                'Aktiválva: ' + valasz.coupon_name + ' — ' + wsHuf(wsCouponDiscount) + ' kedvezmény.'
+                                'Aktiválva: ' + response.coupon_name + ' — ' + wsHuf(wsCouponDiscount) + ' kedvezmény.'
                             );
 
-                            $('#ws-coupon-modal-name').text(valasz.coupon_name || '');
+                            $('#ws-coupon-modal-name').text(response.coupon_name || '');
                             $('#ws-coupon-modal-amount').text(wsHuf(wsCouponDiscount));
                             $('#wsCouponModal').modal('show');
                         } else {
@@ -208,7 +208,7 @@
                             // ezért a korábbi kedvezményt itt is elvesszük.
                             wsCouponDiscount = 0;
                             wsUpdateSummary();
-                            $wsCouponError.removeClass('d-none').text(valasz.message || 'A kupon nem aktiválható.');
+                            $wsCouponError.removeClass('d-none').text(response.message || 'A kupon nem aktiválható.');
                         }
                     })
                     .fail(function () {

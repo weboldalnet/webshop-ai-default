@@ -18,107 +18,107 @@
 
     /* A becsukás késleltetése: a gomb és a panel között van néhány képpontnyi rés,
        azon áthúzva a menü becsukódna, mielőtt az egér a panelre érne. */
-    var BECSUKAS_KESLELTETES_MS = 180;
+    var CLOSE_DELAY_MS = 180;
 
-    var nyitottPanel = null;
-    var becsukasIdozito = null;
+    var openedPanel = null;
+    var closeTimer = null;
 
-    function panelNyit(panel) {
-        clearTimeout(becsukasIdozito);
+    function openPanel(panel) {
+        clearTimeout(closeTimer);
 
-        if (nyitottPanel && nyitottPanel !== panel) {
-            nyitottPanel.classList.remove('show');
+        if (openedPanel && openedPanel !== panel) {
+            openedPanel.classList.remove('show');
         }
 
-        nyitottPanel = panel;
+        openedPanel = panel;
         panel.classList.add('show');
     }
 
-    function panelZarKesleltetve() {
-        clearTimeout(becsukasIdozito);
+    function closePanelDelayed() {
+        clearTimeout(closeTimer);
 
-        becsukasIdozito = setTimeout(function () {
-            if (nyitottPanel) {
-                nyitottPanel.classList.remove('show');
-                nyitottPanel = null;
+        closeTimer = setTimeout(function () {
+            if (openedPanel) {
+                openedPanel.classList.remove('show');
+                openedPanel = null;
             }
-        }, BECSUKAS_KESLELTETES_MS);
+        }, CLOSE_DELAY_MS);
     }
 
-    function asztaliBekot(menu) {
-        menu.querySelectorAll('[data-ws-panel]').forEach(function (gomb) {
-            var panel = menu.querySelector(gomb.getAttribute('data-ws-panel'));
+    function bindDesktop(menu) {
+        menu.querySelectorAll('[data-ws-panel]').forEach(function (button) {
+            var panel = menu.querySelector(button.getAttribute('data-ws-panel'));
 
             if (!panel) {
                 return;
             }
 
-            gomb.addEventListener('mouseenter', function () { panelNyit(panel); });
-            gomb.addEventListener('mouseleave', panelZarKesleltetve);
-            panel.addEventListener('mouseenter', function () { clearTimeout(becsukasIdozito); });
-            panel.addEventListener('mouseleave', panelZarKesleltetve);
+            button.addEventListener('mouseenter', function () { openPanel(panel); });
+            button.addEventListener('mouseleave', closePanelDelayed);
+            panel.addEventListener('mouseenter', function () { clearTimeout(closeTimer); });
+            panel.addEventListener('mouseleave', closePanelDelayed);
 
             /* Billentyűzettel is elérhető legyen: a gombra fókuszálva nyíljon,
                és a panelből kifókuszálva csukódjon. */
-            gomb.addEventListener('focus', function () { panelNyit(panel); });
+            button.addEventListener('focus', function () { openPanel(panel); });
         });
 
         /* Escape zárja a nyitott panelt */
-        document.addEventListener('keydown', function (esemeny) {
-            if (esemeny.key === 'Escape' && nyitottPanel) {
-                nyitottPanel.classList.remove('show');
-                nyitottPanel = null;
+        document.addEventListener('keydown', function (event) {
+            if (event.key === 'Escape' && openedPanel) {
+                openedPanel.classList.remove('show');
+                openedPanel = null;
             }
         });
 
         /* Ha a fókusz kikerül a menüsorból, csukjuk be */
-        menu.addEventListener('focusout', function (esemeny) {
-            if (!menu.contains(esemeny.relatedTarget)) {
-                panelZarKesleltetve();
+        menu.addEventListener('focusout', function (event) {
+            if (!menu.contains(event.relatedTarget)) {
+                closePanelDelayed();
             }
         });
     }
 
-    function mobilBekot() {
-        var fiok = document.querySelector('.ws-cat-drawer');
+    function bindMobile() {
+        var drawer = document.querySelector('.ws-cat-drawer');
 
-        if (!fiok) {
+        if (!drawer) {
             return;
         }
 
-        function nyit() {
-            fiok.classList.add('show');
+        function openDrawer() {
+            drawer.classList.add('show');
             document.body.classList.add('overflow-hidden');
         }
 
-        function zar() {
-            fiok.classList.remove('show');
+        function closeDrawer() {
+            drawer.classList.remove('show');
             document.body.classList.remove('overflow-hidden');
         }
 
-        document.querySelectorAll('.js-ws-cat-drawer-open').forEach(function (gomb) {
-            gomb.addEventListener('click', nyit);
+        document.querySelectorAll('.js-ws-cat-drawer-open').forEach(function (button) {
+            button.addEventListener('click', openDrawer);
         });
 
-        document.querySelectorAll('.js-ws-cat-drawer-close').forEach(function (gomb) {
-            gomb.addEventListener('click', zar);
+        document.querySelectorAll('.js-ws-cat-drawer-close').forEach(function (button) {
+            button.addEventListener('click', closeDrawer);
         });
 
         /* Kattintás a dobozon KÍVÜLRE zárja – ugyanaz a minta, mint a szűrő fióknál */
-        fiok.addEventListener('click', function (esemeny) {
-            if (!esemeny.target.closest('.ws-cat-drawer-box')) {
-                zar();
+        drawer.addEventListener('click', function (event) {
+            if (!event.target.closest('.ws-cat-drawer-box')) {
+                closeDrawer();
             }
         });
 
-        document.addEventListener('keydown', function (esemeny) {
-            if (esemeny.key === 'Escape') {
-                zar();
+        document.addEventListener('keydown', function (event) {
+            if (event.key === 'Escape') {
+                closeDrawer();
             }
         });
     }
 
-    function inditas() {
+    function init() {
         var menu = document.querySelector('.ws-cat-menu');
 
         if (!menu || menu.dataset.wsCatMenuBound) {
@@ -127,14 +127,14 @@
 
         menu.dataset.wsCatMenuBound = '1';
 
-        asztaliBekot(menu);
-        mobilBekot();
+        bindDesktop(menu);
+        bindMobile();
     }
 
     /* A szkript a <head>-ből is betölthető, ilyenkor a menü markupja még nincs kész. */
     if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', inditas);
+        document.addEventListener('DOMContentLoaded', init);
     } else {
-        inditas();
+        init();
     }
 })();

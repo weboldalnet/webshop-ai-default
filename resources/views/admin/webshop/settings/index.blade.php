@@ -622,16 +622,16 @@
             }
 
             function toggleInvoiceLines() {
-                var vanKikapcsolt = false;
+                var hasDisabledLine = false;
 
                 document.querySelectorAll('.js-invoice-line').forEach(function (cb) {
-                    var nev = document.querySelector('.js-invoice-line-name[data-line="' + cb.getAttribute('data-line') + '"]');
-                    if (nev) nev.style.display = cb.checked ? '' : 'none';
-                    if (!cb.checked) vanKikapcsolt = true;
+                    var nameField = document.querySelector('.js-invoice-line-name[data-line="' + cb.getAttribute('data-line') + '"]');
+                    if (nameField) nameField.style.display = cb.checked ? '' : 'none';
+                    if (!cb.checked) hasDisabledLine = true;
                 });
 
-                var jelzes = document.querySelector('.js-invoice-line-warning');
-                if (jelzes) jelzes.style.display = vanKikapcsolt ? '' : 'none';
+                var notice = document.querySelector('.js-invoice-line-warning');
+                if (notice) notice.style.display = hasDisabledLine ? '' : 'none';
             }
 
             function toggleInvoicingSettings() {

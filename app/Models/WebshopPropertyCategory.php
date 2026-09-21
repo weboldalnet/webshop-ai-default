@@ -50,4 +50,21 @@ class WebshopPropertyCategory extends Model
     public function scopeOrdered($query) { return $query->orderBy('sort_order'); }
     public function scopeSearch($query, $search) { return $search ? $query->where('name', 'ILIKE', '%'.$search.'%') : $query; }
     public function isNumber(): bool { return $this->filter_type === 'number'; }
+
+    /**
+     * Szám-tulajdonság értéke a mértékegységgel: "30 adag", "750 ml" — korábban szóköz nélkül
+     * ("30adag") jelent meg. A % és a ° jel szóköz nélkül tapad a számhoz (30%, 40°).
+     */
+    public function formatNumberValue($value): string
+    {
+        $number = (string) (float) $value;
+
+        if (!$this->suffix) {
+            return $number;
+        }
+
+        $separator = in_array(mb_substr($this->suffix, 0, 1), ['%', '°'], true) ? '' : "\u{00A0}";
+
+        return $number . $separator . $this->suffix;
+    }
 }

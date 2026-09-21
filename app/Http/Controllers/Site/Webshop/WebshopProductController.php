@@ -31,37 +31,37 @@ class WebshopProductController extends Controller
             abort(404);
         }
 
-        $kifejezes = trim((string) $request->input('q', ''));
+        $searchTerm = trim((string) $request->input('q', ''));
 
-        if (mb_strlen($kifejezes) < self::SEARCH_MIN_LENGTH) {
+        if (mb_strlen($searchTerm) < self::SEARCH_MIN_LENGTH) {
             return response('');
         }
 
         // ILIKE: a Postgres kis-nagybetű független illesztése.
         // A minta-karaktereket escape-eljük, különben a beírt % vagy _ jel
         // mindenre illeszkedne (a % "bármi", a _ "egy tetszőleges karakter").
-        $escapeKarakterek = '%_' . chr(92);
-        $minta = '%' . addcslashes($kifejezes, $escapeKarakterek) . '%';
+        $escapeCharacters = '%_' . chr(92);
+        $pattern = '%' . addcslashes($searchTerm, $escapeCharacters) . '%';
 
         $query = WebshopProduct::active()
             ->with('category')
-            ->where(function ($q) use ($minta) {
-                $q->where('name', 'ilike', $minta)
-                    ->orWhere('secondary_name', 'ilike', $minta)
-                    ->orWhere('sku', 'ilike', $minta)
-                    ->orWhere('short_desc', 'ilike', $minta);
+            ->where(function ($q) use ($pattern) {
+                $q->where('name', 'ilike', $pattern)
+                    ->orWhere('secondary_name', 'ilike', $pattern)
+                    ->orWhere('sku', 'ilike', $pattern)
+                    ->orWhere('short_desc', 'ilike', $pattern);
             });
 
-        $osszesTalalat = (clone $query)->count();
+        $totalCount = (clone $query)->count();
 
         $products = $query->orderBy('sort_order')->orderBy('id')
             ->limit(self::SEARCH_LIMIT)
             ->get();
 
         return view('site.webshop.partials.search-results', [
-            'searchValue' => $kifejezes,
+            'searchValue' => $searchTerm,
             'products' => $products,
-            'resultCount' => $osszesTalalat,
+            'resultCount' => $totalCount,
         ])->render();
     }
     public function show(WebshopProduct $product)

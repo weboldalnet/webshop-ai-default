@@ -7,10 +7,10 @@
 --}}
 @php
     $hbCategoryId = $block->setting('category_id');
-    $hbHianyzo = $hbCategoryId && !array_key_exists((int) $hbCategoryId, $categoryOptions);
+    $hbCategoryMissing = $hbCategoryId && !array_key_exists((int) $hbCategoryId, $categoryOptions);
 @endphp
 
-@if($hbHianyzo)
+@if($hbCategoryMissing)
     <div class="alert alert-warning py-2">
         A korábban kiválasztott kategória már nem létezik. Válassz újat, különben a blokk üresen marad.
     </div>

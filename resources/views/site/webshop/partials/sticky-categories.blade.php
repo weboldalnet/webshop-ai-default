@@ -13,11 +13,11 @@
     a navigáció magától visszaáll a régi sávra.
 --}}
 @php
-    $wsEgyediMenu = ($ws['category_parent_enabled'] ?? 'false') === 'true'
+    $wsCustomMenu = ($ws['category_parent_enabled'] ?? 'false') === 'true'
         && ($ws['category_custom_menu_enabled'] ?? 'false') === 'true';
 @endphp
 
-@if($wsEgyediMenu)
+@if($wsCustomMenu)
     @include('site.webshop.partials.category-menu')
 @else
 <?php /** @var \Weboldalnet\WebshopAiDefault\Models\WebshopCategory $cat */ ?>

@@ -53,9 +53,9 @@ class WebshopCouponService
             return false;
         }
 
-        $osztaly = self::SERVICE_CLASS;
+        $serviceClass = self::SERVICE_CLASS;
 
-        return $osztaly::hasValidCoupons();
+        return $serviceClass::hasValidCoupons();
     }
 
     /**
@@ -88,7 +88,7 @@ class WebshopCouponService
      *
      * @return array a CouponResult tömbösítve (success, message, discount, …)
      */
-    public static function activate(string $kod): array
+    public static function activate(string $code): array
     {
         if (!self::isEnabled()) {
             return [
@@ -99,8 +99,8 @@ class WebshopCouponService
             ];
         }
 
-        $osztaly = self::SERVICE_CLASS;
-        $result = $osztaly::redeem($kod, self::cartLines());
+        $serviceClass = self::SERVICE_CLASS;
+        $result = $serviceClass::redeem($code, self::cartLines());
 
         if ($result->success) {
             Session::put(self::SESSION_KEY, $result->couponCode);
@@ -127,15 +127,15 @@ class WebshopCouponService
      */
     public static function currentResult(): ?array
     {
-        $kod = self::activeCode();
+        $code = self::activeCode();
 
-        if (!$kod || !self::isEnabled()) {
+        if (!$code || !self::isEnabled()) {
             return null;
         }
 
-        $osztaly = self::SERVICE_CLASS;
+        $serviceClass = self::SERVICE_CLASS;
 
-        return $osztaly::redeem($kod, self::cartLines())->toArray();
+        return $serviceClass::redeem($code, self::cartLines())->toArray();
     }
 
     /**

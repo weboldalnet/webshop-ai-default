@@ -181,7 +181,7 @@ const WebshopSite = {
             $(`.js-view-mode[data-mode="${savedViewMode}"]`).addClass('active');
         }
 
-        const loadProducts = (kezdoBetoltes = false) => {
+        const loadProducts = (isInitialLoad = false) => {
             const formData = $('#ws-filter-form').serializeArray();
             const sort = $('.js-sort-select').val();
             const perPage = $('.js-per-page-select').val();
@@ -264,7 +264,7 @@ const WebshopSite = {
                     állapotra - emiatt a böngésző Vissza gombja először "nem csinált semmit",
                     és csak a második kattintásra hagyta el az oldalt.
                 */
-                if (kezdoBetoltes) {
+                if (isInitialLoad) {
                     window.history.replaceState({path: newUrl}, '', newUrl);
                 } else {
                     window.history.pushState({path: newUrl}, '', newUrl);

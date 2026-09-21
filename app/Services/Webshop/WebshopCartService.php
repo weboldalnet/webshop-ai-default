@@ -20,9 +20,9 @@ class WebshopCartService
         // Készlethatár: a MÁR kosárban lévő mennyiséggel együtt nézzük, különben
         // többszöri "Kosárba" kattintással túl lehetne lépni a raktárkészletet.
         $alreadyInCart = (int) ($cart[$productId]['quantity'] ?? 0);
-        $kertOsszesen = $alreadyInCart + $quantity;
-        $engedett = WebshopStockService::acceptableQuantity($product, $kertOsszesen);
-        $quantity = max(0, $engedett - $alreadyInCart);
+        $requestedTotal = $alreadyInCart + $quantity;
+        $allowedQuantity = WebshopStockService::acceptableQuantity($product, $requestedTotal);
+        $quantity = max(0, $allowedQuantity - $alreadyInCart);
 
         if ($quantity <= 0) {
             return 0;

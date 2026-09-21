@@ -1,3 +1,43 @@
+## [1.1.9] - 2026-09-18
+### Admin javítások (a vegyiáru-bemutató feltöltése közben derültek ki)
+- **Kategória listakép**: a képmetszővel vágott listakép eddig NYERSEN mentődött
+  (~1000×750 px, ~1 MB PNG egy 400×300-as kártyához) — most a
+  `webshop.category_list_image_crop_sizes` célméretére méretezve, webp-ként
+  (`ImageService::saveCustomImage`), a normál és a széles változat is
+- **Variációk szerkesztője**: a „Kapcsolódó termékek" feltételén belül ült, így
+  kikapcsolt kapcsolódó termékeknél a variációkat sem lehetett kezelni — a két
+  oszlop mostantól egymástól független
+- **Új termék oldal**: a „Leírás" mező `js-tinymce` osztályú volt, de a szerkesztő
+  csak az edit oldalon töltődött be — itt sima szövegdoboz maradt
+
+### Site
+- **Szűrők**: a szűrőpanel csak azokat az értékeket mutatja, amelyek a kategória
+  legalább egy AKTÍV termékén szerepelnek (eddig a tulajdonság-csoport összes
+  értéke látszott, pl. a Mosószereknél „Spray" és „WC" — ezekre mindig 0 találat
+  jött); a bejelölt érték mindig látszik, az üres csoport kimarad
+- **Variációk doboz a termékoldalon**: csak akkor jelenik meg, ha a terméken kívül legalább
+  egy AKTÍV változat is van — a lista a jelenlegi terméket mindig tartalmazza, ezért eddig a
+  variáció nélküli termékeken is ott volt egy egyelemű „Variációk" doboz
+- **Szám-tulajdonság mértékegysége**: „30 adag" a „30adag" helyett — közös
+  `WebshopPropertyCategory::formatNumberValue()` (nem törhető szóköz, a % és a °
+  szóköz nélkül); termékkártya, táblázatos lista, összehasonlítás, termékoldal
+
+### A kimaradt magyar azonosítók átnevezése
+- az 1.1.8 „egész csomagos" átnevezéséből kimaradt ~75 azonosító angolra írva:
+  nyitóoldal-blokkok (`hexSzin` → `hexColor`, `intLista` → `intList`, `$blokk`,
+  `$idk`, `$adminMod`, …), kategóriamenü-fa (`fabaRendez` → `buildTree`,
+  `$szuloId`, `$letezoIdk`, …), kereső (`$kifejezes`, `$minta`, `$osszesTalalat`),
+  kosár (`$kertOsszesen`, `$engedett`), kupon (`$osztaly`, `$kod`),
+  service provider (`$wsMenuSzuro`), valamint a JS-ek: `webshop-search.js`,
+  `webshop-category-menu.js`, `webshop-site.js` és a nyitóoldal-szerkesztő, a
+  beállítások, a pénztár és a fizetési eredmény oldal inline scriptjei
+- tokenizáló alapú csere: kommentek, felületi szövegek és API-kulcsok (pl.
+  `{ code: … }`, `obj.status_label`) változatlanok
+- élőben ellenőrizve: fejléc-kereső, kategóriamenü (asztali panel + mobil fiók),
+  nyitóoldal-szerkesztő (termékkereső, kategória hozzáadása, mentés — a bannerképek
+  megmaradnak), kosár (készlethiány-üzenet), kupon aktiválás, 31 rendelés
+  címblokkja
+
 ## [1.1.8] - 2026-09-11
 ### Minden azonosító angolra
 - a magyar nevű PHP változók, metódusok és tömbkulcsok angolra íródtak át az

@@ -22,12 +22,12 @@ class WebshopHomeBlockService
      */
     public static function hydrateForSite(): array
     {
-        $blokkok = WebshopHomeBlock::active()->ordered()->get();
+        $blocks = WebshopHomeBlock::active()->ordered()->get();
 
-        return $blokkok->map(function (WebshopHomeBlock $blokk) {
+        return $blocks->map(function (WebshopHomeBlock $block) {
             return [
-                'block' => $blokk,
-                'items' => self::items($blokk, false),
+                'block' => $block,
+                'items' => self::items($block, false),
             ];
         })->all();
     }
@@ -40,12 +40,12 @@ class WebshopHomeBlockService
      */
     public static function hydrateForAdmin(): array
     {
-        $blokkok = WebshopHomeBlock::ordered()->get();
+        $blocks = WebshopHomeBlock::ordered()->get();
 
-        return $blokkok->map(function (WebshopHomeBlock $blokk) {
+        return $blocks->map(function (WebshopHomeBlock $block) {
             return [
-                'block' => $blokk,
-                'items' => self::items($blokk, true),
+                'block' => $block,
+                'items' => self::items($block, true),
             ];
         })->all();
     }
@@ -55,17 +55,17 @@ class WebshopHomeBlockService
      *
      * @param bool $adminMod törölt elemeknél helyőrzőt adjon-e vissza
      */
-    protected static function items(WebshopHomeBlock $blokk, bool $adminMod): array
+    protected static function items(WebshopHomeBlock $block, bool $forAdmin): array
     {
-        switch ($blokk->type) {
+        switch ($block->type) {
             case WebshopHomeBlock::TYPE_PRODUCTS_MANUAL:
-                return self::manualProducts($blokk, $adminMod);
+                return self::manualProducts($block, $forAdmin);
 
             case WebshopHomeBlock::TYPE_PRODUCTS_CATEGORY:
-                return self::categoryProducts($blokk);
+                return self::categoryProducts($block);
 
             case WebshopHomeBlock::TYPE_CATEGORIES:
-                return self::categories($blokk, $adminMod);
+                return self::categories($block, $forAdmin);
 
             default:
                 return [];
@@ -79,24 +79,24 @@ class WebshopHomeBlockService
      * vissza az azonosítólista szerint; különben az admin drag&drop sorrendje
      * a site-on nem látszana.
      */
-    protected static function manualProducts(WebshopHomeBlock $blokk, bool $adminMod): array
+    protected static function manualProducts(WebshopHomeBlock $block, bool $forAdmin): array
     {
-        $idk = $blokk->setting('product_ids', []);
-        if (empty($idk)) {
+        $ids = $block->setting('product_ids', []);
+        if (empty($ids)) {
             return [];
         }
 
         $products = WebshopProduct::query()
-            ->whereIn('id', $idk)
+            ->whereIn('id', $ids)
             ->with(['category', 'label'])
             ->get()
             ->keyBy('id');
 
         $result = [];
-        foreach ($idk as $id) {
+        foreach ($ids as $id) {
             if (isset($products[$id])) {
                 $result[] = $products[$id];
-            } elseif ($adminMod) {
+            } elseif ($forAdmin) {
                 // Az adminban látszania kell, hogy egy hivatkozott termék eltűnt
                 $result[] = ['missing' => true, 'id' => $id];
             }
@@ -108,22 +108,22 @@ class WebshopHomeBlockService
     /**
      * Egy kategória termékei, a blokkon beállított rendezéssel és darabszámmal.
      */
-    protected static function categoryProducts(WebshopHomeBlock $blokk): array
+    protected static function categoryProducts(WebshopHomeBlock $block): array
     {
-        $kategoriaId = $blokk->setting('category_id');
-        if (!$kategoriaId) {
+        $categoryId = $block->setting('category_id');
+        if (!$categoryId) {
             return [];
         }
 
         $query = WebshopProduct::query()
-            ->where('category_id', $kategoriaId)
+            ->where('category_id', $categoryId)
             ->with(['category', 'label']);
 
         if (method_exists(WebshopProduct::class, 'scopeActive')) {
             $query->active();
         }
 
-        switch ($blokk->setting('sort', 'sort_order')) {
+        switch ($block->setting('sort', 'sort_order')) {
             case 'newest':
                 $query->orderByDesc('id');
                 break;
@@ -140,29 +140,29 @@ class WebshopHomeBlockService
                 $query->orderBy('sort_order')->orderBy('id');
         }
 
-        return $query->limit((int) $blokk->setting('limit', 8))->get()->all();
+        return $query->limit((int) $block->setting('limit', 8))->get()->all();
     }
 
     /**
      * Kiválasztott kategóriák — szintén a mentett sorrendben.
      */
-    protected static function categories(WebshopHomeBlock $blokk, bool $adminMod): array
+    protected static function categories(WebshopHomeBlock $block, bool $forAdmin): array
     {
-        $idk = $blokk->setting('category_ids', []);
-        if (empty($idk)) {
+        $ids = $block->setting('category_ids', []);
+        if (empty($ids)) {
             return [];
         }
 
-        $kategoriak = WebshopCategory::query()
-            ->whereIn('id', $idk)
+        $categories = WebshopCategory::query()
+            ->whereIn('id', $ids)
             ->get()
             ->keyBy('id');
 
         $result = [];
-        foreach ($idk as $id) {
-            if (isset($kategoriak[$id])) {
-                $result[] = $kategoriak[$id];
-            } elseif ($adminMod) {
+        foreach ($ids as $id) {
+            if (isset($categories[$id])) {
+                $result[] = $categories[$id];
+            } elseif ($forAdmin) {
                 $result[] = ['missing' => true, 'id' => $id];
             }
         }

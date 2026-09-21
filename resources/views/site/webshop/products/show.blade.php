@@ -90,7 +90,7 @@
                                                              furcsán. --}}
                                                         <a href="{{ route('site.webshop.categories.show', $product->category) }};{{ $pp->property->slug }}-f{{ $pp->property->id }}" class="badge badge-secondary mr-1">{{ $pp->property->name }}</a>
                                                     @elseif($pp->number_value !== null)
-                                                        <span class="fw-600">{{ (float)$pp->number_value }}{{ $pc->suffix }}</span>
+                                                        <span class="fw-600">{{ $pc->formatNumberValue($pp->number_value) }}</span>
                                                     @endif
                                                 @endforeach
                                             </div>
