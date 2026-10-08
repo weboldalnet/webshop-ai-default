@@ -15,7 +15,18 @@
                  futárszolgálatot – így nem egy hosszú, vegyes listából kell
                  választania. Egytagú csoportnál nincs alválasztás. --}}
             @php
-                $wsSelectedMethod = old('shipping_method', array_key_first($shippingMethods));
+                // Az alapértelmezett mód a CSOPORTOK sorrendjét kövesse (házhoz szállítás →
+                // csomagpont → személyes átvétel), ne a providerek regisztrációs sorrendjét:
+                // utóbbinál a személyes átvétel került előre, és az volt előre kiválasztva.
+                $wsDefaultMethod = null;
+                foreach (($shippingGroups ?? []) as $wsGroup) {
+                    if (!empty($wsGroup['methods'])) {
+                        $wsDefaultMethod = array_key_first($wsGroup['methods']);
+                        break;
+                    }
+                }
+
+                $wsSelectedMethod = old('shipping_method', $wsDefaultMethod ?? array_key_first($shippingMethods));
                 $wsSelectedGroup = null;
                 foreach (($shippingGroups ?? []) as $wsKind => $wsGroup) {
                     if (array_key_exists($wsSelectedMethod, $wsGroup['methods'])) {

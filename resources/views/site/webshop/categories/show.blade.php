@@ -8,14 +8,21 @@
         <div class="container-xl container-fluid pb-5">
             @include('site.webshop.partials.breadcrumb', ['category' => $category])
 
+            @php($wsHasFilters = $wsHasFilters ?? true)
+
             <div class="row mt-4">
-                <!-- Sidebar szűrők -->
-                <div class="col-lg-3 ws-filter-sidebar">
-                    @include('site.webshop.categories.partials.filter-sidebar')
-                </div>
+                {{-- Sidebar szűrők – csak akkor, ha van egyáltalán megjeleníthető szűrő.
+                     Szűrő nélküli kategóriában (pl. csak néhány, tulajdonság nélküli termék)
+                     egy üres „Szűrők" doboz maradna a bal oldalon, a terméklista pedig
+                     ok nélkül szűkülne a sor háromnegyedére. --}}
+                @if($wsHasFilters)
+                    <div class="col-lg-3 ws-filter-sidebar">
+                        @include('site.webshop.categories.partials.filter-sidebar')
+                    </div>
+                @endif
 
                 <!-- Terméklista rész -->
-                <div class="col-lg-9 ws-product-list-wrapper">
+                <div class="{{ $wsHasFilters ? 'col-lg-9' : 'col-12' }} ws-product-list-wrapper">
                     <div class="row mb-3 align-items-center ws-toolbar">
                         <div class="col-md-12 d-flex justify-content-between align-items-center flex-wrap">
                             <h1 class="h3 font-weight-bold mb-0">{{ $category->name_plural }}</h1>

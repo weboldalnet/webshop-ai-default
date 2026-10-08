@@ -260,6 +260,21 @@ class WebshopCommerceService
     ];
 
     /**
+     * Saját díjazású szállítási módok: nincs külső díjszámításuk, a díjat és az
+     * ingyenes-szállítási értékhatárt az adminban adják meg
+     * (site_checkout_shipping_{kód}_fee / _free_above).
+     *
+     * - flat_rate: saját futárszolgálat (commerce-core provider, a díjat
+     *   applyFlatRateSettings() adja át neki)
+     * - mpl: MPL futárszolgálat (a webshop saját providere, lásd
+     *   Shipping\ManualCourierShippingProvider – maga olvassa a beállítást)
+     *
+     * Az admin beállítóoldal ez alapján teszi ki a díjmezőket, a mentés pedig
+     * ez alapján fogadja el őket – új ilyen módnál elég ide felvenni.
+     */
+    public const MANUALLY_PRICED_SHIPPING_METHODS = ['flat_rate', 'mpl'];
+
+    /**
      * A telepített szállítási integrációk (kód => metaadat: name, settings_url,
      * kind, builtin, active) – a kikapcsoltak is benne vannak.
      */
@@ -704,11 +719,62 @@ class WebshopCommerceService
      * Hibát nem dob: ha a provider nem elérhető, 0-t ad vissza, hogy a pénztár
      * működőképes maradjon.
      */
+    /**
+     * A fix díjas (saját futáros) szállítás díját adminból állítjuk be.
+     *
+     * A commerce-core FlatRateShippingProvider a díjat a config-ból (végső soron
+     * .env-ből) olvassa, amit az ügyfél nem tud szerkeszteni. A ShippingManager a
+     * providereket a példányosításkor kapott config-tömbbel hozza létre, ezért a
+     * config() futásidejű átírása már nem érné el a kész példányt – helyette egy
+     * friss, az admin értékeivel felparaméterezett providert regisztrálunk felül.
+     *
+     * Ha nincs beállított díj, nem nyúlunk semmihez: marad a config szerinti érték.
+     */
+    private static function applyFlatRateSettings(): void
+    {
+        if (!class_exists(\Weboldalnet\CommerceCore\Providers\Shipping\FlatRateShippingProvider::class)) {
+            return;
+        }
+
+        $fee = WebshopSettingsService::get('site_checkout_shipping_flat_rate_fee', null);
+        $freeAbove = WebshopSettingsService::get('site_checkout_shipping_flat_rate_free_above', null);
+
+        if ($fee === null || $fee === '') {
+            return;
+        }
+
+        // A 0 és az üres mező egyaránt azt jelenti: nincs ingyenes értékhatár.
+        // FIGYELEM: 0-t tilos átadni – a provider `cartTotal >= freeAbove` feltétele
+        // mellett az MINDEN rendelést ingyenessé tenne.
+        $freeAboveValue = ($freeAbove === null || $freeAbove === '' || (float) $freeAbove <= 0)
+            ? null
+            : (float) $freeAbove;
+
+        // A provider `$this->config[...] ?? config(...)` mintát használ, ezért a null
+        // értéket a config-ból vett .env-érték felülírná – a config-ot is állítjuk.
+        config([
+            'commerce-core.shipping.providers.flat_rate.rate' => (float) $fee,
+            'commerce-core.shipping.providers.flat_rate.free_above' => $freeAboveValue,
+        ]);
+
+        try {
+            $manager = app(\Weboldalnet\CommerceCore\Managers\ShippingManager::class);
+            $manager->register('flat_rate', new \Weboldalnet\CommerceCore\Providers\Shipping\FlatRateShippingProvider([
+                'rate' => (float) $fee,
+                'free_above' => $freeAboveValue,
+            ]));
+        } catch (\Throwable $e) {
+            Log::warning('WebshopCommerceService: a fix szállítási díj beállítása nem sikerült: ' . $e->getMessage());
+        }
+    }
+
     public static function calculateShippingCost(?string $shippingMethod, float $itemsTotal, string $currency = 'HUF'): float
     {
         if (!$shippingMethod || !self::isAvailable()) {
             return 0.0;
         }
+
+        self::applyFlatRateSettings();
 
         try {
             $service = app(\Weboldalnet\CommerceCore\Services\ShippingService::class);
@@ -952,7 +1018,12 @@ class WebshopCommerceService
         return [
             'manual' => 'Manuális szállítás',
             'pickup' => 'Személyes átvétel',
-            'flat_rate' => 'Házhoz szállítás',
+            // NEM „Házhoz szállítás": az a CSOPORT neve, amin belül ez a mód áll –
+            // a pénztárban kétszer egymás alatt ugyanaz a felirat jelent meg.
+            // A fix díjas mód a bolt saját kiszállítása, ezért ez a beszédes név.
+            'flat_rate' => 'Saját futárszolgálat',
+            // Kézzel kezelt futárszolgálat, külső API nélkül (lásd ManualCourierShippingProvider)
+            'mpl' => 'MPL futárszolgálat',
             'parcel_locker' => 'Csomagpont automata',
         ];
     }

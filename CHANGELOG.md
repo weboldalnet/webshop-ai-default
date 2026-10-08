@@ -1,3 +1,34 @@
+## [Unreleased]
+### Szállítás
+- **MPL futárszolgálat** a beépített szállítási módok között, külön csomag nélkül — a
+  pénztárban a házhoz szállítás egyik futárszolgálataként, szállítási címmel választható.
+  Nincs API-kapcsolat: a szállítmányt az ügyfélszolgálat kézzel rögzíti az MPL
+  rendszerében (a rendelésnél „függő" szállítmány jön létre, posta.hu nyomkövetési
+  linkkel). Díj és ingyenes-szállítási értékhatár az adminban; **alapból kikapcsolva**,
+  így frissítés után egyetlen bolt pénztárában sem jelenik meg magától. Általános
+  `Shipping\ManualCourierShippingProvider` — további kézi futárszolgálat egy sorral
+  felvehető (`WebshopAiDefaultServiceProvider::registerBuiltinShippingProviders()`)
+- **Saját futárszolgálat díja adminból**: a fix díjas szállítás díját eddig csak `.env`-ből
+  lehetett állítani — most a beállítóoldalon, ingyenes-szállítási értékhatárral együtt.
+  A saját díjazású módok listája egy helyen: `WebshopCommerceService::MANUALLY_PRICED_SHIPPING_METHODS`
+- **„Saját futárszolgálat" felirat** a fix díjas módnál — eddig maga is „Házhoz szállítás"
+  volt, így a pénztárban a csoportnév alatt még egyszer ugyanaz állt
+- **Alapértelmezett szállítási mód**: a csoportok sorrendjét követi (házhoz szállítás →
+  csomagpont → személyes átvétel); eddig a providerek regisztrációs sorrendje döntött,
+  és a személyes átvétel volt előre kiválasztva
+
+### Pénztár
+- **Összegző**: `col-lg-6` a `col-6` helyett — mobilon is fél szélességű volt
+- **Rádiógombok igazítása**: a core `top: 0`-ja 3,5 px-rel a szöveg fölé tette a jelölőt;
+  a csomag stíluslapja visszaadja a Bootstrap `0.25rem`-jét (a jelölőnégyzetekkel azonosan)
+
+### Kategórialap
+- **Szűrő nélküli kategória**: ha nincs megjeleníthető szűrő, a bal oldali oszlop elmarad,
+  a lista teljes szélességű, xl-en 4 termék fér egy sorba (`col-xl-3`). A döntés közös
+  forrásból jön: `WebshopProductFilterService::getVisibleFilterGroups()` / `hasVisibleFilters()`
+- **Mobil „Szűrés" gomb**: `@isset` helyett `@if` — a `false` értéket is igaznak vette,
+  és szűrő nélküli kategórián üres panelt nyitott
+
 ## [1.1.9] - 2026-09-18
 ### Admin javítások (a vegyiáru-bemutató feltöltése közben derültek ki)
 - **Kategória listakép**: a képmetszővel vágott listakép eddig NYERSEN mentődött

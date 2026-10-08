@@ -1026,3 +1026,19 @@
         height: 460px;
     }
 }
+
+/* --------------------------------------------------------------------------
+   Rádiógombok függőleges igazítása (webshop-szintű javítás)
+
+   A core `inputs.scss` a `.custom-radio` jelölőjét `top: 0`-ra teszi, így a 16px-es
+   karika a sordoboz tetejére kerül. 16px betű + 24px sormagasság mellett a szöveg
+   közepe 11,5px-nél van, a karika közepe viszont 8px-nél – mérve 3,5px-es elcsúszás.
+   A jelölőnégyzeteknél a Bootstrap saját 0.25rem-je marad, azok pontosan ülnek,
+   ezért a rádiónál is azt állítjuk vissza.
+
+   Ez a fájl a core stíluslap UTÁN töltődik be, ezért azonos fajsúlyú szabállyal is nyer.
+   -------------------------------------------------------------------------- */
+.custom-radio .custom-control-label::before,
+.custom-radio .custom-control-label::after {
+    top: .25rem;
+}

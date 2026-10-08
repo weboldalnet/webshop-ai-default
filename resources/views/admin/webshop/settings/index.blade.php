@@ -359,6 +359,53 @@
                                                             </a>
                                                         @endif
                                                     </div>
+
+                                                    {{-- A saját díjazású módoknak (saját futárszolgálat, MPL) nincs
+                                                         külső díjszámítása, ezért nincs hova kattintani a fogaskerékkel:
+                                                         a díjat itt, helyben kell tudni megadni. A lista:
+                                                         WebshopCommerceService::MANUALLY_PRICED_SHIPPING_METHODS --}}
+                                                    @if(in_array($code, \Weboldalnet\WebshopAiDefault\Services\Webshop\Commerce\WebshopCommerceService::MANUALLY_PRICED_SHIPPING_METHODS, true))
+                                                        {{-- Blokk-forma, NEM egysoros: ebben a fájlban később PHP-blokk
+                                                             lezárása jön, ami az egysoros változatot csendben lenyelné. --}}
+                                                        @php
+                                                            $wsFeeKey = 'site_checkout_shipping_' . $code . '_fee';
+                                                            $wsFreeAboveKey = 'site_checkout_shipping_' . $code . '_free_above';
+                                                        @endphp
+                                                        <div class="pl-4 mb-3" id="{{ $code }}-fee-settings"
+                                                             data-fee-block-for="site_checkout_shipping_method_{{ $code }}_enabled"
+                                                             @if(!$method['enabled']) style="display:none;" @endif>
+                                                            <div class="form-group mb-2">
+                                                                <label for="{{ $wsFeeKey }}" class="small mb-1">
+                                                                    Szállítási díj (Ft)
+                                                                </label>
+                                                                <input type="number" min="0" step="1" class="form-control form-control-sm"
+                                                                       style="max-width: 160px;"
+                                                                       id="{{ $wsFeeKey }}" name="{{ $wsFeeKey }}"
+                                                                       value="{{ $ws[$wsFeeKey] ?? 0 }}">
+                                                                <small class="form-text text-muted">
+                                                                    A pénztárban a szállítási mód mellett és az összesítőben is ez az összeg jelenik meg.
+                                                                </small>
+                                                            </div>
+                                                            <div class="form-group mb-0">
+                                                                <label for="{{ $wsFreeAboveKey }}" class="small mb-1">
+                                                                    Ingyenes szállítás ettől a kosárértéktől (Ft)
+                                                                </label>
+                                                                <input type="number" min="0" step="1" class="form-control form-control-sm"
+                                                                       style="max-width: 160px;"
+                                                                       id="{{ $wsFreeAboveKey }}" name="{{ $wsFreeAboveKey }}"
+                                                                       value="{{ $ws[$wsFreeAboveKey] ?? '' }}">
+                                                                <small class="form-text text-muted">
+                                                                    Üresen hagyva vagy 0 esetén nincs ingyenes szállítási értékhatár.
+                                                                </small>
+                                                            </div>
+                                                            @if($code === 'mpl')
+                                                                <small class="form-text text-muted mt-2">
+                                                                    Az MPL-lel leadott rendeléseket az ügyfélszolgálat kézzel rögzíti az MPL rendszerében –
+                                                                    ehhez nincs automatikus kapcsolat.
+                                                                </small>
+                                                            @endif
+                                                        </div>
+                                                    @endif
                                                 @empty
                                                     <p class="text-muted small mb-0">Ehhez nincs telepítve futárszolgálat-integráció.</p>
                                                 @endforelse
@@ -658,6 +705,15 @@
 
                 document.querySelectorAll('[data-shipping-group]').forEach(function (cb) {
                     cb.addEventListener('change', function () { toggleShippingGroupProviders(cb); });
+                });
+
+                /* Szállítási módhoz kötött díjmező (fix díjas szállítás): csak bekapcsolt módnál látszik */
+                document.querySelectorAll('[data-fee-block-for]').forEach(function (block) {
+                    var cb = document.getElementById(block.getAttribute('data-fee-block-for'));
+                    if (!cb) { return; }
+                    var sync = function () { block.style.display = cb.checked ? '' : 'none'; };
+                    cb.addEventListener('change', sync);
+                    sync();
                 });
 
                 var catParentCb = document.getElementById('category_parent_enabled');

@@ -32,6 +32,8 @@ class WebshopAiDefaultServiceProvider extends ServiceProvider
             Event::listen(\Weboldalnet\CommerceCore\Events\PaymentCancelled::class, HandlePaymentCancelled::class);
         }
 
+        $this->registerBuiltinShippingProviders();
+
         // Route-ok betöltése
         $this->loadRoutesFrom(__DIR__.'/../routes/web.php');
 
@@ -108,6 +110,40 @@ class WebshopAiDefaultServiceProvider extends ServiceProvider
                 $view->with('ws', WebshopSettingsService::all());
             }
         });
+    }
+
+    /**
+     * A webshop saját, beépített szállítási módjai (külön csomag nélkül).
+     *
+     * MPL futárszolgálat: nincs API-kapcsolat – a pénztárban házhoz szállításként,
+     * szállítási címmel választható, a szállítmányt pedig az ügyfélszolgálat kézzel
+     * rögzíti az MPL rendszerében. A díjat az adminban adják meg (mint a saját
+     * futárszolgálatnál), a pénztárban a webshop kapcsolója dönti el, hogy
+     * megjelenik-e – alapból KI van kapcsolva, így egy frissítés után sem bukkan
+     * fel magától egyetlen bolt pénztárában sem.
+     *
+     * Adatbázist itt nem olvasunk (friss telepítésnél a migráció előtt még nincs
+     * beállítás-tábla): a provider a díjat csak számoláskor kérdezi le.
+     */
+    protected function registerBuiltinShippingProviders(): void
+    {
+        if (!class_exists(\Weboldalnet\CommerceCore\Managers\ShippingManager::class)
+            || !interface_exists(\Weboldalnet\CommerceCore\Contracts\ShippingProviderInterface::class)) {
+            return;
+        }
+
+        try {
+            $this->app->make(\Weboldalnet\CommerceCore\Managers\ShippingManager::class)->register(
+                'mpl',
+                new \Weboldalnet\WebshopAiDefault\Services\Webshop\Commerce\Shipping\ManualCourierShippingProvider(
+                    'mpl',
+                    'MPL futárszolgálat',
+                    'https://www.posta.hu/nyomkovetes/nyitooldal?searchvalue={code}'
+                )
+            );
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::warning('Webshop: az MPL szállítási mód regisztrálása nem sikerült: ' . $e->getMessage());
+        }
     }
 
     public function register()

@@ -90,7 +90,7 @@
                 </div>
 
                 {{-- 6. Tételes összesítő és a rendelés leadása --}}
-                <div class="col-6 mx-auto">
+                <div class="col-lg-6 mx-auto">
                     @include('site.webshop.checkout.partials.summary')
                 </div>
             </form>

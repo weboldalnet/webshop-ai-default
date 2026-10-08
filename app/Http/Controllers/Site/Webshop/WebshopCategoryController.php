@@ -52,9 +52,17 @@ class WebshopCategoryController extends Controller
             ]);
         }
 
+        // Ha a kategóriában egyetlen megjeleníthető szűrő sincs, a bal oldali oszlop
+        // üres dobozként éktelenkedne – ilyenkor elhagyjuk, és a terméklista kapja
+        // meg a teljes sorszélességet (lásd show.blade.php és product-list.blade.php).
+        $filterGroups = WebshopProductFilterService::getVisibleFilterGroups($category);
+        $hasFilters = count($filterGroups) > 0;
+
         return view('site.webshop.categories.show', [
             'category' => $category,
-            'visibleFilterBtn' => true,
+            'visibleFilterBtn' => $hasFilters,
+            'wsFilterGroups' => $filterGroups,
+            'wsHasFilters' => $hasFilters,
         ]);
     }
 
@@ -92,7 +100,14 @@ class WebshopCategoryController extends Controller
 
         return response()->json([
             'success' => true,
-            'html' => view('site.webshop.categories.partials.product-list', compact('products', 'viewMode', 'ws'))->render(),
+            // A kártya-szélességhez a lista is tudni akarja, van-e szűrő-oszlop:
+            // nélküle xl-en négy termék fér ki egy sorba.
+            'html' => view('site.webshop.categories.partials.product-list', [
+                'products' => $products,
+                'viewMode' => $viewMode,
+                'ws' => $ws,
+                'wsHasFilters' => WebshopProductFilterService::hasVisibleFilters($category),
+            ])->render(),
             'pagination' => view('site.webshop.categories.partials.pagination', compact('products'))->render(),
         ]);
     }

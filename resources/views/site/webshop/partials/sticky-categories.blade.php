@@ -28,11 +28,13 @@
                 <i class="fa-solid fa-arrow-right-arrow-left"></i>
             </button>
             <div class="category-row d-flex flex-nowrap">
-                @isset($visibleFilterBtn)
+                {{-- @isset helyett @if: a kategórialap false-t ad át, ha nincs megjeleníthető
+                     szűrő – az @isset azt is igaznak vette volna, és a gomb üres panelt nyitna. --}}
+                @if($visibleFilterBtn ?? false)
                     <button type="button" class="btn-category filter-btn d-lg-none d-block js-show-filter-btn text-white bg-dark">
                         <i class="fa fa-filter"></i>
                     </button>
-                @endisset
+                @endif
                 @foreach($stickyCategories->where('parent_id', null) as $cat)
                     <div class="dropdown mr-1 mb-0 js-category-dropdown" tabindex="0">
                         <a href="{{ route('site.webshop.categories.show', $cat) }}"

@@ -110,6 +110,14 @@ class WebshopSettingController extends AdminExtendedController
             'product_extra_gallery_title',
         ];
 
+        // Saját díjazású szállítási módok (saját futárszolgálat, MPL) díja és ingyenes-
+        // szállítási értékhatára. A lista egy helyen van: WebshopCommerceService::
+        // MANUALLY_PRICED_SHIPPING_METHODS – az admin nézet is abból teszi ki a mezőket.
+        foreach (WebshopCommerceService::MANUALLY_PRICED_SHIPPING_METHODS as $code) {
+            $valueKeys[] = 'site_checkout_shipping_' . $code . '_fee';
+            $valueKeys[] = 'site_checkout_shipping_' . $code . '_free_above';
+        }
+
         if ($request->has('invoice_lines_present')) {
             foreach (array_keys(WebshopInvoiceRequestFactory::EXTRA_LINES) as $lineKey) {
                 $valueKeys[] = 'invoice_line_' . $lineKey . '_name';

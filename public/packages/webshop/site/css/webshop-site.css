@@ -373,8 +373,8 @@
 /* Aki csökkentett mozgást kért a rendszerében, annak ne pörögjön */
 @media (prefers-reduced-motion: reduce) {
   .fa-spin,
-.fa-pulse,
-.fa-spin-pulse {
+  .fa-pulse,
+  .fa-spin-pulse {
     animation-delay: -1ms;
     animation-duration: 1ms;
     animation-iteration-count: 1;
@@ -525,7 +525,7 @@
 /* A nagyító a mezőn belül, ::after-rel: nem kell hozzá extra elem,
    és nem takarja a szöveget. */
 .ws-search-container::after {
-  content: "";
+  content: "\f002";
   font-family: "Font Awesome 6 Free", "Font Awesome 5 Free", FontAwesome;
   font-weight: 900;
   position: absolute;
@@ -705,7 +705,7 @@
    kapcsolót – minden panel egyszerre látszana, egymásra rajzolva. */
 @media (max-width: 991.98px) {
   .ws-cat-panel,
-.ws-cat-panel.show {
+  .ws-cat-panel.show {
     display: none;
   }
 }
@@ -980,6 +980,21 @@
     width: 690px;
     height: 460px;
   }
+}
+/* --------------------------------------------------------------------------
+   Rádiógombok függőleges igazítása (webshop-szintű javítás)
+
+   A core `inputs.scss` a `.custom-radio` jelölőjét `top: 0`-ra teszi, így a 16px-es
+   karika a sordoboz tetejére kerül. 16px betű + 24px sormagasság mellett a szöveg
+   közepe 11,5px-nél van, a karika közepe viszont 8px-nél – mérve 3,5px-es elcsúszás.
+   A jelölőnégyzeteknél a Bootstrap saját 0.25rem-je marad, azok pontosan ülnek,
+   ezért a rádiónál is azt állítjuk vissza.
+
+   Ez a fájl a core stíluslap UTÁN töltődik be, ezért azonos fajsúlyú szabállyal is nyer.
+   -------------------------------------------------------------------------- */
+.custom-radio .custom-control-label::before,
+.custom-radio .custom-control-label::after {
+  top: 0.25rem;
 }
 
 /*# sourceMappingURL=webshop-site.css.map */

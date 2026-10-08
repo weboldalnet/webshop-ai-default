@@ -73,11 +73,13 @@
 
         {{-- MOBIL: két kompakt gomb --}}
         <div class="ws-cat-menu-mobile d-flex d-lg-none align-items-center">
-            @isset($visibleFilterBtn)
+            {{-- @isset helyett @if: a kategórialap false-t ad át, ha nincs megjeleníthető
+                 szűrő – az @isset azt is igaznak vette volna, és a gomb üres panelt nyitna. --}}
+            @if($visibleFilterBtn ?? false)
                 <button type="button" class="ws-cat-menu-mobile-btn js-show-filter-btn">
                     <i class="fa fa-filter mr-1"></i> Szűrés
                 </button>
-            @endisset
+            @endif
 
             <button type="button" class="ws-cat-menu-mobile-btn js-ws-cat-drawer-open">
                 <i class="fa fa-bars mr-1"></i> Kategóriák
