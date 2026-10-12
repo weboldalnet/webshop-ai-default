@@ -998,3 +998,41 @@
 }
 
 /*# sourceMappingURL=webshop-site.css.map */
+
+/* --------------------------------------------------------------------------
+   Egységár, Omnibusz-megjegyzés és „Ellenőrzött vásárló" jelvény alapszínei
+
+   Korábban ezek a blade-ekben INLINE `style`-ként szerepeltek, ami minden projektet
+   `!important`-ra kényszerített az arculatra hozásnál. Innentől osztályok, a csomag
+   alapértékével — a projekt stíluslapja normál fajsúllyal felülírhatja.
+   -------------------------------------------------------------------------- */
+.ws-unit-price,
+.ws-price-note {
+  color: #5a6268;
+}
+
+.ws-price-note {
+  white-space: normal;
+}
+
+/* A Bootstrap `badge-success` kis betűnél csak ~3,1:1 kontrasztú; ez a sötétebb zöld
+   fehér felirattal 5,9:1-et ad. */
+.ws-verified-badge {
+  background-color: #1e6b30;
+  color: #fff;
+}
+
+/* --------------------------------------------------------------------------
+   Kereső-lenyíló: a kategória-kapszula EGY sor marad, kipontozva
+
+   A terméknév már így viselkedik (`.ws-search-item-title`), a kapszula kimaradt:
+   hosszú kategórianévnél kilógott a sor jobb oldali belső margójából.
+   -------------------------------------------------------------------------- */
+.ws-search-item-meta .badge {
+  display: inline-block;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  vertical-align: bottom;
+}

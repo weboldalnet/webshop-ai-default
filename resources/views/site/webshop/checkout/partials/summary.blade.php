@@ -15,16 +15,16 @@
 
                 <div class="col-lg-12 mx-auto">
                     @if($wsPricesVisible)
-                    <div class="d-flex justify-content-between py-2">
+                    <div class="d-flex flex-wrap justify-content-between py-2">
                         <span>Kosár érték</span>
                         {{-- id kell hozzá: mennyiség-változtatáskor JS-ből frissül --}}
-                        <span class="font-weight-bold" id="ws-sum-items">{{ hufFormat($total) }}</span>
+                        <span class="font-weight-bold ws-nowrap" id="ws-sum-items">{{ hufFormat($total) }}</span>
                     </div>
 
                     @if($wsShippingEnabled)
-                        <div class="d-flex justify-content-between py-2 border-top">
+                        <div class="d-flex flex-wrap justify-content-between py-2 border-top">
                             <span>Szállítási díj</span>
-                            <span class="font-weight-bold" id="ws-sum-shipping">&mdash;</span>
+                            <span class="font-weight-bold ws-nowrap" id="ws-sum-shipping">&mdash;</span>
                         </div>
                     @endif
 
@@ -35,22 +35,22 @@
                          hidden attribútummal és nem is inline display:none-nal: a
                          Bootstrap .d-flex szabálya !important, ezért mindkettőt
                          felülírná, és a sor a rejtés ellenére látszana. --}}
-                    <div class="d-none justify-content-between py-2 border-top" id="ws-sum-cod-row">
+                    <div class="d-none flex-wrap justify-content-between py-2 border-top" id="ws-sum-cod-row">
                         <span>Utánvét költsége</span>
-                        <span class="font-weight-bold" id="ws-sum-cod">&mdash;</span>
+                        <span class="font-weight-bold ws-nowrap" id="ws-sum-cod">&mdash;</span>
                     </div>
 
                     {{-- Kuponkedvezmény. Ugyanaz az osztálycserés rejtés, mint az
                          utánvétnél: a Bootstrap .d-flex !important szabálya a
                          hidden attribútumot és az inline display:none-t is felülírná. --}}
-                    <div class="d-none justify-content-between py-2 border-top" id="ws-sum-coupon-row">
+                    <div class="d-none flex-wrap justify-content-between py-2 border-top" id="ws-sum-coupon-row">
                         <span>Kuponkedvezmény<span class="text-muted small ml-1" id="ws-sum-coupon-code"></span></span>
                         <span class="font-weight-bold text-success" id="ws-sum-coupon">&mdash;</span>
                     </div>
 
-                    <div class="d-flex justify-content-between py-3 border-top h4 mb-0">
+                    <div class="d-flex flex-wrap justify-content-between py-3 border-top h4 mb-0">
                         <span class="font-weight-bold">Összesen fizetendő</span>
-                        <span class="text-primary font-weight-bold" id="ws-sum-total">{{ hufFormat($total) }}</span>
+                        <span class="text-primary font-weight-bold ws-nowrap" id="ws-sum-total">{{ hufFormat($total) }}</span>
                     </div>
                 @endif
 

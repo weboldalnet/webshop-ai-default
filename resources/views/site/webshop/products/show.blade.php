@@ -73,7 +73,11 @@
                                 <div class="ws-product-short-desc text-muted mb-4">{{ $product->short_desc }}</div>
                             @endif
 
-                            <h4 class="font-weight-bold mb-3 border-bottom pb-2">Tulajdonságok</h4>
+                            {{-- A címet CSAK akkor írjuk ki, ha van megjeleníthető tulajdonság: üres
+                                 listánál eddig egy cím állt a semmi fölött. --}}
+                            @if($product->productProperties->isNotEmpty())
+                                <h4 class="font-weight-bold mb-3 border-bottom pb-2">Tulajdonságok</h4>
+                            @endif
                             <div class="ws-product-properties">
                                 @foreach($product->productProperties->groupBy('property_category_id') as $pcId => $pProps)
                                     @php $pc = $pProps->first()->propertyCategory; @endphp

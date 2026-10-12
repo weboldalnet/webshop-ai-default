@@ -6,5 +6,5 @@
     $wsUnitPrice = \Weboldalnet\WebshopAiDefault\Services\Webshop\WebshopUnitPriceService::forProduct($product);
 @endphp
 @if($wsUnitPrice)
-    <span class="ws-unit-price {{ $unitPriceClass ?? 'd-block fs-14 font-weight-normal' }}" @unless(isset($unitPriceClass)) style="color: #5a6268;" @endunless>({{ $wsUnitPrice['formatted'] }})</span>
+    <span class="ws-unit-price {{ $unitPriceClass ?? 'd-block fs-14 font-weight-normal' }}">({{ $wsUnitPrice['formatted'] }})</span>
 @endif

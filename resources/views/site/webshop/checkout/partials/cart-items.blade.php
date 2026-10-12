@@ -15,17 +15,24 @@
                 @foreach($items as $productId => $item)
                     <div class="mb-3 pb-3 border-bottom ws-checkout-item-box">
                         <div class="d-flex align-items-center ws-checkout-item" data-id="{{ $productId }}">
+                            {{-- A kép és a név a termékoldalra visz, ÚJ lapon: a vásárló ne veszítse el a
+                                 félig kitöltött pénztár-űrlapot. A `rel="noopener"` kötelező kísérő. --}}
+                            @php($wsItemUrl = !empty($item['slug']) ? route('site.webshop.products.show', $item['slug']) : null)
                             <div class="mr-3" style="width: 80px; height: 80px;">
-                                @if($item['image'])
-                                    <img src="{{ $item['image_thumb'] ?? $item['image'] }}" class="rounded border" style="width: 80px; height: 80px; object-fit: cover">
-                                @else
-                                    <div class="bg-light text-center p-2 rounded"><i class="fa fa-image text-muted"></i></div>
-                                @endif
+                                <a @if($wsItemUrl) href="{{ $wsItemUrl }}" target="_blank" rel="noopener" @endif
+                                   class="d-block ws-checkout-item-link" aria-label="{{ $item['name'] }}">
+                                    @if($item['image'])
+                                        <img src="{{ $item['image_thumb'] ?? $item['image'] }}" class="rounded border" style="width: 80px; height: 80px; object-fit: cover">
+                                    @else
+                                        <div class="bg-light text-center p-2 rounded"><i class="fa fa-image text-muted"></i></div>
+                                    @endif
+                                </a>
                             </div>
 
                             <div class="flex-grow-1">
                                 <h5 class="fs-16 font-weight-bold mb-1">
-                                    {{ $item['name'] }}
+                                    <a @if($wsItemUrl) href="{{ $wsItemUrl }}" target="_blank" rel="noopener" @endif
+                                       class="ws-checkout-item-link">{{ $item['name'] }}</a>
                                     @if($item['sec_name'])
                                         @if(!$wsPricesVisible) <br> @endif
                                         <span class="font-weight-light fs-14">{{ $item['sec_name'] }}</span>

@@ -1,10 +1,16 @@
-<div class="modal fade" id="reviewModal" tabindex="-1" role="dialog" aria-hidden="true">
+{{--
+    A modal SZÁNDÉKOSAN nem hoz saját színeket: a gyökéren ott a gazdaprojekt
+    `default-modal` osztálya, a gombok a projekt variánsai. Korábban `bg-dark` fejléc és
+    `btn-primary` gomb volt beégetve, ami semmilyen arculathoz nem illeszkedett, és a
+    projekteket a teljes nézet leárnyékolására kényszerítette.
+--}}
+<div class="modal fade default-modal" id="reviewModal" tabindex="-1" role="dialog" aria-hidden="true">
     <div class="modal-dialog" role="document">
         <div class="modal-content border-0 shadow-lg">
-            <div class="modal-header bg-dark text-white">
+            <div class="modal-header">
                 <h5 class="modal-title font-weight-bold">Vélemény írása</h5>
-                <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
-                    <span aria-hidden="true">&times;</span>
+                <button type="button" class="btn btn-sm btn-light shadow-none lh-1" data-dismiss="modal" aria-label="Bezárás">
+                    <i class="fa fa-times fs-20"></i>
                 </button>
             </div>
             <form id="ws-review-form">
@@ -63,9 +69,11 @@
                         </div>
                     </div>
                 </div>
-                <div class="modal-footer bg-light">
-                    <button type="button" class="btn btn-outline-secondary font-weight-bold" data-dismiss="modal">Mégse</button>
-                    <button type="submit" class="btn btn-primary font-weight-bold px-4">Küldés <i class="fa fa-paper-plane ml-2"></i></button>
+                <div class="modal-footer">
+                    {{-- A core modáljainak gomb-készlete (`primary-btn btn-main-color`), hogy a gomb
+                         a gazdaprojekt palettáján jelenjen meg, ne a Bootstrap kékjén. --}}
+                    <button type="button" class="btn btn-default btn-outline-secondary" data-dismiss="modal">Mégse</button>
+                    <button type="submit" class="btn btn-default primary-btn btn-main-color">Küldés <i class="fa fa-paper-plane ml-2"></i></button>
                 </div>
             </form>
         </div>

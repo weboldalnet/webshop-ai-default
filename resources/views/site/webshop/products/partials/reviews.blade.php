@@ -20,9 +20,10 @@
                     <div>
                         <span class="font-weight-bold text-primary">{{ $review->name }}</span>
                         @if($review->is_verified)
-                            {{-- Inline szín: a Bootstrap badge-success kis betűnél csak ~3,1:1 kontrasztú, és a
-                                 csomag CSS-e a projektekbe közzétett példányban frissítéskor nem cserélődik. --}}
-                            <span class="badge ml-2 align-middle" style="background-color: #1e6b30; color: #fff;"><i class="fa fa-check mr-1"></i>Ellenőrzött vásárló</span>
+                            {{-- A szín a csomag CSS-ében (`.ws-verified-badge`), nem inline: így a projektek
+                                 arculatra tudják húzni `!important` nélkül. A Bootstrap `badge-success` azért
+                                 nem jó, mert kis betűnél csak ~3,1:1 kontrasztot ad. --}}
+                            <span class="badge ws-verified-badge ml-2 align-middle"><i class="fa fa-check mr-1"></i>Ellenőrzött vásárló</span>
                         @endif
                     </div>
                     <div class="text-muted small">{{ $review->created_at->format('Y.m.d.') }}</div>
