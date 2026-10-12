@@ -129,6 +129,46 @@
                                        name="sale_price"
                                        value="{{ $product->sale_price }}"
                                 >
+                                <span class="text-muted fs-14">
+                                    Akciónál a webshop áthúzott árként az akciót megelőző 30 nap legalacsonyabb eladási árát
+                                    mutatja (uniós Omnibusz-szabály), és ebből számolja a kedvezmény százalékát. Ha az akciós
+                                    ár nem alacsonyabb ennél, sima eladási árként jelenik meg.
+                                </span>
+                                @if($product->hasActiveSale() && $product->sale_started_at)
+                                    <div class="alert alert-info fs-14 mt-2 mb-0 py-2">
+                                        Akció kezdete: {{ $product->sale_started_at->format('Y. m. d. H:i') }} ·
+                                        Feltüntetett korábbi ár (30 napos legalacsonyabb): <strong>{{ hufFormat($product->referencePrice()) }}</strong>
+                                        ({{ $product->discount_percentage }}% kedvezmény)
+                                    </div>
+                                @elseif($product->sale_price && !$product->hasActiveSale())
+                                    <div class="alert alert-warning fs-14 mt-2 mb-0 py-2">
+                                        Az akciós ár nem alacsonyabb az elmúlt 30 nap legalacsonyabb áránál
+                                        ({{ hufFormat($product->referencePrice()) }}), ezért nem jelenik meg akcióként.
+                                    </div>
+                                @endif
+                            </div>
+                            {{-- Egységár (Ft/kg, Ft/l …) a kiszerelésből --}}
+                            <div class="form-row">
+                                <div class="form-group col-md-6">
+                                    <label for="unit_quantity">Kiszerelés (nettó mennyiség)</label>
+                                    <input type="number" step="0.001" min="0" class="form-control" id="unit_quantity" name="unit_quantity"
+                                           value="{{ old('unit_quantity', $product->unit_quantity) }}">
+                                </div>
+                                <div class="form-group col-md-6">
+                                    <label for="unit_measure">Mértékegység</label>
+                                    <select class="form-control" id="unit_measure" name="unit_measure">
+                                        <option value="">– nincs egységár –</option>
+                                        @foreach(\Weboldalnet\WebshopAiDefault\Services\Webshop\WebshopUnitPriceService::MEASURES as $wsMeasureKey => $wsMeasure)
+                                            <option value="{{ $wsMeasureKey }}" @if(old('unit_measure', $product->unit_measure) === $wsMeasureKey) selected @endif>{{ $wsMeasure['label'] }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                                <div class="col-12">
+                                    <span class="text-muted fs-14">
+                                        Tömegre, térfogatra, hosszra vagy területre mért terméknél kötelező az egységár feltüntetése
+                                        (pl. 500 g → Ft/kg, 750 ml → Ft/l). Darabáras terméknél hagyd üresen.
+                                    </span>
+                                </div>
                             </div>
                         </div>
                     @endif
@@ -160,6 +200,8 @@
                         </div>
                     </div>
                 </div>
+
+                @include('admin.webshop.products.partials.legal-info-fields')
 
             </div>
 

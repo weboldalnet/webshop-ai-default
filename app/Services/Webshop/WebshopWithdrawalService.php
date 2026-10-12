@@ -3,6 +3,7 @@
 namespace Weboldalnet\WebshopAiDefault\Services\Webshop;
 
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\URL;
 use Weboldalnet\WebshopAiDefault\Models\WebshopOrder;
 use Weboldalnet\WebshopAiDefault\Models\WebshopWithdrawal;
 use Weboldalnet\WebshopAiDefault\Models\WebshopWithdrawalItem;
@@ -32,6 +33,44 @@ class WebshopWithdrawalService
             ->where('type', WebshopOrder::TYPE_ORDER)
             ->whereRaw('UPPER(order_number) = ?', [mb_strtoupper($orderNumber)])
             ->first();
+    }
+
+    /**
+     * Egyezik-e a megadott e-mail-cím a rendeléskor megadottal (kis-/nagybetű és
+     * szóközök nélkül, időzítés-független összevetéssel).
+     */
+    public static function emailMatches(WebshopOrder $order, ?string $email): bool
+    {
+        $given = mb_strtolower(trim((string) $email));
+        $stored = mb_strtolower(trim((string) $order->customer_email));
+
+        return $given !== '' && $stored !== '' && hash_equals($stored, $given);
+    }
+
+    /**
+     * Az elállási űrlap aláírt URL-je.
+     *
+     * $hours = null: lejárat nélküli link (a rendelés-visszaigazoló levélbe – aki a
+     * levelet megkapta, az a rendelés gazdája). Egyébként ennyi óráig érvényes
+     * (a sikeres keresés után).
+     */
+    public static function formUrl(WebshopOrder $order, ?int $hours = 24): string
+    {
+        $parameters = ['orderNumber' => $order->order_number];
+
+        return $hours === null
+            ? URL::signedRoute('site.webshop.withdrawals.create', $parameters)
+            : URL::temporarySignedRoute('site.webshop.withdrawals.create', now()->addHours($hours), $parameters);
+    }
+
+    /**
+     * Az elállási nyilatkozat beküldésének aláírt URL-je (az űrlap action-je).
+     */
+    public static function storeUrl(WebshopOrder $order, int $hours = 24): string
+    {
+        return URL::temporarySignedRoute('site.webshop.withdrawals.store', now()->addHours($hours), [
+            'orderNumber' => $order->order_number,
+        ]);
     }
 
     /**
@@ -74,8 +113,11 @@ class WebshopWithdrawalService
      *
      * @param array $quantities order_item_id => darab
      */
-    public static function create(WebshopOrder $order, array $quantities, string $reason): WebshopWithdrawal
+    public static function create(WebshopOrder $order, array $quantities, ?string $reason = null): WebshopWithdrawal
     {
+        // Indoklás nem kötelező (indokolás nélküli elállási jog) – üresen null-ként tároljuk.
+        $reason = trim((string) $reason) === '' ? null : trim((string) $reason);
+
         $remaining = self::remainingQuantities($order);
         $itemsById = $order->items->keyBy('id');
 

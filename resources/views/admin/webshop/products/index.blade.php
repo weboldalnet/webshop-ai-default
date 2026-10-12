@@ -100,11 +100,12 @@
                         @endif
                         @if(($ws['product_price_enabled'] ?? 'false') === 'true')
                             <td class="py-1 lh-12">
-                                @if($prod->sale_price)
-                                    <span class="text-muted small" style="text-decoration: line-through;">{{ $prod->price ? hufFormat($prod->price) : '-' }}</span>
+                                {{-- Ahogy a vásárló látja: áthúzva a 30 napos legalacsonyabb ár (Omnibusz) --}}
+                                @if($prod->hasActiveSale())
+                                    <span class="text-muted small" style="text-decoration: line-through;" title="Az akciót megelőző 30 nap legalacsonyabb ára">{{ hufFormat($prod->referencePrice()) }}</span>
                                     <p class="mb-0 text-danger fw-600">{{hufFormat($prod->sale_price)}}</p>
                                 @else
-                                    <span>{{ $prod->price ? hufFormat($prod->price) : '-' }}</span>
+                                    <span>{{ $prod->sellingPrice() ? hufFormat($prod->sellingPrice()) : '-' }}</span>
                                 @endif
                             </td>
                         @endif

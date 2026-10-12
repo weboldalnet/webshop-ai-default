@@ -3,6 +3,7 @@
 
 @section('content')
     @include('site.webshop.partials.sticky-categories')
+    @include('site.webshop.partials.flash-messages')
 
     {{-- A blokkok SZÁNDÉKOSAN nincsenek közös konténerben: mindegyik maga hozza
          a sajátját, hogy a háttérszíne teljes oldalszélességben futhasson. --}}
@@ -27,9 +28,6 @@
 
     @push('scripts')
         <script src="/packages/webshop/site/js/webshop-site.js"></script>
-        @php($__scripts = \Weboldalnet\WebshopAiDefault\Models\WebshopTrackingScript::byPage('homepage')->active()->ordered()->get())
-        @foreach($__scripts as $__s)
-            {!! $__s->script !!}
-        @endforeach
+        @include('site.webshop.partials.tracking-scripts', ['pageType' => 'homepage'])
     @endpush
 @endsection

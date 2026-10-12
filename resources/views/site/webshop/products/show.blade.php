@@ -111,6 +111,7 @@
                             @include('site.webshop.partials.product-price', [
                                 'product' => $product,
                                 'priceWrapClass' => 'mb-4',
+                                'showPriceNote' => true,
                             ])
 
                             {{-- Készlet-állapot.
@@ -248,11 +249,18 @@
             <div class="row mt-4">
                 <div class="col-lg-12">
                     <div class="card shadow-sm border-0">
+                        {{-- Kötelező termékinformációk (GPSR, élelmiszer, CLP …): a vásárlás előtt elérhetőnek kell lenniük --}}
+                        @php($wsLegalHasInfo = \Weboldalnet\WebshopAiDefault\Services\Webshop\WebshopProductLegalInfoService::hasInfo($product))
                         <div class="card-header bg-white p-0">
                             <ul class="nav nav-tabs ws-tabs" role="tablist">
                                 <li class="nav-item">
                                     <a class="nav-link active px-4 py-2 font-weight-bold fs-20" id="desc-tab" data-toggle="tab" href="#desc" role="tab">Leírás</a>
                                 </li>
+                                @if($wsLegalHasInfo)
+                                    <li class="nav-item">
+                                        <a class="nav-link px-4 py-2 font-weight-bold fs-20" id="legal-info-tab" data-toggle="tab" href="#legal-info" role="tab">Termékinformációk</a>
+                                    </li>
+                                @endif
                                 {{-- A Vélemények fül GOMBJA. A tartalma (tab-pane) korábban is
                                      kirenderelődött, de gomb nélkül semmi nem tudta aktiválni,
                                      így a vélemények szekció elérhetetlen volt. --}}
@@ -279,6 +287,11 @@
                             <div class="tab-pane fade show active" id="desc" role="tabpanel">
                                 {!! $product->description !!}
                             </div>
+                            @if($wsLegalHasInfo)
+                                <div class="tab-pane fade" id="legal-info" role="tabpanel">
+                                    @include('site.webshop.products.partials.legal-info')
+                                </div>
+                            @endif
                             @if(($ws['site_product_reviews_enabled'] ?? 'false') === 'true')
                                 <div class="tab-pane fade" id="reviews" role="tabpanel">
                                     @include('site.webshop.products.partials.reviews')
@@ -346,9 +359,6 @@
         <script type="application/ld+json">
             {!! (new \Weboldalnet\WebshopAiDefault\Services\Webshop\ProductSchemaService())->generateJson($product) !!}
         </script>
-        @php($__scripts = \Weboldalnet\WebshopAiDefault\Models\WebshopTrackingScript::byPage('product')->active()->ordered()->get())
-        @foreach($__scripts as $__s)
-            {!! $__s->script !!}
-        @endforeach
+        @include('site.webshop.partials.tracking-scripts', ['pageType' => 'product'])
     @endpush
 @endsection

@@ -10,7 +10,7 @@ use Weboldalnet\WebshopAiDefault\Models\WebshopWithdrawal;
 use Weboldalnet\WebshopAiDefault\Services\Webshop\WebshopSettingsService;
 
 /**
- * Elállási kérelem visszaigazolása.
+ * Elállási nyilatkozat visszaigazolása (tartós adathordozón, dátummal és időponttal).
  *
  * Ugyanaz a levél megy a vásárlónak és a webshop címére is – utóbbinál más a
  * tárgy, hogy a beérkező kérelem azonnal felismerhető legyen.
@@ -33,8 +33,8 @@ class WebshopWithdrawalMail extends Mailable
     public function build()
     {
         $subject = $this->isShopCopy
-            ? 'Új elállási kérelem – ' . $this->withdrawal->order_number
-            : 'Elállási kérelem visszaigazolása – ' . $this->withdrawal->order_number;
+            ? 'Új elállási nyilatkozat – ' . $this->withdrawal->order_number
+            : 'Elállási nyilatkozat visszaigazolása – ' . $this->withdrawal->order_number;
 
         $contactData = [];
         try {

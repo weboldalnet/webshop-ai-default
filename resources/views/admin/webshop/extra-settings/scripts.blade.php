@@ -11,6 +11,16 @@
 
         @include('admin.webshop.partials.alerts')
 
+        {{-- A nem feltétlenül szükséges kódok csak hozzájárulással futnak; sütiablak nélkül soha. --}}
+        @if(!($consentBannerEnabled ?? false))
+            <div class="alert alert-warning mt-3">
+                <strong>Nincs bekapcsolva a sütiablak.</strong>
+                A nem „feltétlenül szükséges” kategóriájú scriptek csak a látogató hozzájárulásával futnak le – sütiablak
+                nélkül ezért egyáltalán nem fognak futni. A sütiablak a <a href="/module-list">Modulok</a> oldalon,
+                a „Google Consent v2” modullal kapcsolható be.
+            </div>
+        @endif
+
         <div class="row mt-4">
             <div class="col-lg-12">
                 <div class="card shadow-sm border-0">
@@ -20,6 +30,7 @@
                                 <tr>
                                     <th>Név</th>
                                     <th>Oldal típus</th>
+                                    <th>Hozzájárulás</th>
                                     <th>Script eleje</th>
                                     <th style="width: 100px">Aktív</th>
                                     <th style="width: 100px"></th>
@@ -30,6 +41,7 @@
                                     <tr>
                                         <td>{{ $script->name }}</td>
                                         <td>{{ $pageTypes[$script->page_type] ?? $script->page_type }}</td>
+                                        <td class="small">{{ $consentCategories[$script->consentCategory()] ?? $script->consentCategory() }}</td>
                                         <td><code class="small text-muted">{{ \Illuminate\Support\Str::limit($script->script, 50) }}</code></td>
                                         <td class="text-center">
                                             @if($script->is_active)
@@ -44,6 +56,7 @@
                                                         data-id="{{ $script->id }}"
                                                         data-name="{{ $script->name }}"
                                                         data-page="{{ $script->page_type }}"
+                                                        data-consent="{{ $script->consentCategory() }}"
                                                         data-script="{{ $script->script }}"
                                                         data-active="{{ $script->is_active ? 1 : 0 }}"
                                                         data-url="{{ route('admin.webshop.extra-settings.scripts.update', $script) }}">
@@ -57,7 +70,7 @@
                                         </td>
                                     </tr>
                                 @empty
-                                    <tr><td colspan="5" class="text-center text-muted">Nincsenek scriptek.</td></tr>
+                                    <tr><td colspan="6" class="text-center text-muted">Nincsenek scriptek.</td></tr>
                                 @endforelse
                             </tbody>
                         </table>
@@ -87,9 +100,21 @@
                             </div>
                         </div>
                         <div class="form-group">
+                            <label for="consent_category">Hozzájárulási kategória</label>
+                            <select class="form-control" id="consent_category" name="consent_category" required>
+                                @foreach($consentCategories as $val => $lbl)
+                                    <option value="{{ $val }}" @if($val === 'marketing') selected @endif>{{ $lbl }}</option>
+                                @endforeach
+                            </select>
+                            <span class="text-muted fs-14">
+                                A nem „feltétlenül szükséges” script csak akkor fut le, ha a látogató a sütiablakban az adott
+                                kategóriához hozzájárult. Mérés és hirdetés (Analytics, Pixel, Ads) soha nem feltétlenül szükséges.
+                            </span>
+                        </div>
+                        <div class="form-group">
                             <label for="script">Script kód (HTML/JS)</label>
                             <textarea class="form-control" id="script" name="script" rows="10" required></textarea>
-                            <small class="text-muted">A kód változtatás nélkül kerül beillesztésre az adott oldal <code>@stack('scripts')</code> részébe.</small><br>
+                            <small class="text-muted">A kód változtatás nélkül kerül beillesztésre az adott oldal <code>@@stack('scripts')</code> részébe.</small><br>
                             <small class="text-muted fw-600"><code>script</code> tag-eket használni kell!</small>
                         </div>
                         <div class="custom-control custom-switch mb-3">
@@ -137,6 +162,14 @@
                             </div>
                         </div>
                         <div class="form-group">
+                            <label for="edit_consent_category">Hozzájárulási kategória</label>
+                            <select class="form-control" id="edit_consent_category" name="consent_category" required>
+                                @foreach($consentCategories as $val => $lbl)
+                                    <option value="{{ $val }}">{{ $lbl }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div class="form-group">
                             <label for="edit_script">Script kód (HTML/JS)</label>
                             <textarea class="form-control" id="edit_script" name="script" rows="10" required></textarea>
                         </div>
@@ -166,6 +199,7 @@
             form.attr('action', btn.data('url'));
             $('#edit_name').val(btn.data('name'));
             $('#edit_page_type').val(btn.data('page'));
+            $('#edit_consent_category').val(btn.data('consent') || 'marketing');
             $('#edit_script').val(btn.data('script'));
             $('#edit_is_active').prop('checked', btn.data('active') == 1);
 

@@ -3,6 +3,7 @@
 
 @section('content')
     @include('site.webshop.partials.sticky-categories')
+    @include('site.webshop.partials.flash-messages')
 
     <div class="ws-page-container ws-categories-index">
         <div class="container-xl container-fluid pb-5">
@@ -42,9 +43,6 @@
 
     @push('scripts')
         <script src="/packages/webshop/site/js/webshop-site.js"></script>
-        @php($__scripts = \Weboldalnet\WebshopAiDefault\Models\WebshopTrackingScript::byPage('product_list')->active()->ordered()->get())
-        @foreach($__scripts as $__s)
-            {!! $__s->script !!}
-        @endforeach
+        @include('site.webshop.partials.tracking-scripts', ['pageType' => 'product_list'])
     @endpush
 @endsection

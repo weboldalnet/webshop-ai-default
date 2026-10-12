@@ -164,9 +164,14 @@
                     @endif
                 </table>
 
-                <p class="fw-600 small mb-1">A vásárló indoklása</p>
+                {{-- Indoklás nem kötelező (indokolás nélküli elállási jog), ezért gyakran üres. --}}
+                <p class="fw-600 small mb-1">A vásárló megjegyzése</p>
                 <div class="border rounded p-2 mb-3 bg-light">
-                    <p class="mb-0 small ws-pre-line">{{ $withdrawal->reason }}</p>
+                    @if(filled($withdrawal->reason))
+                        <p class="mb-0 small ws-pre-line">{{ $withdrawal->reason }}</p>
+                    @else
+                        <p class="mb-0 small text-muted">Nem adott meg megjegyzést — az elálláshoz nem kötelező.</p>
+                    @endif
                 </div>
 
                 <form action="{{ route('admin.webshop.withdrawals.update', $withdrawal) }}" method="POST">

@@ -42,7 +42,12 @@
                                 @endif
                             </td>
                         @endif
-                        <td class="font-weight-bold">{{ $review->name }}</td>
+                        <td class="font-weight-bold">
+                            {{ $review->name }}
+                            @if($review->is_verified)
+                                <br><span class="badge badge-success" title="Rendelésszámmal és e-mail-címmel igazolta a vásárlást">Ellenőrzött vásárló</span>
+                            @endif
+                        </td>
                         <td>
                             @for($i=1; $i<=5; $i++)
                                 <i class="fa{{ $i <= $review->rating ? '-solid' : '-regular' }} fa-star text-warning"></i>

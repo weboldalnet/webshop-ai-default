@@ -62,12 +62,14 @@
                             <th class="bg-light">Ár</th>
                             @foreach($products as $product)
                                 <td class="font-weight-bold">
-                                    @if($product->sale_price)
-                                        <div class="text-muted small" style="text-decoration: line-through;">{{ hufFormat($product->price) }}</div>
+                                    {{-- Áthúzott ár: az akciót megelőző 30 nap legalacsonyabb ára (Omnibusz) --}}
+                                    @if($product->hasActiveSale())
+                                        <div class="text-muted small" style="text-decoration: line-through;" title="Az akciót megelőző 30 nap legalacsonyabb ára">{{ hufFormat($product->referencePrice()) }}</div>
                                         <div class="text-danger h5">{{ hufFormat($product->sale_price) }}</div>
                                     @else
-                                        <div class="h5">{{ hufFormat($product->price) }}</div>
+                                        <div class="h5">{{ hufFormat($product->sellingPrice()) }}</div>
                                     @endif
+                                    @include('site.webshop.partials.unit-price', ['product' => $product])
                                 </td>
                             @endforeach
                         </tr>

@@ -45,7 +45,7 @@ class WebshopOrderController extends AdminExtendedController
 
             foreach ($request->input('items') as $itemData) {
                 $product = WebshopProduct::findOrFail($itemData['product_id']);
-                $price = $product->sale_price ?? $product->price ?? 0;
+                $price = ($product->sellingPrice() ?? 0);
                 $quantity = (int)$itemData['quantity'];
                 $lineTotal = $price * $quantity;
                 $totalPrice += $lineTotal;

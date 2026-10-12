@@ -1,10 +1,7 @@
 {{-- Pénztár: a lap összes dinamikus viselkedése egy helyen --}}
 <script src="/packages/webshop/site/js/webshop-site.js"></script>
 
-@php($__scripts = \Weboldalnet\WebshopAiDefault\Models\WebshopTrackingScript::byPage('checkout')->active()->ordered()->get())
-@foreach($__scripts as $__s)
-    {!! $__s->script !!}
-@endforeach
+@include('site.webshop.partials.tracking-scripts', ['pageType' => 'checkout'])
 
 <script>
     $(function() {

@@ -74,12 +74,14 @@
                 @endforeach
                 @if(($ws['site_product_prices_visible'] ?? 'true') === 'true')
                     <td class="ws-nowrap">
-                        @if($product->sale_price)
-                            <div class="text-muted small" style="text-decoration: line-through;">{{ hufFormat($product->price) }}</div>
+                        {{-- Áthúzott ár: az akciót megelőző 30 nap legalacsonyabb ára (Omnibusz) --}}
+                        @if($product->hasActiveSale())
+                            <div class="text-muted small" style="text-decoration: line-through;" title="Az akciót megelőző 30 nap legalacsonyabb ára">{{ hufFormat($product->referencePrice()) }}</div>
                             <div class="text-danger font-weight-bold">{{ hufFormat($product->sale_price) }}</div>
                         @else
-                            <div class="font-weight-bold">{{ hufFormat($product->price) }}</div>
+                            <div class="font-weight-bold">{{ hufFormat($product->sellingPrice()) }}</div>
                         @endif
+                        @include('site.webshop.partials.unit-price', ['product' => $product])
                     </td>
                 @endif
                 <td class="text-right ws-nowrap">

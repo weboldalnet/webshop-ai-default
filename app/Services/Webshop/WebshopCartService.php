@@ -40,7 +40,7 @@ class WebshopCartService
                 'sec_name' => $product->secondary_name,
                 'slug' => $product->slug,
                 'quantity' => $quantity,
-                'price' => $product->sale_price ?? $product->price ?? 0,
+                'price' => ($product->sellingPrice() ?? 0),
                 'image' => $product->primary_image,
                 'image_thumb' => $product->primary_image_thumb,
                 'category_id' => $product->category_id,

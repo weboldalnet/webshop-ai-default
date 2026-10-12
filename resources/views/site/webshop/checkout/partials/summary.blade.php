@@ -86,9 +86,13 @@
                     </div>
 
                     <div class="mt-auto pt-3">
+                        {{-- A felirat jogszabályi követelmény (45/2014. Korm. rendelet): rendelésnél a gombon
+                             csak a „megrendelés fizetési kötelezettséggel” vagy azzal egyértelműen egyenértékű
+                             szöveg állhat – ennek hiányában a vásárlót a szerződés NEM köti. Ne írd át
+                             „Rendelés leadása”-ra vagy hasonlóra. Az ajánlatkérés nem fizetős megrendelés. --}}
                         <button type="submit" class="btn btn-success btn-lg btn-block font-weight-bold py-3 shadow mb-0">
                             <i class="fa {{ ($ws['site_checkout_mode'] ?? 'order') == 'quote' ? 'fa-paper-plane' : 'fa-check-circle' }} mr-2"></i>
-                            {{ ($ws['site_checkout_mode'] ?? 'order') == 'quote' ? 'Ajánlatkérés elküldése' : 'Rendelés leadása' }}
+                            {{ ($ws['site_checkout_mode'] ?? 'order') == 'quote' ? 'Ajánlatkérés elküldése' : 'Megrendelés fizetési kötelezettséggel' }}
                         </button>
                     </div>
                 </div>

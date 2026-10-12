@@ -62,15 +62,24 @@ Route::middleware('web')->group(function () {
             Route::get('/payment/{order}/status', [WebshopCheckoutController::class, 'paymentStatus'])->name('payment.status');
 
             // Vélemények
-            Route::post('/reviews', [WebshopReviewController::class, 'store'])->name('reviews.store');
+            // Korlátozott hívásszám: spam ellen, és hogy a rendelésszám-igazolást ne lehessen próbálgatni.
+            Route::post('/reviews', [WebshopReviewController::class, 'store'])
+                ->middleware('throttle:5,1')
+                ->name('reviews.store');
 
             // Elállás
-            // A rendelésszám itt azonosítóként működik, ezért a keresést
-            // korlátozzuk, hogy ne lehessen rendelésszámokat próbálgatni.
+            // A keresés rendelésszámot ÉS e-mail-címet kér (korlátozott hívásszámmal); az
+            // elállási oldal és a beküldés csak ALÁÍRT URL-lel érhető el, amit a sikeres
+            // keresés vagy a rendelés-visszaigazoló levél ad. Így a rendelésszám puszta
+            // ismerete (vagy kitalálása) már nem mutatja meg más vásárló adatait.
+            // Az aláírást a controller ellenőrzi (nem a 'signed' middleware), hogy lejárt
+            // linknél nyers 403 helyett érthető üzenettel kerüljön vissza a vásárló.
             Route::post('/elallas/kereses', [SiteWithdrawalController::class, 'lookup'])
                 ->middleware('throttle:10,1')
                 ->name('withdrawals.lookup');
-            Route::get('/elallas/{orderNumber}', [SiteWithdrawalController::class, 'create'])->name('withdrawals.create');
+            Route::get('/elallas/{orderNumber}', [SiteWithdrawalController::class, 'create'])
+                ->middleware('throttle:30,1')
+                ->name('withdrawals.create');
             Route::post('/elallas/{orderNumber}', [SiteWithdrawalController::class, 'store'])
                 ->middleware('throttle:10,1')
                 ->name('withdrawals.store');
@@ -191,6 +200,10 @@ Route::middleware('web')->group(function () {
                 // Checkout Dokumentumok
                 Route::get('/documents', [WebshopExtraSettingController::class, 'documents'])->name('documents.index');
                 Route::post('/documents', [WebshopExtraSettingController::class, 'storeDocument'])->name('documents.store');
+
+                // Kötelező termékinformációk (GPSR, élelmiszer, CLP, energiacímke, textil)
+                Route::get('/product-info', [WebshopExtraSettingController::class, 'productInfo'])->name('product-info.index');
+                Route::post('/product-info', [WebshopExtraSettingController::class, 'storeProductInfo'])->name('product-info.store');
 
                 // Webshop nyitóoldal (blokkokból épített kezdőoldal)
                 Route::get('/home-page', [WebshopHomePageController::class, 'index'])->name('home-page.index');

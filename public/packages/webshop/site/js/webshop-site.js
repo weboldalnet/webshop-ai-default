@@ -376,7 +376,10 @@ const WebshopSite = {
                 }
             }).fail(function(err) {
                 btn.prop('disabled', false).find('.fa-spinner').remove();
-                alert('Hiba történt a mentés során. Kérjük, ellenőrizze az adatokat!');
+                // Validációs hiba (pl. a vásárlás nem igazolható): a szerver üzenetét mutatjuk
+                var errors = err.responseJSON && err.responseJSON.errors;
+                var firstError = errors ? errors[Object.keys(errors)[0]] : null;
+                alert(firstError ? [].concat(firstError)[0] : 'Hiba történt a mentés során. Kérjük, ellenőrizze az adatokat!');
             });
         });
     },

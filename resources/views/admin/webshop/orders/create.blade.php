@@ -141,8 +141,8 @@
                             @foreach($products as $product)
                                 <option value="{{ $product->name }}" 
                                         data-id="{{ $product->id }}" 
-                                        data-price="{{ $product->sale_price ?? $product->price ?? 0 }}">
-                                    @if($product->sku) [{{ $product->sku }}] @endif {{ hufFormat($product->sale_price ?? $product->price ?? 0) }}
+                                        data-price="{{ ($product->sellingPrice() ?? 0) }}">
+                                    @if($product->sku) [{{ $product->sku }}] @endif {{ hufFormat(($product->sellingPrice() ?? 0)) }}
                                 </option>
                             @endforeach
                         </datalist>
@@ -190,7 +190,7 @@
                                             <td>
                                                 @php
                                                     $product = \Weboldalnet\WebshopAiDefault\Models\WebshopProduct::find($id);
-                                                    $price = $product ? ($product->sale_price ?? $product->price ?? 0) : 0;
+                                                    $price = $product ? (($product->sellingPrice() ?? 0)) : 0;
                                                 @endphp
                                                 <input type="hidden" class="js-admin-order-item-price" value="{{ $price }}">
                                                 {{ hufFormat($price) }}

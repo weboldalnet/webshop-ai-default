@@ -35,11 +35,12 @@
 
                     @if($wsPricesVisible)
                         <span class="ws-search-item-price">
-                            @if($wsProduct->sale_price)
-                                <s class="text-muted mr-1">{{ hufFormat($wsProduct->price) }}</s>{{ hufFormat($wsProduct->sale_price) }}
+                            @if($wsProduct->hasActiveSale())
+                                <s class="text-muted mr-1" title="Az akciót megelőző 30 nap legalacsonyabb ára">{{ hufFormat($wsProduct->referencePrice()) }}</s>{{ hufFormat($wsProduct->sale_price) }}
                             @else
-                                {{ hufFormat($wsProduct->price) }}
+                                {{ hufFormat($wsProduct->sellingPrice()) }}
                             @endif
+                            @include('site.webshop.partials.unit-price', ['product' => $wsProduct, 'unitPriceClass' => 'ml-1 text-muted'])
                         </span>
                     @endif
                 </span>

@@ -221,6 +221,25 @@
                                    @if(($ws['site_product_reviews_enabled'] ?? 'false') === 'true') checked @endif>
                             <label class="custom-control-label" for="site_product_reviews_enabled">Lehessen véleményeket írni</label>
                         </div>
+                        {{-- A termékoldal a vélemények mellett ezek alapján tájékoztat arról, hogyan kezeljük és
+                             ellenőrizzük őket (Fttv., Omnibusz) – a szöveg a beállításból készül. --}}
+                        <div class="pl-4 mb-3">
+                            <div class="custom-control custom-switch mb-2">
+                                <input type="checkbox" class="custom-control-input" id="site_product_reviews_moderation" name="site_product_reviews_moderation"
+                                       @if(($ws['site_product_reviews_moderation'] ?? 'true') === 'true') checked @endif>
+                                <label class="custom-control-label" for="site_product_reviews_moderation">Új vélemény csak jóváhagyás után jelenjen meg</label>
+                            </div>
+                            <div class="custom-control custom-switch">
+                                <input type="checkbox" class="custom-control-input" id="site_product_reviews_verified_only" name="site_product_reviews_verified_only"
+                                       @if(($ws['site_product_reviews_verified_only'] ?? 'false') === 'true') checked @endif>
+                                <label class="custom-control-label" for="site_product_reviews_verified_only">Csak igazolt vásárlók írhassanak véleményt</label>
+                            </div>
+                            <span class="text-muted fs-14">
+                                Igazolás: rendelésszám és e-mail-cím. Kikapcsolva is igazolhatja a vásárlást, aki akarja – az ilyen
+                                vélemény „Ellenőrzött vásárló” jelölést kap. A termékoldal a véleményeknél mindig tájékoztat arról,
+                                hogyan kezeljük őket.
+                            </span>
+                        </div>
                         <div class="custom-control custom-switch mb-3">
                             <input type="checkbox" class="custom-control-input" id="site_product_prices_visible" name="site_product_prices_visible"
                                    @if(($ws['site_product_prices_visible'] ?? 'false') === 'true') checked @endif>

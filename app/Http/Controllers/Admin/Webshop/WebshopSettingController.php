@@ -45,6 +45,8 @@ class WebshopSettingController extends AdminExtendedController
             'admin_product_labels_enabled',
             'site_category_view_switcher_enabled', 'site_related_products_modal_enabled',
             'site_product_reviews_enabled', 'site_product_prices_visible',
+            // Vélemények kezelése és a vásárlás ellenőrzése (WebshopReviewService)
+            'site_product_reviews_moderation', 'site_product_reviews_verified_only',
             'site_checkout_phone_enabled', 'site_checkout_company_enabled',
             'site_checkout_tax_number_enabled', 'site_checkout_billing_enabled',
             'site_checkout_shipping_enabled', 'site_product_compare_enabled',

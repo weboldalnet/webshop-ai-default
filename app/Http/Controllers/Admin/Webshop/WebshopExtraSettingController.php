@@ -9,6 +9,8 @@ use Weboldalnet\WebshopAiDefault\Models\WebshopCategory;
 use Weboldalnet\WebshopAiDefault\Models\WebshopCustomContent;
 use Weboldalnet\WebshopAiDefault\Models\WebshopTrackingScript;
 use Weboldalnet\WebshopAiDefault\Services\Webshop\WebshopCheckoutQaService;
+use Weboldalnet\WebshopAiDefault\Services\Webshop\WebshopLegalInfoService;
+use Weboldalnet\WebshopAiDefault\Services\Webshop\WebshopProductLegalInfoService;
 use Weboldalnet\WebshopAiDefault\Services\Webshop\WebshopSettingsService;
 use Weboldalnet\WebshopAiDefault\Services\Webshop\Commerce\WebshopCommerceService;
 
@@ -95,6 +97,12 @@ class WebshopExtraSettingController extends AdminExtendedController
             'privacy_label' => 'nullable|string|max:255',
             'privacy_url' => 'nullable|string|max:255',
             'privacy_file' => 'nullable|file|max:5120',
+            'legal_seller_name' => 'nullable|string|max:255',
+            'legal_seller_seat' => 'nullable|string|max:255',
+            'legal_seller_registration_number' => 'nullable|string|max:64',
+            'legal_seller_tax_number' => 'nullable|string|max:64',
+            'legal_seller_email' => 'nullable|email|max:255',
+            'legal_seller_phone' => 'nullable|string|max:64',
         ]);
 
         $settings = [
@@ -104,7 +112,14 @@ class WebshopExtraSettingController extends AdminExtendedController
             'site_checkout_tos_url' => $request->input('tos_url'),
             'site_checkout_privacy_label' => $request->input('privacy_label'),
             'site_checkout_privacy_url' => $request->input('privacy_url'),
+            'site_order_mail_attach_tos' => $request->has('site_order_mail_attach_tos') ? 'true' : 'false',
         ];
+
+        // Eladó adatai (rendelés-visszaigazoló levél, elállási nyilatkozatminta)
+        foreach (array_keys(WebshopLegalInfoService::SELLER_FIELDS) as $field) {
+            $key = WebshopLegalInfoService::settingKey($field);
+            $settings[$key] = trim((string) $request->input($key, ''));
+        }
 
         if ($request->hasFile('tos_file')) {
             $path = $request->file('tos_file')->storeAs('webshop/documents', 'aszf.' . $request->file('tos_file')->getClientOriginalExtension(), 'public');
@@ -159,6 +174,39 @@ class WebshopExtraSettingController extends AdminExtendedController
         return redirect()->back()->with('success', 'Pénztár kiegészítések elmentve.');
     }
 
+    public function productInfo()
+    {
+        return view('admin.webshop.extra-settings.product-info', [
+            'profiles' => WebshopProductLegalInfoService::PROFILES,
+            'enabledProfiles' => WebshopProductLegalInfoService::enabledProfiles(),
+            'defaults' => WebshopProductLegalInfoService::shopDefaults(),
+            'seller' => WebshopLegalInfoService::seller(),
+        ]);
+    }
+
+    public function storeProductInfo(Request $request)
+    {
+        $profiles = array_values(array_intersect(
+            array_keys(WebshopProductLegalInfoService::PROFILES),
+            (array) $request->input('profiles', [])
+        ));
+
+        $settings = [WebshopProductLegalInfoService::PROFILES_KEY => implode(',', $profiles)];
+
+        foreach (WebshopProductLegalInfoService::PROFILES as $profile => $definition) {
+            foreach ($definition['fields'] as $field => $config) {
+                if ($config['default'] ?? false) {
+                    $value = trim((string) $request->input('defaults.' . $profile . '.' . $field, ''));
+                    $settings[WebshopProductLegalInfoService::defaultSettingKey($profile, $field)] = mb_substr($value, 0, 2000);
+                }
+            }
+        }
+
+        WebshopSettingsService::save($settings);
+
+        return redirect()->back()->with('success', 'Termékinformációs beállítások elmentve.');
+    }
+
     public function scripts()
     {
         return view('admin.webshop.extra-settings.scripts', [
@@ -169,18 +217,39 @@ class WebshopExtraSettingController extends AdminExtendedController
                 'product' => 'Termék oldal',
                 'checkout' => 'Checkout oldal',
                 'thank_you' => 'Köszönjük oldal',
-            ]
+            ],
+            'consentCategories' => WebshopTrackingScript::CONSENT_CATEGORIES,
+            'consentBannerEnabled' => $this->consentBannerEnabled(),
         ]);
+    }
+
+    /**
+     * Be van-e kapcsolva a core sütiablaka (Google Consent v2 modul).
+     * Nélküle a hozzájárulást igénylő mérőkódok soha nem futnak.
+     */
+    private function consentBannerEnabled(): bool
+    {
+        if (!class_exists(\App\Models\Settings::class)) {
+            return false;
+        }
+
+        return (bool) optional(\App\Models\Settings::first())->has_google_consent;
+    }
+
+    private function scriptRules(): array
+    {
+        return [
+            'page_type' => 'required|string',
+            'name' => 'nullable|string|max:255',
+            'consent_category' => 'required|in:' . implode(',', array_keys(WebshopTrackingScript::CONSENT_CATEGORIES)),
+            'script' => 'required|string',
+            'is_active' => 'boolean',
+        ];
     }
 
     public function storeScript(Request $request)
     {
-        $data = $request->validate([
-            'page_type' => 'required|string',
-            'name' => 'nullable|string|max:255',
-            'script' => 'required|string',
-            'is_active' => 'boolean',
-        ]);
+        $data = $request->validate($this->scriptRules());
 
         $data['is_active'] = $request->has('is_active');
         $data['sort_order'] = (WebshopTrackingScript::max('sort_order') ?? 0) + 1;
@@ -192,12 +261,7 @@ class WebshopExtraSettingController extends AdminExtendedController
 
     public function updateScript(Request $request, WebshopTrackingScript $script)
     {
-        $data = $request->validate([
-            'page_type' => 'required|string',
-            'name' => 'nullable|string|max:255',
-            'script' => 'required|string',
-            'is_active' => 'boolean',
-        ]);
+        $data = $request->validate($this->scriptRules());
 
         $data['is_active'] = $request->has('is_active');
 

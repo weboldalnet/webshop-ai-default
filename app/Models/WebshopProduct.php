@@ -4,6 +4,7 @@ namespace Weboldalnet\WebshopAiDefault\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Weboldalnet\WebshopAiDefault\Services\Webshop\WebshopPriceHistoryService;
 
 /**
  * @property int $id
@@ -20,6 +21,8 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * @property int|null $stock_quantity
  * @property float|null $price
  * @property float|null $sale_price
+ * @property float|null $sale_reference_price Az akciót megelőző 30 nap legalacsonyabb ára (Omnibusz)
+ * @property \Illuminate\Support\Carbon|null $sale_started_at
  * @property bool $is_active
  * @property int $sort_order
  * @property-read \Weboldalnet\WebshopAiDefault\Models\WebshopCategory $category
@@ -37,12 +40,31 @@ class WebshopProduct extends Model
         'category_id', 'label_id', 'name', 'slug', 'description', 'short_desc', 'secondary_name', 'crm_identifier',
         'primary_image', 'primary_image_thumb', 'sku',
         'stock_enabled', 'stock_quantity', 'price', 'sale_price', 'is_active', 'sort_order', 'weight',
+        'unit_quantity', 'unit_measure', 'legal_info',
     ];
 
     protected $casts = [
         'category_id' => 'integer', 'label_id' => 'integer', 'stock_enabled' => 'boolean', 'stock_quantity' => 'integer',
         'price' => 'float', 'sale_price' => 'float', 'is_active' => 'boolean', 'sort_order' => 'integer',
+        'sale_reference_price' => 'float', 'sale_started_at' => 'datetime',
+        'unit_quantity' => 'float', 'legal_info' => 'array',
     ];
+
+    protected static function booted()
+    {
+        // Ártörténet az akciós „korábbi ár” (Omnibusz) számításához
+        static::saving(function (self $product) {
+            if (!$product->exists || $product->isDirty(['price', 'sale_price'])) {
+                WebshopPriceHistoryService::syncSaleReference($product);
+            }
+        });
+
+        static::saved(function (self $product) {
+            if ($product->wasRecentlyCreated || $product->wasChanged(['price', 'sale_price'])) {
+                WebshopPriceHistoryService::record($product);
+            }
+        });
+    }
 
     public function category() { return $this->belongsTo(WebshopCategory::class, 'category_id'); }
     public function label() { return $this->belongsTo(WebshopProductLabel::class, 'label_id'); }
@@ -100,12 +122,45 @@ class WebshopProduct extends Model
     public function scopeSearch($query, $search) { return $search ? $query->where('name', 'ILIKE', '%'.$search.'%')->orWhere('secondary_name', 'ILIKE', '%'.$search.'%') : $query; }
     public function scopeByCategory($query, $categoryId) { return $categoryId ? $query->where('category_id', $categoryId) : $query; }
 
+    /**
+     * A vásárló által fizetendő ár: az akciós ár, ha van, különben az alapár.
+     */
+    public function sellingPrice(): ?float
+    {
+        return WebshopPriceHistoryService::sellingPrice($this->price, $this->sale_price);
+    }
+
+    /**
+     * Az akciós ár mellett feltüntethető korábbi ár: az akciót megelőző 30 nap
+     * legalacsonyabb eladási ára (Omnibusz). Ártörténet hiányában az alapár.
+     */
+    public function referencePrice(): ?float
+    {
+        return $this->sale_reference_price ?: $this->price;
+    }
+
+    /**
+     * Hirdethető-e árcsökkentésként (áthúzott ár, százalék).
+     *
+     * Csak ha az akciós ár ténylegesen alacsonyabb a 30 napos legalacsonyabb árnál –
+     * különben az akciós ár sima eladási árként jelenik meg.
+     */
+    public function hasActiveSale(): bool
+    {
+        $reference = $this->referencePrice();
+
+        return $this->sale_price !== null && $this->sale_price > 0
+            && $reference !== null && $reference > $this->sale_price;
+    }
+
     public function getDiscountPercentageAttribute()
     {
-        if (!$this->price || !$this->sale_price || $this->price <= $this->sale_price) {
+        if (!$this->hasActiveSale()) {
             return 0;
         }
 
-        return round((($this->price - $this->sale_price) / $this->price) * 100);
+        $reference = $this->referencePrice();
+
+        return round((($reference - $this->sale_price) / $reference) * 100);
     }
 }

@@ -144,6 +144,88 @@
                         {{ $order->note }}
                     </div>
                 @endif
+
+                {{-- Jogi tájékoztatás (csak valódi rendelésnél). A szerződést tartós adathordozón kell
+                     visszaigazolni az eladó adataival, a szerződési feltételekkel és az elállási
+                     tájékoztatással, nyilatkozatmintával együtt (45/2014. Korm. rendelet).
+                     FIGYELEM: ebben a fájlban fent egysoros PHP-direktíva van, ezért itt lent
+                     blokk-formájú PHP-t NEM szabad használni – a Blade lenyelné a köztes részt. --}}
+                @if($isOrder ?? false)
+                    <div style="margin-top: 30px;">
+                        <p style="font-size: 17px; color: #000; margin-bottom: 10px; font-weight: bold; border-bottom: 1px solid #ddd; padding-bottom: 5px;">
+                            Fontos tudnivalók
+                        </p>
+
+                        @if(!empty($termsAttached) || !empty($termsUrl))
+                            <p style="font-size: 14px; color: #333; margin: 0 0 10px;">
+                                <strong>Szerződési feltételek:</strong>
+                                a rendelésre webáruházunk Általános Szerződési Feltételei vonatkoznak.
+                                @if(!empty($termsAttached)) A feltételeket PDF-ben csatoltuk ehhez a levélhez. @endif
+                                @if(!empty($termsUrl)) Online is megtekintheti: <a href="{{ $termsUrl }}" style="color: #333;">Általános Szerződési Feltételek</a>. @endif
+                            </p>
+                        @endif
+
+                        <p style="font-size: 14px; color: #333; margin: 0 0 10px;">
+                            <strong>Elállási jog:</strong>
+                            a termék átvételétől számított 14 napon belül indoklás nélkül elállhat a vásárlástól.
+                            @if(!empty($withdrawalUrl))
+                                Ezt a legegyszerűbben itt teheti meg:
+                                <a href="{{ $withdrawalUrl }}" style="color: #333; font-weight: bold;">Elállás a vásárlástól</a>.
+                            @endif
+                            Elállási szándékát bármilyen egyértelmű nyilatkozattal, vagy az alábbi nyilatkozatminta
+                            kitöltésével és elküldésével is jelezheti.
+                        </p>
+
+                        @if(!empty($privacyUrl))
+                            <p style="font-size: 14px; color: #333; margin: 0 0 10px;">
+                                <strong>Adatkezelés:</strong>
+                                személyes adatai kezeléséről az
+                                <a href="{{ $privacyUrl }}" style="color: #333;">Adatvédelmi tájékoztatóban</a> olvashat.
+                            </p>
+                        @endif
+
+                        @if(!empty($seller['name']))
+                            <p style="font-weight: bold; margin: 18px 0 5px; border-bottom: 1px solid #eee;">Az eladó adatai</p>
+                            <p style="margin: 0 0 15px; font-size: 13px; color: #333; line-height: 1.6;">
+                                {{ $seller['name'] }}<br>
+                                @if(!empty($seller['seat'])) Székhely: {{ $seller['seat'] }}<br> @endif
+                                @if(!empty($seller['registration_number'])) Cégjegyzékszám / nyilvántartási szám: {{ $seller['registration_number'] }}<br> @endif
+                                @if(!empty($seller['tax_number'])) Adószám: {{ $seller['tax_number'] }}<br> @endif
+                                @if(!empty($seller['email'])) E-mail: {{ $seller['email'] }}<br> @endif
+                                @if(!empty($seller['phone'])) Telefon: {{ $seller['phone'] }} @endif
+                            </p>
+                        @endif
+
+                        {{-- Elállási nyilatkozatminta (45/2014. Korm. rendelet 2. melléklet), a rendelés adataival előtöltve --}}
+                        <div style="border: 1px solid #ccc; padding: 12px 14px; font-size: 13px; color: #333; line-height: 1.6;">
+                            <p style="font-weight: bold; margin: 0;">Elállási nyilatkozatminta</p>
+                            <p style="margin: 0 0 8px; font-style: italic;">(csak a szerződéstől való elállási szándék esetén töltse ki és juttassa vissza)</p>
+                            <p style="margin: 0 0 6px;">
+                                Címzett: {{ implode(', ', array_filter([$seller['name'] ?? null, $seller['seat'] ?? null, $seller['email'] ?? null])) }}
+                            </p>
+                            <p style="margin: 0 0 6px;">
+                                Alulírott kijelentem, hogy gyakorlom elállási jogomat az alábbi termék(ek) adásvételére irányuló
+                                szerződés tekintetében:
+                                @foreach($order->items as $item){{ $item->product_name }} ({{ $item->quantity }} db)@if(!$loop->last), @endif @endforeach
+                                – rendelésszám: {{ $order->order_number }}
+                            </p>
+                            <p style="margin: 0 0 6px;">
+                                Szerződéskötés időpontja / átvétel időpontja:
+                                {{ optional($order->created_at)->format('Y. m. d.') }} / ………………………
+                            </p>
+                            <p style="margin: 0 0 6px;">A fogyasztó neve: {{ $order->customer_name }}</p>
+                            <p style="margin: 0 0 6px;">
+                                A fogyasztó címe:
+                                {{ implode(', ', array_filter([
+                                    trim(($mailBillingData['zip'] ?? ($mailShippingData['zip'] ?? '')) . ' ' . ($mailBillingData['city'] ?? ($mailShippingData['city'] ?? ''))),
+                                    $mailBillingData['address'] ?? ($mailShippingData['address'] ?? null),
+                                ])) }}
+                            </p>
+                            <p style="margin: 0 0 6px;">A fogyasztó aláírása (kizárólag papíron tett nyilatkozat esetén): ………………………</p>
+                            <p style="margin: 0;">Kelt: ………………………</p>
+                        </div>
+                    </div>
+                @endif
             </div>
         </td>
     </tr>

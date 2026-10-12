@@ -24,7 +24,7 @@ class ProductSchemaService
         if ($product->price) {
             $offers = [
                 '@type' => 'Offer',
-                'price' => number_format($product->sale_price ?? $product->price, 2, '.', ''),
+                'price' => number_format($product->sellingPrice(), 2, '.', ''),
                 'priceCurrency' => 'HUF',
                 'availability' => $product->stock_enabled && $product->stock_quantity <= 0 ? 'https://schema.org/OutOfStock' : 'https://schema.org/InStock',
                 'url' => route('site.webshop.products.show', $product),

@@ -12,9 +12,11 @@ use Weboldalnet\WebshopAiDefault\Models\WebshopProductDocument;
 use Weboldalnet\WebshopAiDefault\Models\WebshopProductProperty;
 use Weboldalnet\WebshopAiDefault\Models\WebshopPropertyCategory;
 use Weboldalnet\WebshopAiDefault\Services\Webshop\WebshopFileService;
+use Weboldalnet\WebshopAiDefault\Services\Webshop\WebshopProductLegalInfoService;
 use Weboldalnet\WebshopAiDefault\Services\Webshop\WebshopProductVariationService;
 use Weboldalnet\WebshopAiDefault\Services\Webshop\WebshopSettingsService;
 use Weboldalnet\WebshopAiDefault\Services\Webshop\WebshopSlugService;
+use Weboldalnet\WebshopAiDefault\Services\Webshop\WebshopUnitPriceService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -129,9 +131,17 @@ class WebshopProductController extends AdminExtendedController
         $ws = WebshopSettingsService::all();
 //        $rules = ['name' => 'required|string|max:255', 'category_id' => 'required|integer', 'primary_image[img]' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:5120'];
         $rules = ['name' => 'required|string|max:255', 'category_id' => 'required|integer'];
-        if (($ws['product_price_enabled'] ?? 'false') === 'true') { $rules['price'] = 'nullable|numeric|min:0'; $rules['sale_price'] = 'nullable|numeric|min:0'; }
+        if (($ws['product_price_enabled'] ?? 'false') === 'true') {
+            $rules['price'] = 'nullable|numeric|min:0';
+            $rules['sale_price'] = 'nullable|numeric|min:0';
+            $rules['unit_quantity'] = 'nullable|numeric|min:0|required_with:unit_measure';
+            $rules['unit_measure'] = 'nullable|in:' . implode(',', array_keys(WebshopUnitPriceService::MEASURES));
+        }
         if (($ws['product_stock_enabled'] ?? 'false') === 'true') { $rules['stock_quantity'] = 'nullable|integer|min:0'; }
-        $request->validate($rules);
+        $rules['legal_info'] = 'nullable|array';
+        $request->validate($rules, [
+            'unit_quantity.required_with' => 'Mértékegységhez add meg a kiszerelés mennyiségét is.',
+        ]);
 
         if ($request->filled('price') && $request->filled('sale_price') && (float)$request->input('sale_price') > (float)$request->input('price')) {
             return redirect()->back()->withInput()->withErrors(['sale_price' => 'Az akciós ár nem lehet nagyobb, mint az alapár.']);
@@ -144,7 +154,24 @@ class WebshopProductController extends AdminExtendedController
             unset($data['label_id']);
         }
 
-        if (($ws['product_price_enabled'] ?? 'false') === 'true') { $data['price'] = $request->input('price'); $data['sale_price'] = $request->input('sale_price'); }
+        if (($ws['product_price_enabled'] ?? 'false') === 'true') {
+            $data['price'] = $request->input('price');
+            $data['sale_price'] = $request->input('sale_price');
+            $data['unit_measure'] = $request->input('unit_measure') ?: null;
+            $data['unit_quantity'] = $data['unit_measure'] ? $request->input('unit_quantity') : null;
+        }
+
+        // Kötelező termékinformációk: csak a bekapcsolt profilok mezői érkeznek; a többi profil
+        // korábban mentett adatát megtartjuk, hogy egy profil ki-be kapcsolása ne törölje.
+        $legalInput = WebshopProductLegalInfoService::sanitize($request->input('legal_info', []));
+        $legalStored = is_array($product->legal_info) ? $product->legal_info : [];
+        foreach (WebshopProductLegalInfoService::enabledProfiles() as $profile) {
+            unset($legalStored[$profile]);
+            if (isset($legalInput[$profile])) {
+                $legalStored[$profile] = $legalInput[$profile];
+            }
+        }
+        $data['legal_info'] = $legalStored ?: null;
         if (($ws['product_stock_enabled'] ?? 'false') === 'true') { $data['stock_enabled'] = $request->has('stock_enabled'); $data['stock_quantity'] = $request->input('stock_quantity'); }
         if ($request->hasFile('primary_image')) {
             $mode = WebshopSettingsService::get('admin_product_primary_image_mode', 'cropper');

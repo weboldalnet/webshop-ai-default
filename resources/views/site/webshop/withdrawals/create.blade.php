@@ -11,7 +11,7 @@
 
                     @if(session('withdrawal_success'))
                         <div class="alert alert-success" role="alert">
-                            <h5 class="font-weight-bold mb-1"><i class="fa fa-check-circle mr-2"></i>Kérelem elküldve</h5>
+                            <h5 class="font-weight-bold mb-1"><i class="fa fa-check-circle mr-2"></i>Elállási nyilatkozat elküldve</h5>
                             {{ session('withdrawal_success') }}
                         </div>
                     @endif
@@ -38,7 +38,12 @@
                         @endif
                     </p>
 
-                    <form action="{{ route('site.webshop.withdrawals.store', ['orderNumber' => $order->order_number]) }}"
+                    {{-- Ha minden tételről beérkezett már nyilatkozat (pl. közvetlenül a beküldés után),
+                         nincs mit kiválasztani – űrlap helyett csak a sikerüzenet marad. --}}
+                    @if(array_sum($remaining) > 0)
+                    {{-- A beküldés aláírt URL-re megy (a controller ellenőrzi) – a sima route() itt
+                         nem működne, mert az elállási oldal csak aláírt linkkel érhető el. --}}
+                    <form action="{{ $storeUrl }}"
                           method="POST" class="mt-4">
                         @csrf
 
@@ -88,37 +93,40 @@
                             </div>
                         </div>
 
+                        {{-- Indoklás NEM kérhető kötelezően: a fogyasztó 14 napon belül indokolás nélkül
+                             elállhat (45/2014. Korm. rendelet). A mező csak lehetőség. --}}
                         <div class="card border-0 shadow-sm mb-4">
                             <div class="card-header bg-white font-weight-bold">
-                                Elállási kérelem
+                                Megjegyzés <span class="font-weight-normal text-muted">(nem kötelező)</span>
                             </div>
                             <div class="card-body">
                                 <div class="form-group mb-0">
-                                    <label for="ws-withdrawal-reason" class="font-weight-bold">
-                                        Indoklás <span class="text-danger">*</span>
-                                    </label>
-                                    <textarea name="reason" id="ws-withdrawal-reason" rows="5"
+                                    <label for="ws-withdrawal-reason" class="sr-only">Megjegyzés</label>
+                                    <textarea name="reason" id="ws-withdrawal-reason" rows="4"
                                               class="form-control @error('reason') is-invalid @enderror"
-                                              placeholder="Kérjük, írd le, miért szeretnél elállni a vásárlástól."
-                                              required minlength="10">{{ old('reason') }}</textarea>
+                                              placeholder="Ha szeretnéd, megírhatod, miért állsz el – ez nem feltétele az elállásnak.">{{ old('reason') }}</textarea>
                                     @error('reason')
                                         <div class="invalid-feedback">{{ $message }}</div>
                                     @enderror
-                                    <small class="form-text text-muted">Legalább 10 karakter.</small>
+                                    <small class="form-text text-muted">
+                                        A vásárlástól a termék átvételétől számított 14 napon belül indoklás nélkül elállhatsz.
+                                    </small>
                                 </div>
                             </div>
                         </div>
 
                         <div class="text-center">
+                            {{-- Megerősítő lépés: az elállás egyoldalú nyilatkozat, nem kérelem. --}}
                             <button type="submit" class="btn btn-primary btn-lg font-weight-bold px-5">
-                                Elállási kérelem elküldése <i class="fa fa-paper-plane ml-2"></i>
+                                Elállás megerősítése <i class="fa fa-check ml-2"></i>
                             </button>
                             <p class="text-muted small mt-2 mb-0">
-                                A kérelemről visszaigazoló e-mailt küldünk a(z)
-                                <strong>{{ $order->customer_email }}</strong> címre.
+                                A nyilatkozat beérkezéséről – annak tartalmával, dátumával és időpontjával –
+                                visszaigazoló e-mailt küldünk a(z) <strong>{{ $order->customer_email }}</strong> címre.
                             </p>
                         </div>
                     </form>
+                    @endif
                 </div>
             </div>
         </div>

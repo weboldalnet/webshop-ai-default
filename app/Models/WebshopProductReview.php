@@ -25,13 +25,17 @@ class WebshopProductReview extends Model
     protected $table = 'public.webshop_product_reviews';
 
     protected $fillable = [
-        'product_id', 'name', 'rating', 'review', 'is_active',
+        'product_id', 'name', 'rating', 'review', 'is_active', 'is_verified', 'order_id',
     ];
 
     protected $casts = [
         'product_id' => 'integer',
         'rating' => 'integer',
         'is_active' => 'boolean',
+        // Igazolt vásárlás: a véleményező rendelésszámmal és e-mail-címmel bizonyította,
+        // hogy a terméket (vagy egy változatát) ebben a boltban vásárolta.
+        'is_verified' => 'boolean',
+        'order_id' => 'integer',
     ];
 
     public function product()

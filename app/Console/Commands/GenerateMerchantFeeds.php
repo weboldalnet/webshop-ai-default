@@ -7,6 +7,7 @@ use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Storage;
 use Weboldalnet\WebshopAiDefault\Models\WebshopCategory;
 use Weboldalnet\WebshopAiDefault\Models\WebshopProduct;
+use Weboldalnet\WebshopAiDefault\Services\Webshop\WebshopUnitPriceService;
 use XMLWriter;
 
 class GenerateMerchantFeeds extends Command
@@ -82,11 +83,30 @@ class GenerateMerchantFeeds extends Command
             $xml->writeElement('g:image_link', $product->primary_image ? url($product->primary_image) : '');
             $xml->writeElement('g:availability', $product->stock_enabled && $product->stock_quantity <= 0 ? 'out of stock' : 'in stock');
 
-            if ($product->price) {
+            if ($product->sellingPrice()) {
                 $currency = 'HUF'; // Alapértelmezett, bővíthető ha van currency a projektben
-                $xml->writeElement('g:price', number_format($product->price, 2, '.', '') . ' ' . $currency);
-                if ($product->sale_price && $product->sale_price < $product->price) {
+                // Akciónál a „price” a 30 napos legalacsonyabb korábbi ár (Omnibusz), ahogy a termékoldalon is
+                if ($product->hasActiveSale()) {
+                    $xml->writeElement('g:price', number_format($product->referencePrice(), 2, '.', '') . ' ' . $currency);
                     $xml->writeElement('g:sale_price', number_format($product->sale_price, 2, '.', '') . ' ' . $currency);
+                } else {
+                    $xml->writeElement('g:price', number_format($product->sellingPrice(), 2, '.', '') . ' ' . $currency);
+                }
+            }
+
+            // Egységár (Ft/kg, Ft/l …): a Google a kiszerelést és az alapegységet kéri
+            $unitPrice = WebshopUnitPriceService::forProduct($product);
+            if ($unitPrice && ($product->unit_measure ?? null) !== 'pcs') {
+                // Google által elfogadott egységek; a dl és mm nincs köztük, ezért átváltjuk
+                [$measure, $multiplier] = [
+                    'g' => ['g', 1], 'kg' => ['kg', 1], 'ml' => ['ml', 1], 'cl' => ['cl', 1], 'dl' => ['cl', 10],
+                    'l' => ['l', 1], 'mm' => ['cm', 0.1], 'cm' => ['cm', 1], 'm' => ['m', 1], 'm2' => ['sqm', 1], 'm3' => ['cbm', 1],
+                ][$product->unit_measure] ?? [null, 1];
+                $baseMeasure = ['kg' => 'kg', 'l' => 'l', 'm' => 'm', 'm²' => 'sqm', 'm³' => 'cbm'][$unitPrice['base']] ?? null;
+                if ($measure && $baseMeasure) {
+                    $quantity = rtrim(rtrim(number_format((float) $product->unit_quantity * $multiplier, 3, '.', ''), '0'), '.');
+                    $xml->writeElement('g:unit_pricing_measure', $quantity . ' ' . $measure);
+                    $xml->writeElement('g:unit_pricing_base_measure', '1 ' . $baseMeasure);
                 }
             }
 

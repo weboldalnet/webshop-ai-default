@@ -1,4 +1,48 @@
 ## [Unreleased]
+### Jogi megfelelés (online értékesítés) — javasolt verzió: 1.2.0
+Minden pont termékfajtától független; ahol termékkör-függő adat kell, ott bekapcsolható profil van.
+**5 új migráció** (mind additív, `Schema::hasColumn`/`hasTable` védelemmel) — frissítés után
+`php artisan migrate` kell (a deploy ezt futtatja).
+- **Rendelés gomb**: „Megrendelés fizetési kötelezettséggel" (45/2014. Korm. r.) — ajánlatkérés módban változatlan
+- **Elállás indoklás nélkül**: a megjegyzés mező nem kötelező; „kérelem" helyett „nyilatkozat";
+  a visszaigazoló levél a beérkezés dátumát és idejét is tartalmazza (tárgy: „Elállási nyilatkozat …")
+- **Elállás védelme**: a keresés rendelésszám + e-mail-cím párost kér (kis-/nagybetű, szóköz
+  közömbös), egyezés nélkül általános üzenet; az űrlap és a beküldés csak aláírt URL-lel érhető el
+  (`WebshopWithdrawalService::formUrl()/storeUrl()`), lejárt/hamis linknél érthető üzenet; throttle
+- **Rendelés-visszaigazoló levél**: eladó adatai, ÁSZF (PDF-mellékletként, ha helyi PDF van;
+  kapcsolható), elállási tájékoztató aláírt linkkel, adatkezelési link, kitöltött
+  nyilatkozatminta (45/2014. 2. melléklet). Eladói adatok: Extra beállítások → Dokumentumok
+  („Eladó adatai", hiányjelzéssel; üres mezőnél a Kapcsolat beállítások adata)
+- **Akciós ár (Omnibusz)**: áthúzott árként az akciót megelőző 30 nap legalacsonyabb eladási
+  ára, ebből a %-os kedvezmény is. Új ártörténet-tábla (`webshop_product_price_history`), a
+  termék mentési eseményei töltik (`WebshopPriceHistoryService`); lépcsőzetes akciónál a
+  referencia marad. Ha az akciós ár nem alacsonyabb a 30 napos minimumnál, sima árként jelenik
+  meg. Új model-metódusok: `sellingPrice()`, `referencePrice()`, `hasActiveSale()` — a kosár,
+  az admin rendelésfelvétel, a schema és a Merchant feed is ezeket használja
+- **Egységár**: kiszerelés (mennyiség + mértékegység) a terméken → „(798 Ft/l)" az ár alatt
+  mindenhol (kártya, termékoldal, táblázat, összehasonlítás, kereső), Merchant feedben
+  `unit_pricing_measure`. Üresen hagyva nincs egységár (`WebshopUnitPriceService`)
+- **Vélemények**: „Ellenőrzött vásárló" jelölés rendelésszám + e-mail igazolással, moderálás
+  (alapból bekapcsolva: új vélemény közzététel előtt jóváhagyásra vár), opcionálisan csak
+  igazolt vásárlók írhatnak; a termékoldalon automatikus tájékoztató a beállítások szerint
+- **Mérőkódok csak hozzájárulással**: a Mérési scriptek kapnak hozzájárulási kategóriát
+  (alapértelmezés: marketing); a nem „feltétlenül szükséges" kód `<template>`-ben vár, és csak a
+  core sütiablakának megfelelő hozzájárulása után fut (visszatérő látogatónál azonnal, döntéskor
+  a döntés pillanatában). Sütiablak nélkül ezek nem futnak — az admin figyelmeztet
+- **Kötelező termékinformációk**: új „Termékinformációk" beállítóoldal és termékoldali fül.
+  Profilok: általános termékbiztonság (GPSR), élelmiszer (összetevők, allergének, tápérték …),
+  veszélyes keverék (CLP piktogram, H/P-mondatok, UFI), energiacímke, textil. Bolt szintű
+  alapérték (pl. gyártó) adható; a termékszerkesztőben csak a bekapcsolt profilok mezői látszanak
+- **Apróbb javítások**: elállás-modal címkéi sötét láblécben is látszanak; a webshop főoldal
+  megjeleníti az átirányítási üzeneteket; értékelésnél a szerver konkrét hibaüzenete jelenik
+  meg; a Mérési scriptek súgójában a `@stack` szöveg már nem tűnik el
+
+**Frissítési teendők egy élő boltban**: Dokumentumok → Eladó adatai kitöltése (cégjegyzékszám,
+adószám); ellenőrizni, hogy az ÁSZF valóban ÁSZF-PDF (a levél mellékletként küldi);
+Termékinformációk → profilok bekapcsolása; meglévő mérőkódok kategóriája alapból „marketing".
+Felülírt (projektben másolt) nézeteknél az áthúzott árat `referencePrice()`-ra, a sima árat
+`sellingPrice()`-ra érdemes cserélni, és beilleszteni a `site.webshop.partials.unit-price` részletet.
+
 ### Szállítás
 - **MPL futárszolgálat** a beépített szállítási módok között, külön csomag nélkül — a
   pénztárban a házhoz szállítás egyik futárszolgálataként, szállítási címmel választható.

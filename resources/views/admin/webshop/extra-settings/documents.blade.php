@@ -13,7 +13,44 @@
 
         <form action="{{ route('admin.webshop.extra-settings.documents.store') }}" method="POST" enctype="multipart/form-data">
             @csrf
-            
+
+            {{-- Eladó adatai: az e-kereskedelmi törvény szerint folyamatosan elérhetővé kell tenni, és a
+                 rendelés-visszaigazoló levél, valamint az elállási nyilatkozatminta is ezeket használja.
+                 Ami üresen marad, ott a Kapcsolat beállítások (cím, e-mail, telefon) adatai jelennek meg. --}}
+            @php
+                $wsSellerFields = \Weboldalnet\WebshopAiDefault\Services\Webshop\WebshopLegalInfoService::SELLER_FIELDS;
+                $wsSellerMissing = \Weboldalnet\WebshopAiDefault\Services\Webshop\WebshopLegalInfoService::missingSellerFields();
+            @endphp
+            <div class="row mt-4">
+                <div class="col-lg-12">
+                    <h3 class="header-box product-info mb-1">Eladó adatai</h3>
+                    <div class="content-box bordered mb-3">
+                        @if(!empty($wsSellerMissing))
+                            <div class="alert alert-warning small">
+                                <strong>Hiányzó kötelező adat:</strong> {{ implode(', ', $wsSellerMissing) }}.
+                                Ezeket a vásárlók számára folyamatosan elérhetővé kell tenni, és a rendelés-visszaigazoló
+                                levélben is szerepelnek.
+                            </div>
+                        @endif
+                        <div class="row">
+                            @foreach($wsSellerFields as $wsField => $wsLabel)
+                                @php $wsKey = \Weboldalnet\WebshopAiDefault\Services\Webshop\WebshopLegalInfoService::settingKey($wsField); @endphp
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="{{ $wsKey }}">{{ $wsLabel }}</label>
+                                        <input type="text" class="form-control" id="{{ $wsKey }}" name="{{ $wsKey }}"
+                                               value="{{ $ws[$wsKey] ?? '' }}">
+                                        @if(in_array($wsField, ['seat', 'email', 'phone'], true))
+                                            <span class="text-muted fs-14">Üresen hagyva a Kapcsolat beállítások adata jelenik meg.</span>
+                                        @endif
+                                    </div>
+                                </div>
+                            @endforeach
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             {{-- ÁSZF --}}
             <div class="row mt-4">
                 <div class="col-lg-12">
@@ -38,6 +75,19 @@
                             @endif
                             <input type="file" class="form-control-file" id="tos_file" name="tos_file" accept=".pdf,.doc,.docx">
                         </div>
+                        {{-- A szerződést tartós adathordozón kell visszaigazolni – egy link ennek nem felel meg,
+                             a PDF-melléklet igen. Csak feltöltött PDF csatolható (külső URL nem). --}}
+                        <div class="custom-control custom-switch">
+                            <input type="checkbox" class="custom-control-input" id="site_order_mail_attach_tos" name="site_order_mail_attach_tos" value="1"
+                                   @if(($ws['site_order_mail_attach_tos'] ?? 'true') === 'true') checked @endif>
+                            <label class="custom-control-label" for="site_order_mail_attach_tos">
+                                Csatolás a rendelés-visszaigazoló levélhez (PDF esetén)
+                            </label>
+                        </div>
+                        <span class="text-muted fs-14">
+                            A szerződési feltételeket tartós adathordozón kell átadni a vásárlónak; egy weboldal-link ennek
+                            nem felel meg, a levélhez csatolt PDF igen.
+                        </span>
                     </div>
                 </div>
             </div>

@@ -1,16 +1,30 @@
 <div class="ws-reviews-box">
-    <div class="d-flex justify-content-between align-items-center mb-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
         <h5 class="font-weight-bold mb-0">Vásárlói vélemények</h5>
         <button type="button" class="btn btn-dark" data-toggle="modal" data-target="#reviewModal">
             <i class="fa fa-pen-to-square mr-2"></i> Vélemény írása
         </button>
     </div>
 
+    {{-- Kötelező tájékoztatás a vélemények eredetéről (Fttv., Omnibusz). A szöveg a tényleges
+         beállításból készül, így nem állíthat többet, mint amit a rendszer ellenőriz. --}}
+    <p class="text-muted small mb-4 ws-reviews-disclosure">
+        <i class="fa fa-circle-info mr-1"></i>
+        {{ \Weboldalnet\WebshopAiDefault\Services\Webshop\WebshopReviewService::disclosureText() }}
+    </p>
+
     <div class="ws-reviews-list">
         @forelse($product->reviews()->active()->latestFirst()->get() as $review)
             <div class="ws-review-item border-bottom pb-3 mb-3">
                 <div class="d-flex justify-content-between">
-                    <div class="font-weight-bold text-primary">{{ $review->name }}</div>
+                    <div>
+                        <span class="font-weight-bold text-primary">{{ $review->name }}</span>
+                        @if($review->is_verified)
+                            {{-- Inline szín: a Bootstrap badge-success kis betűnél csak ~3,1:1 kontrasztú, és a
+                                 csomag CSS-e a projektekbe közzétett példányban frissítéskor nem cserélődik. --}}
+                            <span class="badge ml-2 align-middle" style="background-color: #1e6b30; color: #fff;"><i class="fa fa-check mr-1"></i>Ellenőrzött vásárló</span>
+                        @endif
+                    </div>
                     <div class="text-muted small">{{ $review->created_at->format('Y.m.d.') }}</div>
                 </div>
                 <div class="ws-rating my-2 text-warning">

@@ -59,9 +59,6 @@
     </div>
 
     @push('scripts')
-        @php($__scripts = \Weboldalnet\WebshopAiDefault\Models\WebshopTrackingScript::byPage('thank_you')->active()->ordered()->get())
-        @foreach($__scripts as $__s)
-            {!! $__s->script !!}
-        @endforeach
+        @include('site.webshop.partials.tracking-scripts', ['pageType' => 'thank_you'])
     @endpush
 @endsection

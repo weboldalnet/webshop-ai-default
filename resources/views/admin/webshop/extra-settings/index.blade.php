@@ -46,6 +46,17 @@
             <div class="col-md-6 col-lg-3 mb-4">
                 <div class="card h-100 shadow-sm border-0 text-center py-4">
                     <div class="card-body">
+                        <div class="fs-28 text-info mb-3"><i class="fa fa-clipboard-list"></i></div>
+                        <h4 class="font-weight-bold">Termékinformációk</h4>
+                        <p class="text-muted small">Kötelező termékadatok: gyártó, összetevők, veszélyjelek, energiacímke.</p>
+                        <a href="{{ route('admin.webshop.extra-settings.product-info.index') }}" class="btn btn-outline-info btn-sm stretched-link">Megnyitás</a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-6 col-lg-3 mb-4">
+                <div class="card h-100 shadow-sm border-0 text-center py-4">
+                    <div class="card-body">
                         <div class="fs-28 text-secondary mb-3"><i class="fa fa-home"></i></div>
                         <h4 class="font-weight-bold">Webshop nyitóoldal</h4>
                         <p class="text-muted small">Egyedi kezdőoldal blokkokból a kategórialista helyett.</p>
