@@ -45,9 +45,21 @@
 
             </div>
 
+            {{--
+                Oszlopsorrend (#d01bfe21). A három doboz DOM-sorrendje kép → leírás → Vásárlás,
+                ami asztali nézetben jó, kisebb képernyőn viszont a vásárlás a leírás MÖGÉ
+                került: 390 px-en az ár és a „Kosárba rakom” csak egy képernyőnyi görgetés
+                után látszott, 768 px-en pedig a Vásárlás doboz külön sorban, középen lógott.
+
+                Ezért `order` osztályokkal átrendezzük, a DOM-sorrend érintése nélkül (így a
+                képernyőolvasó és a billentyűzetes sorrend is értelmes marad):
+                  mobil:  kép → VÁSÁRLÁS → leírás
+                  tablet: kép (6) + VÁSÁRLÁS (6) egy sorban, alatta a leírás teljes szélességben
+                  asztali: változatlan, három oszlop az eredeti sorrendben
+            --}}
             <div class="row mt-2 ws-product-main">
                 <!-- Kép blokk -->
-                <div class="col-lg-4 col-md-6 mb-4">
+                <div class="col-lg-4 col-md-6 mb-4 order-1">
                     <div class="ws-product-gallery card shadow-sm">
                         <div class="ws-main-image p-2 text-center gallery">
                             @if(\Weboldalnet\WebshopAiDefault\Services\Webshop\WebshopSettingsService::getBool('admin_product_labels_enabled') && $product->label)
@@ -92,7 +104,7 @@
                 </div>
 
                 <!-- Tulajdonságok blokk -->
-                <div class="col-lg-4 col-md-6 mb-4">
+                <div class="col-lg-4 col-md-12 mb-4 order-3 order-lg-2">
                     <div class="card shadow-sm h-100 border-0">
                         <div class="card-body">
                             {{-- Rövid leírás a tulajdonságok FÖLÖTT, saját címmel.
@@ -140,7 +152,7 @@
                 </div>
 
                 <!-- Ár és kosár blokk -->
-                <div class="col-lg-4 col-md-6 mx-auto mb-4">
+                <div class="col-lg-4 col-md-6 mb-4 order-2 order-lg-3">
                     <div class="card shadow-sm bg-light">
                         <div class="card-body d-flex flex-column">
                             <h4 class="font-weight-bold mb-4 border-bottom pb-2 text-primary">Vásárlás</h4>
@@ -216,6 +228,36 @@
                     @endif
                 </div>
             </div>
+
+            {{--
+                RAGADÓS KOSÁRSÁV mobilra (#d01bfe21).
+
+                Az oszlopsorrend átrendezése után a Vásárlás doboz a kép alá került, de egy
+                telefonon a kép (a szélességéből adódó magassággal) és a fejléc után a gomb így
+                is a hajtás alá eshet — kis kijelzőn szükségszerűen. Ez a sáv garantálja, hogy
+                a vásárlás MINDIG egy mozdulatra legyen.
+
+                Nem duplikálja a logikát: a gombja a VALÓDI „Kosárba rakom" gombot nyomja meg,
+                így a mennyiség, a variációk és a készletkezelés változatlanul érvényes. És nem
+                is lóg feleslegesen a képernyőn: csak akkor jelenik meg, ha a valódi gomb épp
+                NEM látszik (IntersectionObserver).
+            --}}
+            @if($wsStock === null || $wsStock > 0)
+                <div class="ws-sticky-buy d-lg-none" hidden aria-hidden="true">
+                    <div class="ws-sticky-buy__info">
+                        <span class="ws-sticky-buy__name">{{ $product->name }}</span>
+                        @include('site.webshop.partials.product-price', [
+                            'product' => $product,
+                            'priceWrapClass' => 'ws-sticky-buy__price',
+                            'priceSize' => 'h6',
+                            'showUnitPrice' => false,
+                        ])
+                    </div>
+                    <button type="button" class="btn btn-primary font-weight-bold ws-sticky-buy__btn">
+                        <i class="fa fa-shopping-cart mr-2"></i> Kosárba
+                    </button>
+                </div>
+            @endif
 
         </div>{{-- /container: a galéria OLDAL SZÉLES, ezért ki kell lépnie belőle --}}
 
@@ -397,5 +439,51 @@
             {!! (new \Weboldalnet\WebshopAiDefault\Services\Webshop\ProductSchemaService())->generateJson($product) !!}
         </script>
         @include('site.webshop.partials.tracking-scripts', ['pageType' => 'product'])
+
+        {{-- Ragadós kosársáv (#d01bfe21): csak akkor látszik, ha a VALÓDI kosárgomb nincs
+             a képernyőn, és azt a gombot nyomja meg — így a mennyiség és a variációk
+             kezelése egy helyen marad. --}}
+        <script>
+            (function () {
+                var sav = document.querySelector('.ws-sticky-buy');
+                var gomb = document.querySelector('.js-add-to-cart');
+                if (!sav || !gomb) return;
+
+                sav.querySelector('.ws-sticky-buy__btn').addEventListener('click', function () {
+                    gomb.click();
+                });
+
+                /*
+                    Görgetés-alapú láthatóság, NEM IntersectionObserver. Azért így:
+                    az IO visszahívása háttérben lévő lapon nem fut le, ezért sem
+                    automatizált ellenőrzéssel, sem háttérfülön nem kiszámítható a
+                    viselkedés. Ez a változat mindig ugyanazt csinálja, és egy
+                    requestAnimationFrame-mel szabályozott, passzív figyelő elég hozzá.
+                */
+                var varakozik = false;
+
+                function frissit() {
+                    varakozik = false;
+
+                    var r = gomb.getBoundingClientRect();
+                    var latszik = r.bottom > 0 && r.top < (window.innerHeight || 0);
+
+                    if (sav.hidden !== latszik) {
+                        sav.hidden = latszik;
+                        sav.setAttribute('aria-hidden', latszik ? 'true' : 'false');
+                    }
+                }
+
+                function utemez() {
+                    if (varakozik) return;
+                    varakozik = true;
+                    window.requestAnimationFrame(frissit);
+                }
+
+                window.addEventListener('scroll', utemez, { passive: true });
+                window.addEventListener('resize', utemez);
+                frissit();
+            })();
+        </script>
     @endpush
 @endsection

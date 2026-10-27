@@ -17,7 +17,13 @@
             @endphp
             @foreach($products as $product)
                 <div class="{{ $colClass }} col-md-4 col-sm-6 mb-4">
-                    @include('site.webshop.categories.partials.product-card', ['product' => $product, 'ws' => $ws])
+                    {{-- Az ELSŐ kártya képe jellemzően az LCP-elem, ezért az nem lehet lusta
+                         betöltésű (#b6fa1b34) — a kártya ebből a jelzésből dönt. --}}
+                    @include('site.webshop.categories.partials.product-card', [
+                        'product' => $product,
+                        'ws' => $ws,
+                        'wsElsoKartya' => $loop->first,
+                    ])
                 </div>
             @endforeach
         </div>

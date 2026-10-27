@@ -997,42 +997,96 @@
   top: 0.25rem;
 }
 
-/*# sourceMappingURL=webshop-site.css.map */
-
 /* --------------------------------------------------------------------------
-   Egységár, Omnibusz-megjegyzés és „Ellenőrzött vásárló" jelvény alapszínei
+   Érintési felületek mobilon (#58128ff8)
 
-   Korábban ezek a blade-ekben INLINE `style`-ként szerepeltek, ami minden projektet
-   `!important`-ra kényszerített az arculatra hozásnál. Innentől osztályok, a csomag
-   alapértékével — a projekt stíluslapja normál fajsúllyal felülírhatja.
+   390 px-en a termékoldal mennyiségválasztója 38 px magas volt; az irányadó minimum
+   44 px (ennyi egy felnőtt ujjbegy). A szabály SZÁNDÉKOSAN csak mobilra szól: asztali
+   nézetben az egérrel a 38 px is pontosan célozható, és a doboz elrendezése sem változik.
+
+   A kategórialista rendezés- és darabszám-választóját ez NEM érinti: azok a projekt
+   megrendelői döntése szerint az alap rendszer méretezésével maradnak.
    -------------------------------------------------------------------------- */
-.ws-unit-price,
-.ws-price-note {
-  color: #5a6268;
+@media (max-width: 767.98px) {
+  .ws-page-container .js-quantity-select,
+  .ws-page-container .js-add-to-cart,
+  .ws-page-container .ws-product-card-actions .btn {
+    min-height: 44px;
+  }
 }
-
-.ws-price-note {
-  white-space: normal;
-}
-
-/* A Bootstrap `badge-success` kis betűnél csak ~3,1:1 kontrasztú; ez a sötétebb zöld
-   fehér felirattal 5,9:1-et ad. */
-.ws-verified-badge {
-  background-color: #1e6b30;
-  color: #fff;
-}
-
 /* --------------------------------------------------------------------------
-   Kereső-lenyíló: a kategória-kapszula EGY sor marad, kipontozva
+   Egységár: keskeny kártyán se tudjon kilógni (#4b9109de családja)
 
-   A terméknév már így viselkedik (`.ws-search-item-title`), a kapszula kimaradt:
-   hosszú kategórianévnél kilógott a sor jobb oldali belső margójából.
+   Az ár-doboz `ws-nowrap`-et kap, hogy a „2 650 Ft" ne törjön ketté — de ez az egységárat
+   is fogva tartotta, és keskeny termékkártyán az kilógott és levágódott. Az egységár külön
+   sor, ezért nyugodtan törhet a saját dobozán belül; magát az értéket (`1 297 Ft/l`)
+   viszont egyben tartjuk.
    -------------------------------------------------------------------------- */
-.ws-search-item-meta .badge {
-  display: inline-block;
+.ws-product-price-box {
+  flex-wrap: wrap;
+}
+.ws-product-price-box .ws-unit-price {
+  white-space: nowrap;
   max-width: 100%;
+}
+
+/* --------------------------------------------------------------------------
+   Ragadós kosársáv mobilra (#d01bfe21)
+
+   A termékoldalon az oszlopsorrend átrendezése után a Vásárlás doboz a kép alá kerül, de
+   kis kijelzőn a fejléc + a (szélességéből adódóan magas) termékkép után a gomb így is a
+   hajtás alá eshet. Ez a sáv garantálja, hogy a vásárlás mindig egy mozdulatra legyen.
+
+   Csak akkor látszik, ha a valódi kosárgomb nincs a képernyőn — ezt a lap JS-e kapcsolja
+   a `hidden` attribútummal.
+   -------------------------------------------------------------------------- */
+.ws-sticky-buy {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 1030; /* a Bootstrap fixed-top szintje, de a modál (1050) alatt */
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 14px;
+  background: #fff;
+  border-top: 1px solid rgba(0, 0, 0, 0.1);
+  box-shadow: 0 -4px 16px rgba(0, 0, 0, 0.12);
+  /* A `hidden` attribútumot a flex display felülírná, ezért kimondjuk. */
+}
+.ws-sticky-buy[hidden] {
+  display: none;
+}
+.ws-sticky-buy__info {
+  flex: 1 1 auto;
+  min-width: 0; /* enélkül a hosszú terméknév nem engedné zsugorodni a dobozt */
+}
+.ws-sticky-buy__name {
+  display: block;
+  font-size: 13px;
+  line-height: 1.2;
+  color: #6c757d;
+  white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  white-space: nowrap;
-  vertical-align: bottom;
+}
+.ws-sticky-buy__price {
+  margin: 0;
+}
+.ws-sticky-buy__price .h6 {
+  margin: 0;
+}
+.ws-sticky-buy__btn {
+  flex: 0 0 auto;
+  min-height: 44px; /* ugyanaz az érintési minimum, mint a többi vezérlőn */
+  padding-left: 18px;
+  padding-right: 18px;
+}
+
+/* A sáv eltakarná a lap alját, ezért a tartalomnak helyet hagyunk alatta. */
+@media (max-width: 991.98px) {
+  body:has(.ws-sticky-buy) .ws-page-container.ws-products-show {
+    padding-bottom: 76px;
+  }
 }

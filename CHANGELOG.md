@@ -1,4 +1,30 @@
 ## [Unreleased]
+### Tesztelői hibajegyek: pénztár-hozzájárulás, termékoldal mobilon, kártyakép, érintési felületek
+Migrációt NEM igényel, csak `composer update` + `vendor:publish --tag=webshop-assets --force`
+(a csomag saját CSS-e is változott).
+
+- **Pénztár hozzájárulás — a feltöltött dokumentum linkje eltűnt (#3b64d88c).** Az admin az
+  üresen hagyott mezőt ÜRES STRINGKÉNT menti, a `??` pedig nem esik át az üres stringen: ha a
+  külső URL mező üres volt, a feltöltött PDF linkje nem jelent meg, és az üres feliratmező sem
+  esett vissza az alapértelmezett szövegre. Mindkettő javítva, az ÁSZF-nél és az adatvédelemnél is.
+- **Termékoldal mobilon és tableten (#d01bfe21).** Az ár és a „Kosárba rakom” csak egy
+  képernyőnyi görgetés után látszott, tableten pedig a Vásárlás doboz külön sorban, középen
+  lógott. Az oszlopok `order` osztályokkal átrendezve (a DOM-sorrend érintetlen, így a
+  képernyőolvasó sorrendje is értelmes marad): mobilon kép → VÁSÁRLÁS → leírás, tableten
+  kép + Vásárlás egy sorban, alatta a leírás teljes szélességben, asztali nézetben változatlan.
+  Mellé **ragadós kosársáv** mobilra: csak akkor jelenik meg, ha a valódi kosárgomb nincs a
+  képernyőn, és azt a gombot nyomja meg — a mennyiség- és variációkezelés egy helyen marad.
+- **Kártyakép a kategórialistán (#b6fa1b34).** A kép `width`/`height` attribútumot kap a
+  kategória beállított vágási méretéből (layout-ugrás, CLS), és az ELSŐ kártya képe nem lusta
+  betöltésű, hanem `fetchpriority="high"` — az jellemzően az LCP-elem, lusta képként a böngésző
+  csak későn kezdi tölteni (a jegy mérése: 11,04 s LCP).
+- **Érintési felületek mobilon (#58128ff8).** A termékoldali mennyiségválasztó, a kosárgomb és a
+  kártyák művelet-gombjai legalább 44 px magasak 768 px alatt. A kategórialista rendezés- és
+  darabszám-választóját SZÁNDÉKOSAN nem érinti.
+- **Egységár keskeny kártyán (#4b9109de családja).** Az ár-doboz `ws-nowrap`-je az egységárat is
+  fogva tartotta, és az kilógott a kártyából. A doboz mostantól törhet, az egységár értéke
+  („1 297 Ft/l”) viszont egyben marad.
+
 ### SEO: meta leírás, OG kép és márkanév a webshop oldalain
 **1 új migráció** (additív, `Schema::hasColumn` védelemmel) — frissítés után `php artisan migrate`.
 - **Termék SEO mezők**: `og_title`, `og_description`, `og_img` a termékeken, a kategóriákéval

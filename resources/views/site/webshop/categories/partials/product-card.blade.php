@@ -1,3 +1,20 @@
+@php
+    /*
+     | Kártyakép (#b6fa1b34).
+     |
+     | A width/height a kategória beállított vágási méretéből jön (ebből menti a képet a
+     | WebshopProductController is), config-tartalékkal. Enélkül a böngésző csak a kép
+     | letöltése után tudja, mennyi helyet hagyjon — ez adja a layout-ugrást (CLS).
+     |
+     | A lusta betöltés CSAK a lista alsóbb kártyáin indokolt. Az ELSŐ kártya képe jellemzően
+     | az LCP-elem: lusta képként a böngésző későn kezdi tölteni, és ez önmagában másodperceket
+     | tesz az LCP-hez (a jegy mérése: 11,04 s). Az első kártya ezért eleve töltődik, nagy
+     | prioritással. Az első kártyát a hívó jelöli a `$wsElsoKartya` paraméterrel.
+     */
+    $wsKepSzelesseg = (int) ($product->category->primary_image_width ?? config('webshop.primary_image.width', 500));
+    $wsKepMagassag = (int) ($product->category->primary_image_height ?? config('webshop.primary_image.height', 500));
+    $wsElso = (bool) ($wsElsoKartya ?? false);
+@endphp
 <div class="card ws-product-card h-100 shadow-sm position-relative">
     @if(($ws['site_product_prices_visible'] ?? 'true') === 'true' && $product->sale_price && $product->discount_percentage > 0)
         <div class="ws-product-sale-badge badge badge-danger position-absolute">
@@ -13,7 +30,10 @@
     @endif
     <a href="{{ route('site.webshop.products.show', $product) }}" class="ws-product-card-img text-center bg-light d-flex align-items-center justify-content-center overflow-hidden" style="height: 220px;">
         @if($product->primary_image)
-            <img src="{{ $product->primary_image }}" alt="{{ $product->name }}" class="img-fluid" style="max-height: 100%;">
+            <img src="{{ $product->primary_image }}" alt="{{ $product->name }}"
+                 width="{{ $wsKepSzelesseg }}" height="{{ $wsKepMagassag }}"
+                 @if($wsElso) fetchpriority="high" @else loading="lazy" @endif
+                 class="img-fluid" style="max-height: 100%;">
         @else
             <i class="fa fa-image text-dark opacity-25 fs-30"></i>
         @endif

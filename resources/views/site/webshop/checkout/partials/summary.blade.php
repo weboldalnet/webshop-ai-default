@@ -54,16 +54,35 @@
                     </div>
                 @endif
 
+                @php
+                    /*
+                     | A hozzájárulások felirata és dokumentum-linkje. A `??` ITT NEM ELÉG: az admin
+                     | űrlap az üresen hagyott mezőt ÜRES STRINGKÉNT menti, az pedig nem null, tehát
+                     | a `??` megállt rajta. Emiatt a feltöltött PDF linkje nem jelent meg a pénztárban
+                     | (a külső URL mező üres volt), és az üres felirat-mező sem esett vissza az
+                     | alapértelmezett szövegre. Hibajegy: #3b64d88c.
+                     */
+                    $wsSzoveg = static fn ($ertek, $alap) => trim((string) ($ertek ?? '')) !== '' ? trim((string) $ertek) : $alap;
+
+                    $tosLabel = $wsSzoveg($ws['site_checkout_tos_label'] ?? null, 'Elfogadom az Általános Szerződési Feltételeket');
+                    $tosLink = $wsSzoveg($ws['site_checkout_tos_url'] ?? null, $wsSzoveg($ws['site_checkout_tos_path'] ?? null, ''));
+
+                    $privLabel = $wsSzoveg($ws['site_checkout_privacy_label'] ?? null, 'Elfogadom az Adatvédelmi tájékoztatót');
+                    $privLink = $wsSzoveg($ws['site_checkout_privacy_url'] ?? null, $wsSzoveg($ws['site_checkout_privacy_path'] ?? null, ''));
+                @endphp
+
                 <div class="d-flex flex-column">
                     <div>
                         @if(($ws['site_checkout_tos_enabled'] ?? 'false') === 'true')
                             <div class="custom-control custom-checkbox mt-3 mt-lg-0">
                                 <input type="checkbox" class="custom-control-input @error('accept_tos') is-invalid @enderror" id="accept_tos" name="accept_tos" value="1" {{ old('accept_tos') ? 'checked' : '' }} required>
+                                {{-- A felirat marad a jelölőnégyzet kattintási felülete; a dokumentum
+                                     linkje külön áll, különben a szövegre kattintás a PDF-et nyitná
+                                     meg a pipálás helyett. --}}
                                 <label class="custom-control-label" for="accept_tos">
-                                    {{ $ws['site_checkout_tos_label'] ?? 'Elfogadom az Általános Szerződési Feltételeket' }}
-                                    @php $tosLink = $ws['site_checkout_tos_url'] ?? ($ws['site_checkout_tos_path'] ?? null); @endphp
-                                    @if($tosLink)
-                                        (<a href="{{ $tosLink }}" target="_blank">Megnyitás</a>)
+                                    {{ $tosLabel }}
+                                    @if($tosLink !== '')
+                                        (<a href="{{ $tosLink }}" target="_blank" rel="noopener">Megnyitás</a>)
                                     @endif
                                 </label>
                                 @error('accept_tos') <div class="invalid-feedback d-block">{{ $message }}</div> @enderror
@@ -74,10 +93,9 @@
                             <div class="custom-control custom-checkbox mt-2">
                                 <input type="checkbox" class="custom-control-input @error('accept_privacy') is-invalid @enderror" id="accept_privacy" name="accept_privacy" value="1" {{ old('accept_privacy') ? 'checked' : '' }} required>
                                 <label class="custom-control-label" for="accept_privacy">
-                                    {{ $ws['site_checkout_privacy_label'] ?? 'Elfogadom az Adatvédelmi tájékoztatót' }}
-                                    @php $privLink = $ws['site_checkout_privacy_url'] ?? ($ws['site_checkout_privacy_path'] ?? null); @endphp
-                                    @if($privLink)
-                                        (<a href="{{ $privLink }}" target="_blank">Megnyitás</a>)
+                                    {{ $privLabel }}
+                                    @if($privLink !== '')
+                                        (<a href="{{ $privLink }}" target="_blank" rel="noopener">Megnyitás</a>)
                                     @endif
                                 </label>
                                 @error('accept_privacy') <div class="invalid-feedback d-block">{{ $message }}</div> @enderror
