@@ -40,14 +40,20 @@
             <div class="form-group">
                 <label for="og_img">Megosztási kép (1200x630)</label>
                 <input type="file" class="form-control-file" id="og_img" name="og_img" accept=".jpg,.jpeg,.png">
+                <span class="text-muted fs-14">Üresen hagyva a kategória listaképe megy ki megosztáskor.</span>
             </div>
             <div class="form-group">
-                <label for="og_title">OG Cím</label>
+                <label for="og_title">OG / böngészőcím</label>
                 <input type="text" class="form-control" id="og_title" name="og_title" maxlength="60" value="{{ old('og_title', $isEdit ? $category->og_title : '') }}" placeholder="Alapértelmezett: kategória neve">
+                <span class="text-muted fs-14">A cégnév automatikusan a végére kerül, ezt nem kell beírni.</span>
             </div>
             <div class="form-group">
-                <label for="og_description">OG Leírás</label>
-                <textarea class="form-control" id="og_description" name="og_description" maxlength="120">{{ old('og_description', $isEdit ? $category->og_description : '') }}</textarea>
+                <label for="og_description">Meta / OG leírás</label>
+                {{-- 160 karakter: ez a mező adja a Google találati listájában megjelenő meta
+                     leírást is, a korábbi 120-as korlát ahhoz túl szűk volt. --}}
+                <textarea class="form-control" id="og_description" name="og_description" rows="3" maxlength="160"
+                          placeholder="Alapértelmezett: a kategória leírásának első mondatai">{{ old('og_description', $isEdit ? $category->og_description : '') }}</textarea>
+                <span class="text-muted fs-14">Ez jelenik meg a Google találati listájában és a közösségi megosztásnál. Legfeljebb 160 karakter.</span>
             </div>
         </div>
     </div>

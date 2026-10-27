@@ -80,6 +80,12 @@ class WebshopFileService
         return ImageService::saveOgImage($file, 'webshop/categories/og', $name);
     }
 
+    /** Termék megosztási képe — a core 1200x630-ra vágja, ahogy a kategóriáét is. */
+    public static function saveProductOgImage(UploadedFile $file, string $name): string
+    {
+        return ImageService::saveOgImage($file, 'webshop/products/og', $name);
+    }
+
     public static function saveCategoryIcon(UploadedFile $file, string $name): string
     {
         $extension = $file->getClientOriginalExtension();

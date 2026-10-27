@@ -139,6 +139,10 @@ class WebshopProductController extends AdminExtendedController
         }
         if (($ws['product_stock_enabled'] ?? 'false') === 'true') { $rules['stock_quantity'] = 'nullable|integer|min:0'; }
         $rules['legal_info'] = 'nullable|array';
+        // SEO / megosztás — mind elhagyható, üresen a termék saját adataiból lesz tartalék.
+        $rules['og_title'] = 'nullable|string|max:60';
+        $rules['og_description'] = 'nullable|string|max:160';
+        $rules['og_img'] = 'nullable|image|mimes:jpg,jpeg,png|max:5120';
         $request->validate($rules, [
             'unit_quantity.required_with' => 'Mértékegységhez add meg a kiszerelés mennyiségét is.',
         ]);
@@ -149,6 +153,18 @@ class WebshopProductController extends AdminExtendedController
 
         $data = $request->only(['name', 'category_id', 'description', 'short_desc', 'secondary_name', 'crm_identifier', 'sku', 'label_id']);
         $data['slug'] = WebshopSlugService::generateUniqueSlug($data['name'], 'public.webshop_products', $product->id);
+
+        // SEO / megosztás. Üres mező = NULL, nem üres string: így a megjelenítésnél egyértelmű,
+        // hogy tartalékot kell képezni (WebshopSeoService). A képet csak akkor cseréljük, ha
+        // ténylegesen jött új fájl — enélkül minden mentés törölné a korábbit.
+        $data['og_title'] = trim((string) $request->input('og_title')) ?: null;
+        $data['og_description'] = trim((string) $request->input('og_description')) ?: null;
+        if ($request->hasFile('og_img')) {
+            $data['og_img'] = WebshopFileService::saveProductOgImage(
+                $request->file('og_img'),
+                getTransformedString($request->input('name')) . '-' . $product->id
+            );
+        }
 
         if (($ws['admin_product_labels_enabled'] ?? 'false') !== 'true') {
             unset($data['label_id']);

@@ -1,5 +1,15 @@
 @extends('site.layouts.layout')
-@section('title', isset($parentCategory) ? $parentCategory->name_singular : 'Webshop kategóriák')
+
+{{-- Ez a nézet KÉT dolgot szolgál ki: a webshop nyitóoldalát (/webshop) és egy
+     szülőkategória alkategória-listáját. A SEO adatokat ezért a szolgáltatás választja szét:
+     szülőkategóriánál annak saját mezői, gyökérszinten a Webshop > Nyitóoldal meta mezői,
+     azok híján a tényleges kategóriakínálatból képzett leírás. --}}
+@php
+    $wsSeo = \Weboldalnet\WebshopAiDefault\Services\Webshop\WebshopSeoService::shopHome($parentCategory ?? null);
+@endphp
+@section('title', $wsSeo['title'])
+@section('description', $wsSeo['description'])
+@section('og_image', $wsSeo['image'])
 
 @section('content')
     @include('site.webshop.partials.sticky-categories')

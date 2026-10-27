@@ -1,5 +1,14 @@
 @extends('site.layouts.layout')
-@section('title', $metaTitle)
+
+{{-- A nyitóoldal meta adatai a Webshop > Nyitóoldal beállításokból jönnek. A `$metaDescription`
+     korábban át volt adva a nézetnek, de SEHOL nem jelent meg: a mező ki volt tölthető az
+     adminban, a lapon mégis üres maradt a meta description. --}}
+@php
+    $wsSeo = \Weboldalnet\WebshopAiDefault\Services\Webshop\WebshopSeoService::shopHome();
+@endphp
+@section('title', $wsSeo['title'])
+@section('description', $metaDescription ?: $wsSeo['description'])
+@section('og_image', $wsSeo['image'])
 
 @section('content')
     @include('site.webshop.partials.sticky-categories')

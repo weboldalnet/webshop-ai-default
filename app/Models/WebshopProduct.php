@@ -14,6 +14,9 @@ use Weboldalnet\WebshopAiDefault\Services\Webshop\WebshopPriceHistoryService;
  * @property string $secondary_name
  * @property string $slug
  * @property string|null $description
+ * @property string|null $og_title SEO/megosztási cím — üresen a termék neve
+ * @property string|null $og_description Meta és OG leírás — üresen a rövid leírásból
+ * @property string|null $og_img Megosztási kép (1200x630) — üresen az elsődleges kép
  * @property string|null $primary_image
  * @property string|null $primary_image_thumb
  * @property string|null $sku
@@ -38,6 +41,7 @@ class WebshopProduct extends Model
 
     protected $fillable = [
         'category_id', 'label_id', 'name', 'slug', 'description', 'short_desc', 'secondary_name', 'crm_identifier',
+        'og_title', 'og_description', 'og_img',
         'primary_image', 'primary_image_thumb', 'sku',
         'stock_enabled', 'stock_quantity', 'price', 'sale_price', 'is_active', 'sort_order', 'weight',
         'unit_quantity', 'unit_measure', 'legal_info',

@@ -1,4 +1,26 @@
 ## [Unreleased]
+### SEO: meta leírás, OG kép és márkanév a webshop oldalain
+**1 új migráció** (additív, `Schema::hasColumn` védelemmel) — frissítés után `php artisan migrate`.
+- **Termék SEO mezők**: `og_title`, `og_description`, `og_img` a termékeken, a kategóriákéval
+  azonos névvel és szerkesztőfelülettel (termékszerkesztő → „SEO / OG adatok" doboz).
+- **Tartalék minden oldalon** (`WebshopSeoService`): üres mezőnél a cím a termék/kategória nevéből,
+  a leírás a rövid leírásból vagy a termékleírásból (tagek nélkül, 160 karakterre szóhatáron vágva),
+  a kép az elsődleges képből, illetve a kategória listaképéből képződik. A rövid leírás csak akkor
+  visz, ha mondatnyi (≥60 karakter) — sok shopban az a mező specifikáció („3 l · hidegen sajtolva"),
+  ami önmagában használhatatlan meta leírás.
+- **Böngészőcím márkanévvel**: minden webshop oldal címe „… - Cégnév" alakú (ha a szerkesztő már
+  beleírta a márkát, nem duplázzuk).
+- **og:image abszolút URL**: a közösségi és kereső robotok külön kérésben töltik le, relatív
+  útvonalat nem tudnak feloldani.
+- **Webshop nyitóoldal**: a Webshop → Nyitóoldal „Meta leírás" mezője eddig ki volt tölthető az
+  adminban, de SEHOL nem jelent meg a lapon — mostantól kimegy; ennek híján a tényleges
+  főkategóriákból képződik leírás.
+- **Kategória**: üresen hagyott SEO mező mostantól NULL, nem a név/leírás másolata (eddig a teljes
+  HTML-leírás másolódott az OG leírásba); a leírásmező 120 → 160 karakter, mert ez adja a meta
+  descriptiont is.
+- **Termékoldal képei**: a főkép és a bélyegkép `width`/`height` attribútumot kap a kategória
+  beállított vágási méretéből (layout-ugrás, CLS ellen).
+
 ### Jogi megfelelés (online értékesítés) — javasolt verzió: 1.2.0
 Minden pont termékfajtától független; ahol termékkör-függő adat kell, ott bekapcsolható profil van.
 **5 új migráció** (mind additív, `Schema::hasColumn`/`hasTable` védelemmel) — frissítés után

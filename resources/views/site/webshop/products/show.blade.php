@@ -1,5 +1,34 @@
 @extends('site.layouts.layout')
-@section('title', $product->name)
+
+@php
+    /*
+     | Böngészőcím, meta/OG leírás és megosztási kép: az adminban megadott SEO mezők, azok
+     | hiányában a termék saját adatai (név, rövid leírás, elsődleges kép).
+     */
+    $wsSeo = \Weboldalnet\WebshopAiDefault\Services\Webshop\WebshopSeoService::product($product);
+
+    /*
+     | A főkép és a bélyegkép width/height attribútumához: a mentett méret a TERMÉK
+     | KATEGÓRIÁJÁBÓL jön (`primary_image_width/height`, lásd
+     | WebshopProductController::saveImages), config-tartalékkal — ezért nem lehet fix
+     | számot írni a markupba. A két attribútum a layout-ugrás (CLS) ellen kell: enélkül
+     | a böngésző csak a kép letöltése után tudja, mennyi helyet foglaljon.
+     |
+     | A galériaképek (`image`, `image_thumb`) szándékosan maradnak ki: azokat a csomag
+     | CSAK szélességre menti (1000, illetve 150 px), a magasság a forráskép arányából
+     | adódik, tehát egy beírt magasság torzítana.
+     */
+    $wsImgWidth = (int) ($product->category->primary_image_width ?? config('webshop.primary_image.width', 500));
+    $wsImgHeight = (int) ($product->category->primary_image_height ?? config('webshop.primary_image.height', 500));
+    $wsThumbWidth = (int) config('webshop.thumbnail.width', 120);
+    // A bélyegkép ugyanabból a vágott forrásból készül, tehát a főkép arányát viszi.
+    $wsThumbHeight = (int) (config('webshop.thumbnail.height')
+        ?: ($wsImgWidth > 0 ? round($wsThumbWidth * $wsImgHeight / $wsImgWidth) : $wsThumbWidth));
+@endphp
+
+@section('title', $wsSeo['title'])
+@section('description', $wsSeo['description'])
+@section('og_image', $wsSeo['image'])
 
 @section('content')
     @include('site.webshop.partials.sticky-categories', ['category' => $product->category])
@@ -31,7 +60,9 @@
 
                             @if($product->primary_image)
                                 <a href="{{ $product->primary_image }}">
-                                    <img src="{{ $product->primary_image }}" id="ws-main-img" alt="{{ $product->name }}" class="img-fluid" style="max-height: 100%;">
+                                    <img src="{{ $product->primary_image }}" id="ws-main-img" alt="{{ $product->name }}"
+                                         width="{{ $wsImgWidth }}" height="{{ $wsImgHeight }}"
+                                         class="img-fluid" style="max-height: 100%;">
                                 </a>
                             @else
                                 <i class="fa fa-image fa-5x text-muted opacity-25"></i>
@@ -46,7 +77,9 @@
                         @if($product->defaultGalleryImages->isNotEmpty())
                             <div class="ws-thumbnails p-2 d-flex flex-wrap border-top">
                                 <div class="ws-thumb p-1" style="width: 25%; cursor: pointer;">
-                                    <img src="{{ $product->primary_image_thumb }}" class="img-fluid border rounded js-thumb active" data-src="{{ $product->primary_image }}">
+                                    <img src="{{ $product->primary_image_thumb }}" alt="{{ $product->name }}"
+                                         width="{{ $wsThumbWidth }}" height="{{ $wsThumbHeight }}"
+                                         class="img-fluid border rounded js-thumb active" data-src="{{ $product->primary_image }}">
                                 </div>
                                 @foreach($product->defaultGalleryImages as $img)
                                     <div class="ws-thumb p-1" style="width: 25%; cursor: pointer;">

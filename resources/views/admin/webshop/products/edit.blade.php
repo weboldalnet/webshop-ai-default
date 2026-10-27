@@ -201,6 +201,43 @@
                     </div>
                 </div>
 
+                {{-- SEO / megosztás — mindhárom mező elhagyható: üresen a termék saját
+                     adataiból képződik a tartalék (WebshopSeoService). --}}
+                <div class="col-lg-12 mb-3">
+                    <h3 class="header-box product-info mb-1"><i class="fa-solid fa-code"></i> SEO / OG adatok</h3>
+                    <div class="content-box bordered mb-3">
+                        <div class="row">
+                            <div class="col-lg-8">
+                                <div class="form-group">
+                                    <label for="og_title">OG / böngészőcím</label>
+                                    <input type="text" class="form-control" id="og_title" name="og_title"
+                                           maxlength="60"
+                                           value="{{ old('og_title', $product->og_title) }}"
+                                           placeholder="Alapértelmezett: a termék neve">
+                                    <span class="text-muted fs-14">A cégnév automatikusan a végére kerül, ezt nem kell beírni.</span>
+                                </div>
+                                <div class="form-group">
+                                    <label for="og_description">Meta / OG leírás</label>
+                                    <textarea class="form-control" id="og_description" name="og_description"
+                                              rows="3" maxlength="160"
+                                              placeholder="Alapértelmezett: a rövid leírás első mondatai">{{ old('og_description', $product->og_description) }}</textarea>
+                                    <span class="text-muted fs-14">Ez jelenik meg a Google találati listájában és a közösségi megosztásnál. Legfeljebb 160 karakter.</span>
+                                </div>
+                            </div>
+                            <div class="col-lg-4">
+                                @if($product->og_img)
+                                    <div class="mb-2"><img src="{{ $product->og_img }}" class="img-fluid" style="max-height:150px"></div>
+                                @endif
+                                <div class="form-group">
+                                    <label for="og_img">Megosztási kép (1200x630)</label>
+                                    <input type="file" class="form-control-file" id="og_img" name="og_img" accept=".jpg,.jpeg,.png">
+                                    <span class="text-muted fs-14">Üresen hagyva a termék elsődleges képe megy ki megosztáskor.</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
                 @include('admin.webshop.products.partials.legal-info-fields')
 
             </div>

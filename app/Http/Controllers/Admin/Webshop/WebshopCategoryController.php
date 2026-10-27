@@ -41,6 +41,9 @@ class WebshopCategoryController extends AdminExtendedController
             'name_singular' => 'required|string|max:255',
             'name_plural' => 'required|string|max:255',
             'og_img' => 'nullable|image|mimes:jpg,jpeg,png|max:5120',
+            // SEO / megosztás — mind elhagyható, üresen tartalék képződik.
+            'og_title' => 'nullable|string|max:60',
+            'og_description' => 'nullable|string|max:160',
             'primary_image_width' => 'nullable|integer|min:1',
             'primary_image_height' => 'nullable|integer|min:1',
         ]);
@@ -50,8 +53,11 @@ class WebshopCategoryController extends AdminExtendedController
         $data['slug'] = WebshopSlugService::generateUniqueSlug($data['name_singular'], 'public.webshop_categories');
         $data['is_active'] = true;
         $data['sort_order'] = (WebshopCategory::max('sort_order') ?? 0) + 1;
-        if (empty($data['og_title'])) $data['og_title'] = $data['name_singular'];
-        if (empty($data['og_description'])) $data['og_description'] = $data['description'] ?? '';
+        // Üres SEO mező = NULL, nem a név/leírás MÁSOLATA. Így a megjelenítésnél egyértelmű,
+        // hogy tartalékot kell képezni (WebshopSeoService: név, tagek nélküli leírás 160
+        // karakterre vágva) — és a szerkesztőbe sem kerül vissza a hosszú HTML-leírás másolata.
+        $data['og_title'] = trim((string) ($data['og_title'] ?? '')) ?: null;
+        $data['og_description'] = trim((string) ($data['og_description'] ?? '')) ?: null;
         if (!WebshopSettingsService::getBool('category_parent_enabled')) $data['parent_id'] = null;
 
         if ($request->hasFile('og_img')) {
@@ -112,6 +118,9 @@ class WebshopCategoryController extends AdminExtendedController
             'name_singular' => 'required|string|max:255',
             'name_plural' => 'required|string|max:255',
             'og_img' => 'nullable|image|mimes:jpg,jpeg,png|max:5120',
+            // SEO / megosztás — mind elhagyható, üresen tartalék képződik.
+            'og_title' => 'nullable|string|max:60',
+            'og_description' => 'nullable|string|max:160',
             'primary_image_width' => 'nullable|integer|min:1',
             'primary_image_height' => 'nullable|integer|min:1',
         ]);
@@ -119,8 +128,11 @@ class WebshopCategoryController extends AdminExtendedController
         $data = $request->only(['name_singular', 'name_plural', 'description', 'og_title', 'og_description', 'parent_id', 'primary_image_width', 'primary_image_height', 'card_width_units', 'list_image_mode', 'list_image_product_id', 'google_merchant_id', 'facebook_merchant_id', 'list_image_cropped_path', 'list_image_cropped_path_wide']);
         $data['show_in_sticky_header'] = $request->has('show_in_sticky_header');
         $data['slug'] = WebshopSlugService::generateUniqueSlug($data['name_singular'], 'public.webshop_categories', $category->id);
-        if (empty($data['og_title'])) $data['og_title'] = $data['name_singular'];
-        if (empty($data['og_description'])) $data['og_description'] = $data['description'] ?? '';
+        // Üres SEO mező = NULL, nem a név/leírás MÁSOLATA. Így a megjelenítésnél egyértelmű,
+        // hogy tartalékot kell képezni (WebshopSeoService: név, tagek nélküli leírás 160
+        // karakterre vágva) — és a szerkesztőbe sem kerül vissza a hosszú HTML-leírás másolata.
+        $data['og_title'] = trim((string) ($data['og_title'] ?? '')) ?: null;
+        $data['og_description'] = trim((string) ($data['og_description'] ?? '')) ?: null;
         if (!WebshopSettingsService::getBool('category_parent_enabled')) $data['parent_id'] = null;
 
         if ($request->hasFile('og_img')) {

@@ -1,5 +1,13 @@
 @extends('site.layouts.layout')
-@section('title', $category->name_singular)
+
+{{-- Böngészőcím, meta/OG leírás és megosztási kép: az adminban megadott SEO mezők, azok
+     hiányában a kategória saját adatai (név, leírás, listakép). --}}
+@php
+    $wsSeo = \Weboldalnet\WebshopAiDefault\Services\Webshop\WebshopSeoService::category($category);
+@endphp
+@section('title', $wsSeo['title'])
+@section('description', $wsSeo['description'])
+@section('og_image', $wsSeo['image'])
 
 @section('content')
     @include('site.webshop.partials.sticky-categories')
