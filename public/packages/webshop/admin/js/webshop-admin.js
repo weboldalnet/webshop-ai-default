@@ -783,6 +783,303 @@ var WebshopAdmin = (function ($) {
         });
     }
 
+    /**
+     * Szakasz-navigáció a hosszú szerkesztőkön (termék, kategória): kattintásra a szakaszhoz
+     * görget, görgetés közben kiemeli, melyik szakasznál tartunk.
+     */
+    function initSectionNav(navSelector) {
+        var nav = document.querySelector(navSelector || '.js-ws-section-nav');
+        if (!nav) {
+            return;
+        }
+
+        var items = [];
+        nav.querySelectorAll('a[href^="#"]').forEach(function (link) {
+            var target = document.querySelector(link.getAttribute('href'));
+            if (target) {
+                items.push({ link: link, target: target });
+            }
+        });
+        if (!items.length) {
+            return;
+        }
+
+        nav.addEventListener('click', function (e) {
+            var link = e.target.closest('a[href^="#"]');
+            var item = items.filter(function (i) { return i.link === link; })[0];
+            if (!item) {
+                return;
+            }
+            e.preventDefault();
+            // háttérfülön a sima görgetés nem fut le, ott azonnal ugrunk
+            item.target.scrollIntoView({ behavior: document.hidden ? 'auto' : 'smooth', block: 'start' });
+        });
+
+        function update() {
+            var line = window.innerHeight * 0.3;
+            var current = items[0];
+            items.forEach(function (i) {
+                if (i.target.getBoundingClientRect().top - line <= 0) {
+                    current = i;
+                }
+            });
+            // a lap alján az utolsó szakasz az aktív, akkor is, ha nem ér fel a jelzővonalig
+            if (window.innerHeight + window.pageYOffset >= document.documentElement.scrollHeight - 4) {
+                current = items[items.length - 1];
+            }
+            items.forEach(function (i) {
+                i.link.classList.toggle('is-active', i === current);
+            });
+        }
+
+        window.addEventListener('scroll', update, { passive: true });
+        window.addEventListener('resize', update);
+        update();
+    }
+
+    /**
+     * Kapcsoló-csempék és függő mezők.
+     *
+     * - `.ws-toggle-row` kapcsolója a sort (al-opciónál csak azt), fő kapcsolónál a csempét is kiemeli.
+     * - `[data-ws-show-when="#id"]`: csak akkor látszik, ha a jelölőnégyzet be van pipálva; select
+     *   esetén `data-ws-show-value` adja a várt értéket. A rejtett mezők NEM kapnak `disabled`-et:
+     *   egy be nem küldött jelölőnégyzetet a mentés kikapcsoltnak venne.
+     */
+    function initToggleTiles(root) {
+        var $root = $(root || document);
+
+        $root.on('change', '.ws-toggle-row input[type="checkbox"]', function () {
+            var $row = $(this).closest('.ws-toggle-row').toggleClass('is-on', this.checked);
+            if (!$row.hasClass('is-sub')) {
+                $row.closest('.ws-toggle-tile').toggleClass('is-on', this.checked);
+            }
+        });
+
+        var $dependents = $root.find('[data-ws-show-when]');
+
+        function sync() {
+            $dependents.each(function () {
+                var control = document.querySelector(this.getAttribute('data-ws-show-when'));
+                if (!control) {
+                    return;
+                }
+                var expected = this.getAttribute('data-ws-show-value');
+                var visible = control.type === 'checkbox' || control.type === 'radio'
+                    ? control.checked
+                    : (expected === null ? !!control.value : control.value === expected);
+                this.style.display = visible ? '' : 'none';
+            });
+        }
+
+        $root.on('change', 'input, select', sync);
+        sync();
+    }
+
+    /**
+     * Fülekre bontott beállítás-oldal: a legutóbb nyitott fül mentés után is nyitva marad, és ha a
+     * böngésző egy rejtett fülön lévő mezőt talál hibásnak, arra a fülre vált (különben a mentés
+     * némán megakadna).
+     */
+    function initSettingsTabs(tabsSelector, storageKey) {
+        var $tabs = $(tabsSelector);
+        if (!$tabs.length || !$.fn.tab) {
+            return;
+        }
+
+        var key = storageKey || 'ws-settings-tab';
+        var saved = null;
+        try {
+            saved = window.location.hash || sessionStorage.getItem(key);
+        } catch (e) {}
+
+        var $start = saved ? $tabs.find('a[href="' + saved + '"]') : $();
+        if ($start.length) {
+            $start.tab('show');
+        }
+
+        $tabs.on('shown.bs.tab', 'a', function () {
+            try {
+                sessionStorage.setItem(key, this.getAttribute('href'));
+            } catch (e) {}
+        });
+
+        var $form = $tabs.closest('form').length ? $tabs.closest('form') : $tabs.nextAll('form').first();
+        if ($form.length) {
+            $form[0].addEventListener('invalid', function (e) {
+                var pane = e.target.closest('.tab-pane');
+                if (pane && !pane.classList.contains('active')) {
+                    $tabs.find('a[href="#' + pane.id + '"]').tab('show');
+                }
+            }, true);
+        }
+    }
+
+    /**
+     * Tulajdonságlista egy tulajdonságcsoporton belül (properties/index): élő keresés, felvétel és
+     * szerkesztés modalban, törlés oldalbetöltés nélkül. A „Mentés és új” (és az Enter új felvételnél)
+     * ment, frissíti a listát, és a modalt üres mezővel nyitva hagyja a következő tulajdonsághoz.
+     */
+    function initPropertyList(config) {
+        var $rows = $('.js-property-rows');
+        var $table = $('.js-property-table');
+        var $search = $('.js-property-search');
+        var $result = $('.js-property-result');
+        var $modal = $('#propertyModal');
+        var $form = $modal.find('.js-property-form');
+        var $name = $form.find('.js-property-name');
+        var $error = $form.find('.js-property-error');
+        var $saved = $form.find('.js-property-saved');
+        var $buttons = $form.find('.js-property-save, .js-property-save-new');
+        var mode = 'create';
+        var updateUrl = null;
+        var listRequest = null;
+        var searchTimer = null;
+        var busy = false;
+
+        function reload(highlightId) {
+            var q = $.trim($search.val());
+            if (listRequest) {
+                listRequest.abort();
+            }
+            listRequest = $.ajax({ url: config.listUrl, data: { search: q }, dataType: 'json' })
+                .done(function (res) {
+                    $rows.html(res.html);
+                    $('.js-property-total').text(res.total);
+                    $result.text(res.count + ' találat').toggle(q !== '');
+                    // szűrt listán a sorrendezés a többi elem sorrendjét is felülírná, ezért keresés közben áll
+                    $table.toggleClass('is-searching', q !== '');
+                    if ($rows.data('ui-sortable')) {
+                        $rows.sortable(q !== '' ? 'disable' : 'enable').sortable('refresh');
+                    }
+                    if (highlightId) {
+                        $rows.find('tr[data-id="' + highlightId + '"]').addClass('ws-row-flash');
+                    }
+                })
+                .fail(function (xhr) {
+                    if (xhr.statusText !== 'abort') {
+                        showToast('error', 'Nem sikerült frissíteni a listát.');
+                    }
+                });
+        }
+
+        function setError(message) {
+            $name.toggleClass('is-invalid', !!message);
+            $error.text(message || '');
+        }
+
+        function openModal(newMode, data) {
+            mode = newMode;
+            updateUrl = data ? data.url : null;
+            $modal.find('.js-property-modal-title').text(mode === 'edit' ? 'Tulajdonság szerkesztése' : 'Új tulajdonság');
+            $form.find('.js-property-enter-hint').toggle(mode === 'create');
+            $name.val(data ? data.name : '');
+            setError(null);
+            if (!$modal.hasClass('show')) {
+                $saved.hide();
+                $modal.modal('show');
+            } else {
+                $name.trigger('focus');
+            }
+        }
+
+        function save(keepOpen) {
+            var name = $.trim($name.val());
+            if (busy) {
+                return;
+            }
+            if (!name) {
+                setError('Add meg a tulajdonság nevét.');
+                $name.trigger('focus');
+                return;
+            }
+            busy = true;
+            $buttons.prop('disabled', true);
+
+            $.ajax({
+                url: mode === 'edit' ? updateUrl : $form.data('store-url'),
+                method: 'POST',
+                dataType: 'json',
+                data: { name: name, _method: mode === 'edit' ? 'PUT' : 'POST' }
+            }).done(function (res) {
+                showToast('success', res.message);
+                reload(res.property ? res.property.id : null);
+                if (keepOpen) {
+                    $saved.text('Elmentve: „' + name + '”. Jöhet a következő.').show();
+                    openModal('create');
+                } else {
+                    $modal.modal('hide');
+                }
+            }).fail(function (xhr) {
+                var errors = xhr.responseJSON && xhr.responseJSON.errors;
+                if (xhr.status === 422 && errors && errors.name) {
+                    setError(errors.name[0]);
+                } else {
+                    setError((xhr.responseJSON && xhr.responseJSON.message) || 'Hiba történt a mentés során.');
+                }
+                $name.trigger('focus');
+            }).always(function () {
+                busy = false;
+                $buttons.prop('disabled', false);
+            });
+        }
+
+        $search.on('input', function () {
+            clearTimeout(searchTimer);
+            searchTimer = setTimeout(function () { reload(); }, 250);
+        }).on('keydown', function (e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+            }
+        });
+
+        $(document).on('click', '.js-new-property', function () {
+            openModal('create');
+        });
+        $(document).on('click', '.js-edit-property', function () {
+            openModal('edit', { name: $(this).data('name'), url: $(this).data('url') });
+        });
+
+        $modal.on('shown.bs.modal', function () {
+            $name.trigger('focus').trigger('select');
+        });
+        $name.on('input', function () {
+            setError(null);
+        });
+        // Enter: új felvételnél „Mentés és új”, szerkesztésnél mentés és bezárás
+        $form.on('submit', function (e) {
+            e.preventDefault();
+            save(mode === 'create');
+        });
+        $form.on('click', '.js-property-save-new', function () {
+            save(true);
+        });
+        $form.on('click', '.js-property-save', function () {
+            save(false);
+        });
+
+        // Törlés: a közös megerősítő modal űrlapja AJAX-szal megy, a lista helyben frissül
+        $('#deleteForm').on('submit', function (e) {
+            e.preventDefault();
+            var $submit = $(this).find('[type="submit"]').prop('disabled', true);
+            $.ajax({ url: this.getAttribute('action'), method: 'POST', dataType: 'json', data: { _method: 'DELETE' } })
+                .done(function (res) {
+                    $('#deleteConfirmModal').modal('hide');
+                    showToast('success', res.message || 'Törölve.');
+                    reload();
+                })
+                .fail(function () {
+                    showToast('error', 'Hiba történt a törlés során.');
+                })
+                .always(function () {
+                    $submit.prop('disabled', false);
+                });
+        });
+
+        if ($.trim($search.val()) !== '' && $rows.data('ui-sortable')) {
+            $rows.sortable('disable');
+        }
+    }
+
     return {
         initSortable: initSortable,
         initToggleActive: initToggleActive,
@@ -796,6 +1093,10 @@ var WebshopAdmin = (function ($) {
         initProductRelationPicker: initProductRelationPicker,
         initTooltips: initTooltips,
         initCustomFileInput: initCustomFileInput,
+        initSectionNav: initSectionNav,
+        initToggleTiles: initToggleTiles,
+        initSettingsTabs: initSettingsTabs,
+        initPropertyList: initPropertyList,
         showToast: showToast
     };
 

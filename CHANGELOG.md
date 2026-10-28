@@ -1,4 +1,39 @@
 ## [Unreleased]
+### Admin: átlátható termék-, kategória- és beállítás-szerkesztő, AJAX-os tulajdonságlista
+Migrációt NEM igényel, csak `composer update` + `vendor:publish --tag=webshop-assets --force`
+(a csomag admin CSS-e és JS-e is változott). Az input-nevek, az alapértékek és a mentések változatlanok;
+minden mező ugyanazon Webshop beállítás mögött jelenik meg, mint eddig.
+
+- **Termékszerkesztő**: két oszlop — balra a termék tartalma kártyákra bontva (alapadatok, leírás,
+  ár és kiszerelés, tulajdonságok, galéria, dokumentumok, kapcsolódó termékek / variációk, kötelező
+  termékinformációk, SEO), jobbra az elsődleges kép, a besorolás, a készlet és egy ragadós „Ugrás”
+  szakasz-navigáció. Fejléc állapot-címkékkel (aktív, kategória, cikkszám, ár, készlet), Megtekintés /
+  Vélemények gombbal. A kategóriához rendelt tulajdonságcsoportok kinyitva elöl, a többi összecsukva
+  (kinyitva marad, ha van benne bejelölt érték). A fő és a másodlagos galéria egy szakaszban, mindkettő
+  a saját listájába tölt fel. Új termék lapja is az új formában.
+- **Kategória-szerkesztő**: ugyanez a felépítés; a „Termékkártyán is” jelölő csak a bejelölt
+  tulajdonságcsoportnál látszik. A Leírás mezőhöz eddig nem töltődött be a TinyMCE (sima szövegdoboz
+  volt) — most betöltődik, a site amúgy is HTML-ként jeleníti meg.
+- **Megosztási (OG) kép**: a termék- és a kategória-szerkesztőben a core megszokott képmetszős
+  input-groupja (1200 × 630), közös részlet: `admin/webshop/partials/og-image-input`. A listakép
+  „Képfeltöltés” módja is input-groupot kapott (vágás nélkül).
+- **Webshop beállítások**: öt fül (Termékek, Kategóriák, Webshop oldal, Pénztár, Számlázás), kapcsoló-
+  csempék rövid súgóval, a függő al-opciók a fő kapcsoló csempéjén belül (csak `display:none`, sosem
+  `disabled`, hogy a mentés ne kapcsolja ki őket). A nyitott fül mentés után is nyitva marad; rejtett
+  fülön lévő hibás mezőnél a mentés arra a fülre vált, nem akad el némán.
+- **Tulajdonságcsoport űrlapja**: a szerkesztő alatt a szűrőtípusok magyarázata (több választás /
+  egy választás / szám: mit jelent a terméknél és a szűrőben, példával), a kiválasztott kiemelve;
+  szám típusra váltásnál figyelmeztetés, ha már vannak felvett értékek.
+- **Tulajdonságlista (egy csoporton belül) AJAX-os**: élő keresés, felvétel és szerkesztés modalban
+  („Mentés és új”: ment, frissíti a listát, a modal nyitva marad üres mezővel; új felvételnél az Enter
+  is ezt teszi), törlés oldalbetöltés nélkül. Soronként látszik, hány termékhez van rendelve; keresés
+  közben a húzásos sorrendezés áll (szűrt listán a többi elem sorrendjét is felülírná). Egy csoporton
+  belül nem lehet két azonos nevű tulajdonság. A régi oldalas create/edit útvonalak tartaléknak maradtak.
+- **Mentés-sáv**: a webshop szerkesztőkön a `style="left: 0"` miatt a gomb a képernyő (és nem a tartalom)
+  közepére csúszott — most a core többi oldalával egyezően a tartalom közepén van.
+- Új admin JS-függvények: `initSectionNav`, `initToggleTiles` (`data-ws-show-when`), `initSettingsTabs`,
+  `initPropertyList`; új CSS-komponensek `ws-` előtaggal, a core admin-tokenjeire építve, tartalékszínekkel.
+
 ### Tesztelői hibajegyek: pénztár-hozzájárulás, termékoldal mobilon, kártyakép, érintési felületek
 Migrációt NEM igényel, csak `composer update` + `vendor:publish --tag=webshop-assets --force`
 (a csomag saját CSS-e is változott).

@@ -116,3 +116,720 @@
 .ws-relation-row:hover {
     background-color: #e2e6ea !important;
 }
+
+/* =====================================================================================
+   SZERKESZTŐ-FELÜLET (2026-10-28) — termék, kategória, beállítások
+   A core 2026-os admin arculatának tokenjeire épül (--accent, --navy, --border …), de
+   mindegyiknek van tartaléka: régebbi core-ú projektben is ugyanígy néz ki.
+   ===================================================================================== */
+.ws-editor {
+    --ws-surface: var(--surface, #fff);
+    --ws-surface-2: var(--surface-2, #f1f5f9);
+    --ws-border: var(--border, #e2e8f0);
+    --ws-border-strong: var(--border-strong, #cbd5e1);
+    --ws-navy: var(--navy, #0f1b3d);
+    --ws-text: var(--text, #1e293b);
+    --ws-muted: var(--muted, #64748b);
+    --ws-accent: var(--accent, #0ea5c4);
+    --ws-accent-soft: var(--accent-soft, #e6f7fb);
+    --ws-accent-700: var(--accent-700, #0a7e97);
+    --ws-good: var(--good, #16a34a);
+    --ws-good-soft: var(--good-soft, #dcfce7);
+    --ws-warn: var(--warn, #d97706);
+    --ws-warn-soft: var(--warn-soft, #fef3c7);
+    --ws-bad: var(--bad, #dc2626);
+    --ws-radius: var(--radius, 12px);
+    --ws-radius-lg: var(--radius-lg, 16px);
+    --ws-shadow-sm: var(--shadow-sm, 0 1px 2px rgba(15, 27, 61, .06));
+    --ws-font-display: var(--font-display, inherit);
+    color: var(--ws-text);
+}
+
+/* --- Fejléc: cím, állapot-címkék, műveletek --- */
+.ws-editor-head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 16px;
+    margin-bottom: 20px;
+}
+.ws-editor-kicker {
+    display: block;
+    margin-bottom: 2px;
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: .04em;
+    text-transform: uppercase;
+    color: var(--ws-accent-700);
+}
+.ws-editor-title {
+    margin: 0 0 8px;
+    font-family: var(--ws-font-display);
+    font-size: 26px;
+    font-weight: 700;
+    line-height: 1.2;
+    color: var(--ws-navy);
+}
+.ws-editor-head-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+.ws-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+.ws-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 3px 10px;
+    border: 1px solid var(--ws-border);
+    border-radius: 999px;
+    background-color: var(--ws-surface);
+    font-size: 13px;
+    font-weight: 600;
+    line-height: 1.5;
+    color: var(--ws-muted);
+}
+.ws-chip i {
+    font-size: 12px;
+}
+.ws-chip.is-good {
+    border-color: transparent;
+    background-color: var(--ws-good-soft);
+    color: var(--ws-good);
+}
+.ws-chip.is-warn {
+    border-color: transparent;
+    background-color: var(--ws-warn-soft);
+    color: var(--ws-warn);
+}
+.ws-chip.is-accent {
+    border-color: transparent;
+    background-color: var(--ws-accent-soft);
+    color: var(--ws-accent-700);
+}
+
+/* --- Kártya (szakasz) --- */
+.ws-card {
+    margin-bottom: 20px;
+    padding: 20px 22px;
+    border: 1px solid var(--ws-border);
+    border-radius: var(--ws-radius-lg);
+    background-color: var(--ws-surface);
+    box-shadow: var(--ws-shadow-sm);
+    scroll-margin-top: 20px;
+}
+/* a dokumentum-szakasz a JS miatt a .content-box osztályt is viseli: a core dobozstílusa itt ne érvényesüljön */
+.ws-card.content-box {
+    padding: 20px 22px;
+    box-shadow: var(--ws-shadow-sm);
+}
+.ws-card-head {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    margin-bottom: 16px;
+}
+.ws-card-icon {
+    display: inline-flex;
+    flex: 0 0 36px;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    background-color: var(--ws-accent-soft);
+    color: var(--ws-accent-700);
+    font-size: 15px;
+}
+.ws-card-heading {
+    flex: 1 1 auto;
+    min-width: 0;
+}
+.ws-card-title {
+    margin: 0;
+    font-family: var(--ws-font-display);
+    font-size: 18px;
+    font-weight: 700;
+    line-height: 36px;
+    color: var(--ws-navy);
+}
+.ws-card-lead {
+    display: block;
+    margin-top: -4px;
+    font-size: 14px;
+    line-height: 1.4;
+    color: var(--ws-muted);
+}
+.ws-card-head-aside {
+    flex: 0 0 auto;
+    align-self: center;
+}
+.ws-card .form-group:last-child {
+    margin-bottom: 0;
+}
+.ws-card label:not(.custom-control-label):not(.ws-toggle-row) {
+    margin-bottom: 6px;
+    font-weight: 600;
+}
+.ws-card-sub {
+    margin: 22px 0 12px;
+    padding-top: 18px;
+    border-top: 1px solid var(--ws-border);
+    font-family: var(--ws-font-display);
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--ws-navy);
+}
+.ws-hint {
+    display: block;
+    margin-top: 4px;
+    font-size: 14px;
+    line-height: 1.35;
+    color: var(--ws-muted);
+}
+.ws-req {
+    color: var(--ws-bad);
+}
+
+/* --- Szakasz-navigáció (oldalsáv) --- */
+.ws-side-sticky {
+    position: sticky;
+    top: 20px;
+}
+.ws-section-nav {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    padding: 10px;
+    border: 1px solid var(--ws-border);
+    border-radius: var(--ws-radius-lg);
+    background-color: var(--ws-surface);
+    box-shadow: var(--ws-shadow-sm);
+}
+.ws-section-nav-title {
+    padding: 4px 10px 8px;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: .05em;
+    text-transform: uppercase;
+    color: var(--ws-muted);
+}
+.ws-section-link {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 7px 10px;
+    border-radius: 9px;
+    font-size: 15px;
+    font-weight: 500;
+    color: var(--ws-text);
+    transition: background-color .15s ease, color .15s ease;
+}
+.ws-section-link i {
+    flex: 0 0 18px;
+    font-size: 13px;
+    text-align: center;
+    color: var(--ws-muted);
+}
+.ws-section-link:hover {
+    background-color: var(--ws-surface-2);
+    color: var(--ws-navy);
+}
+.ws-section-link.is-active {
+    background-color: var(--ws-accent-soft);
+    color: var(--ws-accent-700);
+    font-weight: 600;
+}
+.ws-section-link.is-active i {
+    color: var(--ws-accent-700);
+}
+
+/* --- Tulajdonságcsoportok --- */
+.ws-prop-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+}
+@media (max-width: 767.98px) {
+    .ws-prop-grid {
+        grid-template-columns: minmax(0, 1fr);
+    }
+}
+.ws-prop-tile {
+    border: 1px solid var(--ws-border);
+    border-radius: var(--ws-radius);
+    background-color: var(--ws-surface);
+}
+.ws-prop-tile.is-default {
+    border-color: var(--ws-border-strong);
+}
+.ws-prop-tile-head {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+    margin: 0;
+    padding: 10px 14px;
+    border: 0;
+    border-radius: var(--ws-radius);
+    background: transparent;
+    font-size: 15px;
+    font-weight: 700;
+    text-align: left;
+    color: var(--ws-navy);
+}
+button.ws-prop-tile-head {
+    cursor: pointer;
+}
+button.ws-prop-tile-head:hover {
+    background-color: var(--ws-surface-2);
+}
+.ws-prop-tile-head .ws-prop-count {
+    flex: 0 0 auto;
+    margin-left: auto;
+    white-space: nowrap;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--ws-muted);
+}
+.ws-prop-tile-head .fa-chevron-down {
+    font-size: 12px;
+    color: var(--ws-muted);
+    transition: transform .2s;
+}
+.ws-prop-tile-head.collapsed .fa-chevron-down {
+    transform: rotate(-90deg);
+}
+.ws-prop-type {
+    flex: 0 0 auto;
+    white-space: nowrap;
+    padding: 1px 8px;
+    border-radius: 999px;
+    background-color: var(--ws-surface-2);
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--ws-muted);
+}
+.ws-prop-body {
+    padding: 2px 14px 12px;
+}
+.ws-option-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(125px, 1fr));
+    gap: 4px 14px;
+}
+.ws-prop-more {
+    margin: 18px 0 10px;
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: .05em;
+    text-transform: uppercase;
+    color: var(--ws-muted);
+}
+
+/* --- Képek --- */
+.ws-gallery-block + .ws-gallery-block {
+    margin-top: 22px;
+    padding-top: 18px;
+    border-top: 1px solid var(--ws-border);
+}
+/* üres lista: a data-empty szövege (a JS-ből hozzáadott/törölt elemekkel együtt frissül) */
+.ws-gallery-list:not(:has(.ws-gallery-item))::before,
+.ws-relation-list:not(:has(.ws-relation-row))::before {
+    content: attr(data-empty);
+    display: block;
+    flex: 1 1 100%;
+    margin: 0 0 12px;
+    padding: 14px;
+    border: 1px dashed var(--ws-border-strong);
+    border-radius: var(--ws-radius);
+    font-size: 14px;
+    text-align: center;
+    color: var(--ws-muted);
+}
+.ws-gallery-list:not(:has(.ws-gallery-item))::before {
+    margin: 0 15px 12px;
+}
+.ws-gallery-item .ws-gallery-card {
+    overflow: hidden;
+    border: 1px solid var(--ws-border);
+    border-radius: var(--ws-radius);
+    background-color: var(--ws-surface);
+}
+.ws-gallery-item .ws-gallery-card img {
+    display: block;
+    aspect-ratio: 1 / 1;
+    max-height: none;
+    border-radius: 0;
+}
+.ws-gallery-toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 4px;
+    padding: 6px 8px;
+    border-top: 1px solid var(--ws-border);
+}
+.ws-upload-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px 12px;
+    max-width: 560px;
+}
+.ws-upload-row .input-group {
+    flex: 1 1 280px;
+}
+.ws-image-preview {
+    display: block;
+    max-width: 100%;
+    max-height: 220px;
+    margin: 0 auto 12px;
+    border: 1px solid var(--ws-border);
+    border-radius: var(--ws-radius);
+}
+
+/* --- Kapcsolatok (kapcsolódó termékek, variációk) --- */
+.ws-relation-col + .ws-relation-col {
+    border-left: 1px solid var(--ws-border);
+}
+@media (max-width: 991.98px) {
+    .ws-relation-col + .ws-relation-col {
+        margin-top: 18px;
+        padding-top: 18px;
+        border-top: 1px solid var(--ws-border);
+        border-left: 0;
+    }
+}
+.ws-relation-col .form-group {
+    position: relative;
+}
+.ws-relation-row.bg-light {
+    border-color: var(--ws-border) !important;
+    border-radius: 10px !important;
+    background-color: var(--ws-surface-2) !important;
+}
+.ws-relation-row img {
+    border-radius: 6px;
+}
+.ws-empty-note {
+    padding: 12px;
+    border: 1px dashed var(--ws-border-strong);
+    border-radius: var(--ws-radius);
+    font-size: 14px;
+    text-align: center;
+    color: var(--ws-muted);
+}
+
+/* --- Dokumentumok --- */
+.ws-doc-table {
+    margin-bottom: 0;
+}
+.ws-doc-table th {
+    border-top: 0;
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: .03em;
+    text-transform: uppercase;
+    color: var(--ws-muted);
+}
+.ws-doc-table td {
+    vertical-align: middle;
+}
+.ws-doc-new {
+    margin-top: 18px;
+    padding: 16px;
+    border-radius: var(--ws-radius);
+    background-color: var(--ws-surface-2);
+}
+
+/* --- Beállítások: fülek --- */
+.ws-tabs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-bottom: 20px;
+    padding: 6px;
+    border: 1px solid var(--ws-border);
+    border-radius: var(--ws-radius-lg);
+    background-color: var(--ws-surface);
+    box-shadow: var(--ws-shadow-sm);
+}
+.ws-tabs .nav-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 9px 16px;
+    border-radius: 10px;
+    font-weight: 600;
+    color: var(--ws-text);
+    transition: background-color .15s ease, color .15s ease;
+}
+.ws-tabs .nav-link:hover {
+    background-color: var(--ws-surface-2);
+    color: var(--ws-navy);
+}
+.ws-tabs .nav-link.active {
+    background-color: var(--ws-navy);
+    color: #fff;
+}
+.ws-tabs .nav-link i {
+    font-size: 14px;
+}
+/* mobilon a fülek tördelődnek (nincs vízszintes görgetés): mind látszik egyszerre */
+@media (max-width: 767.98px) {
+    .ws-tabs .nav-link {
+        padding: 8px 12px;
+        font-size: 15px;
+    }
+}
+
+/* --- Kapcsoló-csempék (a core fejlesztői beállításainak mintája, saját előtaggal) --- */
+.ws-toggle-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    align-items: start;
+    gap: 10px;
+}
+@media (max-width: 767.98px) {
+    .ws-toggle-grid {
+        grid-template-columns: minmax(0, 1fr);
+    }
+}
+.ws-toggle-tile {
+    overflow: hidden;
+    border: 1px solid var(--ws-border);
+    border-radius: var(--ws-radius);
+    background-color: var(--ws-surface);
+    transition: border-color .15s ease, background-color .15s ease;
+}
+.ws-toggle-tile:hover {
+    border-color: var(--ws-border-strong);
+}
+.ws-toggle-tile.is-on {
+    border-color: var(--ws-accent);
+    background-color: var(--ws-accent-soft);
+}
+.ws-toggle-tile.is-wide {
+    grid-column: 1 / -1;
+}
+.ws-toggle-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin: 0;
+    padding: 11px 14px;
+    cursor: pointer;
+}
+.ws-toggle-icon {
+    display: flex;
+    flex: 0 0 34px;
+    align-items: center;
+    justify-content: center;
+    height: 34px;
+    border-radius: 9px;
+    background-color: var(--ws-surface-2);
+    color: var(--ws-muted);
+    font-size: 15px;
+    transition: background-color .15s ease, color .15s ease;
+}
+.ws-toggle-tile.is-on > .ws-toggle-row:not(.is-sub) .ws-toggle-icon {
+    background-color: var(--ws-accent-700);
+    color: #fff;
+}
+.ws-toggle-text {
+    display: flex;
+    flex: 1 1 auto;
+    flex-direction: column;
+    min-width: 0;
+}
+.ws-toggle-name {
+    font-weight: 600;
+    line-height: 1.25;
+    color: var(--ws-text);
+}
+.ws-toggle-hint {
+    margin-top: 2px;
+    font-size: 13px;
+    line-height: 1.35;
+    color: var(--ws-muted);
+}
+.ws-toggle-row .custom-switch {
+    flex: 0 0 auto;
+    min-height: 1.5rem;
+    margin-right: -6px;
+}
+.ws-toggle-row .custom-control-label {
+    user-select: none;
+}
+/* al-opció a csempén belül: a fő sor szövegéhez igazítva, szaggatott elválasztóval */
+.ws-toggle-row.is-sub,
+.ws-toggle-sub {
+    padding: 9px 14px 9px 60px;
+    border-top: 1px dashed var(--ws-border-strong);
+}
+.ws-toggle-row.is-sub .ws-toggle-name {
+    font-size: 14px;
+    font-weight: 500;
+}
+.ws-toggle-sub .form-group {
+    margin-bottom: 0;
+}
+.ws-toggle-sub label {
+    font-size: 14px;
+}
+
+/* választó-lista egy csempén belül (fizetési módok, futárszolgálatok, mezők) */
+.ws-check-list {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+.ws-check-item {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 4px 10px;
+    padding: 8px 12px;
+    border: 1px solid var(--ws-border);
+    border-radius: 10px;
+    background-color: var(--ws-surface);
+}
+.ws-check-item .custom-control {
+    flex: 1 1 auto;
+}
+.ws-check-link {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--ws-accent-700);
+}
+.ws-check-extra {
+    flex: 1 1 100%;
+    padding: 8px 0 2px 24px;
+}
+.ws-check-item .badge {
+    font-size: 11px;
+    font-weight: 600;
+}
+.ws-money {
+    max-width: 180px;
+}
+.ws-option-list.is-wide {
+    grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+}
+
+/* választómező csempében (a kapcsoló-csempék rácsában) */
+.ws-field-tile {
+    padding: 12px 14px;
+}
+.ws-field-tile .form-group {
+    margin-bottom: 0;
+}
+
+/* --- Tulajdonságcsoport: szűrőtípusok magyarázata --- */
+.ws-type-list {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 12px;
+}
+@media (max-width: 991.98px) {
+    .ws-type-list {
+        grid-template-columns: minmax(0, 1fr);
+    }
+}
+.ws-type-item {
+    display: flex;
+    gap: 12px;
+    padding: 14px;
+    border: 1px solid var(--ws-border);
+    border-radius: var(--ws-radius);
+    background-color: var(--ws-surface);
+    font-size: 14px;
+    line-height: 1.4;
+    transition: border-color .15s ease, background-color .15s ease;
+}
+.ws-type-item.is-active {
+    border-color: var(--ws-accent);
+    background-color: var(--ws-accent-soft);
+}
+.ws-type-icon {
+    display: flex;
+    flex: 0 0 34px;
+    align-items: center;
+    justify-content: center;
+    height: 34px;
+    border-radius: 9px;
+    background-color: var(--ws-surface-2);
+    color: var(--ws-muted);
+}
+.ws-type-item.is-active .ws-type-icon {
+    background-color: var(--ws-accent-700);
+    color: #fff;
+}
+.ws-type-name {
+    margin-bottom: 6px;
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--ws-navy);
+}
+.ws-type-row {
+    margin-bottom: 4px;
+    color: var(--ws-text);
+}
+.ws-type-example {
+    margin-top: 6px;
+    color: var(--ws-muted);
+}
+
+/* --- Tulajdonságlista (AJAX) --- */
+.ws-list-toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px 14px;
+    margin-bottom: 14px;
+}
+.ws-list-search {
+    flex: 0 1 360px;
+}
+.ws-list-table {
+    margin-bottom: 6px;
+}
+.ws-list-table th {
+    border-top: 0;
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: .03em;
+    text-transform: uppercase;
+    color: var(--ws-muted);
+}
+.ws-list-table td {
+    vertical-align: middle;
+}
+.ws-list-table.is-searching .ws-drag-handle {
+    visibility: hidden;
+}
+.ws-row-flash td {
+    animation: ws-row-flash 1.8s ease-out;
+}
+@keyframes ws-row-flash {
+    from {
+        background-color: var(--ws-accent-soft);
+    }
+    to {
+        background-color: transparent;
+    }
+}
+
+/* a core középre zárja a táblázatcellákat — a listákban a név balra olvasható */
+.ws-list-table th,
+.ws-list-table td,
+.ws-doc-table th,
+.ws-doc-table td {
+    text-align: left;
+}

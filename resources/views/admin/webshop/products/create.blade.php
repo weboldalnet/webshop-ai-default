@@ -7,26 +7,44 @@
          bekezdések nélkül mentődött. --}}
     @include('admin.commons.tinymce-img-upload', ['tinyHeight' => 300])
 
-    <div class="container mw-600 mt-3 mb-150">
+    <div class="container-fluid ws-editor mt-3 mb-150" style="max-width: 860px">
         @include('admin.webshop.partials.alerts')
         @include('admin.webshop.partials.form-errors')
 
-        <div class="row"><div class="col-lg-12"><h3 class="header-box product-info mb-1"><i class="fa fa-box"></i> Új termék</h3></div></div>
-        <div class="content-box bordered mb-3">
-            <form method="POST" action="{{ route('admin.webshop.products.store') }}" enctype="multipart/form-data">
-                @csrf
-                <div class="form-group">
-                    <label for="name">Név <span class="text-danger">*</span></label>
-                    <input type="text" class="form-control" id="name" name="name" value="{{ old('name') }}" required>
-                </div>
-                <div class="form-group">
-                    <label for="category_id">Kategória <span class="text-danger">*</span></label>
-                    <select class="form-control" id="category_id" name="category_id" required>
-                        <option value="">-- Válassz --</option>
-                        @foreach($categories as $cat)
-                            <option value="{{ $cat->id }}" @if(old('category_id') == $cat->id) selected @endif>{{ $cat->hierarchical_name }}</option>
-                        @endforeach
-                    </select>
+        <div class="ws-editor-head">
+            <div>
+                <span class="ws-editor-kicker">Termék</span>
+                <h2 class="ws-editor-title mb-1">Új termék</h2>
+                <span class="ws-hint mt-0">Az alapadatok után a teljes szerkesztő nyílik meg: ár, tulajdonságok, képek.</span>
+            </div>
+            <div class="ws-editor-head-actions">
+                <a href="{{ route('admin.webshop.products.index') }}" class="btn btn-outline-secondary">
+                    <i class="fa-solid fa-arrow-left"></i> Terméklista
+                </a>
+            </div>
+        </div>
+
+        <form method="POST" action="{{ route('admin.webshop.products.store') }}" enctype="multipart/form-data">
+            @csrf
+            <div class="ws-card">
+                <header class="ws-card-head">
+                    <span class="ws-card-icon"><i class="fa-solid fa-pen"></i></span>
+                    <div class="ws-card-heading"><h3 class="ws-card-title">Alapadatok</h3></div>
+                </header>
+                <div class="form-row">
+                    <div class="form-group col-md-7">
+                        <label for="name">Név <span class="ws-req">*</span></label>
+                        <input type="text" class="form-control" id="name" name="name" value="{{ old('name') }}" required>
+                    </div>
+                    <div class="form-group col-md-5">
+                        <label for="category_id">Kategória <span class="ws-req">*</span></label>
+                        <select class="form-control" id="category_id" name="category_id" required>
+                            <option value="">– válassz –</option>
+                            @foreach($categories as $cat)
+                                <option value="{{ $cat->id }}" @if(old('category_id') == $cat->id) selected @endif>{{ $cat->hierarchical_name }}</option>
+                            @endforeach
+                        </select>
+                    </div>
                 </div>
                 <div class="form-group">
                     <label for="description">Leírás</label>
@@ -45,16 +63,21 @@
                                 <label class="custom-file-label text-muted" for="primary_image">Kép kiválasztása</label>
                             </div>
                         </div>
-                        <div class="lh-12 mt-1">
-                            <span class="text-muted">Alapértelmezett méret: {{ config('webshop.primary_image.width') }} x {{ config('webshop.primary_image.height') }}</span>
-                        </div>
+                        <span class="ws-hint">Alapértelmezett méret: {{ config('webshop.primary_image.width') }} × {{ config('webshop.primary_image.height') }} px.</span>
                     </div>
+                @else
+                    <span class="ws-hint">Az elsődleges képet a létrehozás után, a kategória képméretére vágva töltheted fel.</span>
                 @endif
-                <div class="text-center mt-3">
-                    <button type="submit" class="btn btn-primary fs-18 font-weight-bold"><i class="fa fa-save"></i> Létrehozás</button>
-                    <a href="{{ route('admin.webshop.products.index') }}" class="btn btn-secondary">Vissza</a>
+            </div>
+
+            <div class="admin-save-box">
+                <div class="admin-save-btn-container mx-auto">
+                    <button type="submit" class="btn btn-primary fs-18 fw-600"><i class="fa fa-save"></i> Létrehozás</button>
+                    <a href="{{ route('admin.webshop.products.index') }}" class="btn btn-secondary fs-18">Vissza</a>
                 </div>
-            </form>
-        </div>
+            </div>
+        </form>
     </div>
+
+    <link rel="stylesheet" href="/packages/webshop/admin/css/webshop-admin.css">
 @endsection

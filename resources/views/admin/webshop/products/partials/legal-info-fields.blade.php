@@ -10,25 +10,27 @@
     $wsLegalDefaults = $wsLegalService::shopDefaults();
 @endphp
 
-<div class="col-lg-12 mb-3">
-    <h3 class="header-box product-info mb-1">Kötelező termékinformációk</h3>
-    <div class="content-box bordered mb-3">
-        @if(empty($wsLegalProfiles))
-            <span class="text-muted fs-14">
-                Nincs bekapcsolva termékinformációs profil. A termék fajtájához tartozó kötelező adatokat
-                (gyártó, összetevők, veszélyjelek …) a
-                <a href="{{ route('admin.webshop.extra-settings.product-info.index') }}">Termékinformációk</a> beállításnál kapcsolhatod be.
+<div class="ws-card" id="ws-sec-legal">
+    <header class="ws-card-head">
+        <span class="ws-card-icon"><i class="fa-solid fa-clipboard-list"></i></span>
+        <div class="ws-card-heading">
+            <h3 class="ws-card-title">Kötelező termékinformációk</h3>
+            <span class="ws-card-lead">
+                @if(empty($wsLegalProfiles))
+                    Nincs bekapcsolva termékinformációs profil. A termék fajtájához tartozó kötelező adatokat
+                    (gyártó, összetevők, veszélyjelek …) a
+                    <a href="{{ route('admin.webshop.extra-settings.product-info.index') }}">Termékinformációk</a> beállításnál kapcsolhatod be.
+                @else
+                    A termékoldal „Termékinformációk” fülén jelennek meg, csak a kitöltött mezők. Bolt szintű alapértékek és
+                    profilok: <a href="{{ route('admin.webshop.extra-settings.product-info.index') }}">Termékinformációk</a> beállítás.
+                @endif
             </span>
-        @else
-            <p class="text-muted fs-14 mb-3">
-                Ezek az adatok a termékoldal „Termékinformációk” fülén jelennek meg; csak a kitöltött mezők látszanak.
-                Bolt szintű alapértékeket és a profilokat a
-                <a href="{{ route('admin.webshop.extra-settings.product-info.index') }}">Termékinformációk</a> beállításnál adhatsz meg.
-            </p>
-
+        </div>
+    </header>
+        @unless(empty($wsLegalProfiles))
             @foreach($wsLegalProfiles as $wsProfile)
                 @php($wsProfileDef = $wsLegalService::PROFILES[$wsProfile])
-                <h4 class="fs-18 font-weight-bold mt-3 mb-2">{{ $wsProfileDef['label'] }}</h4>
+                <h4 class="ws-card-sub @if($loop->first) mt-0 @endif">{{ $wsProfileDef['label'] }}</h4>
                 <div class="row">
                     @foreach($wsProfileDef['fields'] as $wsField => $wsConfig)
                         @php($wsName = 'legal_info[' . $wsProfile . '][' . $wsField . ']')
@@ -88,8 +90,7 @@
             @endforeach
 
             @if(in_array('food', $wsLegalProfiles, true))
-                <span class="text-muted fs-14 d-block">A nettó mennyiség a fenti „Kiszerelés” mezőkből kerül a termékoldalra.</span>
+                <span class="ws-hint">A nettó mennyiség az „Ár és kiszerelés” szakasz Kiszerelés mezőjéből kerül a termékoldalra.</span>
             @endif
-        @endif
-    </div>
+        @endunless
 </div>
