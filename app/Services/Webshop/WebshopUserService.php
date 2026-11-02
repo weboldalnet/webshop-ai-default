@@ -114,7 +114,8 @@ class WebshopUserService
 
         // Törölt fiók rendelései a megrendelő adataival megmaradnak, csak a fiók-kapcsolat szűnik meg.
         Event::listen('eloquent.deleted: ' . ltrim(self::USER_CLASS, '\\'), function ($user) {
-            WebshopOrder::where('commerce_user_id', $user->id)->update(['commerce_user_id' => null]);
+            // a lomtárban lévő (soft delete) rendeléseknél is, hogy visszaállítás után se mutasson törölt fiókra
+            WebshopOrder::withTrashed()->where('commerce_user_id', $user->id)->update(['commerce_user_id' => null]);
         });
     }
 
