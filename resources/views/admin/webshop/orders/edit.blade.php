@@ -57,6 +57,14 @@
                     <!-- Vevő adatok -->
                     <h3 class="header-box product-info mb-3">Vevő adatok</h3>
                     <div class="content-box bordered mb-4">
+                        {{-- Vásárlói fiók (weboldalnet/commerce-users), ha a rendelés fiókból jött --}}
+                        @if($order->commerce_user_id && \Illuminate\Support\Facades\Route::has('admin.webshop.users.show'))
+                            <div class="alert alert-info py-2 px-3 fs-14 mb-3">
+                                <i class="fa fa-user-check mr-1"></i>
+                                Vásárlói fiókból rendelt:
+                                <a href="{{ route('admin.webshop.users.show', $order->commerce_user_id) }}" class="fw-600">a vásárló adatlapja</a>
+                            </div>
+                        @endif
                         <div class="row">
                             <div class="col-md-12 form-group">
                                 <label>Vevő neve <span class="text-danger">*</span></label>

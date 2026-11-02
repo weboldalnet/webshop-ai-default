@@ -50,6 +50,12 @@
                 <a href="{{ route('admin.webshop.coupons.index') }}">Kuponok</a>
             @endif
 
+            {{-- Vásárlók: a felhasználó modul (weboldalnet/commerce-users) bekapcsolva és telepítve --}}
+            @if(\Weboldalnet\WebshopAiDefault\Services\Webshop\WebshopUserService::isEnabled()
+                && \Illuminate\Support\Facades\Route::has('admin.webshop.users.index'))
+                <a href="{{ route('admin.webshop.users.index') }}">Vásárlók</a>
+            @endif
+
             <a href="{{ route('admin.webshop.extra-settings.index') }}" class="fw-800">Webshop beállítások</a>
 
             @if($user->is_super)

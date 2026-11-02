@@ -4,8 +4,8 @@
 @section('content')
     @php
         /*
-         * WEBSHOP BEÁLLÍTÁSOK (újratervezve 2026-10-28): öt fül — Termékek, Kategóriák, Webshop oldal,
-         * Pénztár, Számlázás. Az input-nevek és az alapértékek a régiek, a mentés
+         * WEBSHOP BEÁLLÍTÁSOK (újratervezve 2026-10-28): hat fül — Termékek, Kategóriák, Webshop oldal,
+         * Pénztár, Számlázás, Vásárlói fiókok. Az input-nevek és az alapértékek a régiek, a mentés
          * (WebshopSettingController::update) változatlan.
          *
          * MINDEN fül EGY űrlapban van: a rejtett fül mezői is elmennek mentéskor. A függő blokkok
@@ -38,6 +38,7 @@
             <a class="nav-link" data-toggle="tab" href="#ws-tab-storefront" role="tab"><i class="fa-solid fa-store"></i> Webshop oldal</a>
             <a class="nav-link" data-toggle="tab" href="#ws-tab-checkout" role="tab"><i class="fa-solid fa-cart-shopping"></i> Pénztár</a>
             <a class="nav-link" data-toggle="tab" href="#ws-tab-invoicing" role="tab"><i class="fa-solid fa-file-invoice"></i> Számlázás</a>
+            <a class="nav-link" data-toggle="tab" href="#ws-tab-users" role="tab"><i class="fa-solid fa-users"></i> Vásárlói fiókok</a>
         </nav>
 
         <form method="POST" action="{{ route('admin.webshop.settings.update') }}">
@@ -630,6 +631,63 @@
                                     A számla MINDEN tételére ez kerül, a termékekre is – a webshop nem tárol termékenkénti
                                     áfakulcsot. Alanyi adómentes boltnál tehát AAM-re állítsd, és az egész számla AAM lesz.
                                 </span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {{-- ===== VÁSÁRLÓI FIÓKOK (weboldalnet/commerce-users, WebshopUserService) ===== --}}
+                <div class="tab-pane fade" id="ws-tab-users" role="tabpanel">
+                    @unless($usersInstalled)
+                        <div class="alert alert-warning py-2 px-3 small">
+                            <i class="fa fa-exclamation-triangle mr-1"></i>
+                            A felhasználó modul (weboldalnet/commerce-users) nincs telepítve, a kapcsolók önmagukban nem elegendők.
+                        </div>
+                    @endunless
+
+                    <div class="ws-card">
+                        <header class="ws-card-head">
+                            <span class="ws-card-icon"><i class="fa-solid fa-users"></i></span>
+                            <div class="ws-card-heading">
+                                <h3 class="ws-card-title">Vásárlói fiókok</h3>
+                                <span class="ws-card-lead">Regisztráció e-mailes aktiválással, bejelentkezés, elfelejtett jelszó, profil és jelszócsere.</span>
+                            </div>
+                        </header>
+                        <div class="ws-toggle-tile @if($wsOn('users_enabled')) is-on @endif">
+                            @include($wsToggle, ['name' => 'users_enabled', 'label' => 'Vásárlói fiókok', 'icon' => 'fa-users',
+                                'hint' => 'A fejlécben megjelenik a fiók-gomb, a pénztár bejelentkezve kitölti a vásárló adatait. A fiókokat a Webshop › Vásárlók menüpontban látod.',
+                                'checked' => $wsOn('users_enabled')])
+                            <div data-ws-show-when="#users_enabled">
+                                @include($wsToggle, ['name' => 'users_checkout_login_required', 'label' => 'Vásárlás csak bejelentkezve', 'sub' => true,
+                                    'hint' => 'Vendégként nem lehet rendelni: a pénztár előbb belépést vagy regisztrációt kér. Kikapcsolva a fiók nem kötelező, csak kényelmi lehetőség.',
+                                    'checked' => $wsOn('users_checkout_login_required')])
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="ws-card" data-ws-show-when="#users_enabled">
+                        <header class="ws-card-head">
+                            <span class="ws-card-icon"><i class="fa-solid fa-id-card"></i></span>
+                            <div class="ws-card-heading">
+                                <h3 class="ws-card-title">A fiókban elérhető</h3>
+                                <span class="ws-card-lead">A Profilom és a Jelszócsere mindig elérhető.</span>
+                            </div>
+                        </header>
+                        <div class="ws-toggle-grid">
+                            <div class="ws-toggle-tile @if($wsOn('users_orders_enabled', 'true')) is-on @endif">
+                                @include($wsToggle, ['name' => 'users_orders_enabled', 'label' => 'Rendeléseim', 'icon' => 'fa-box',
+                                    'hint' => 'A vásárló rendelései a fiókban: a fiókhoz kötöttek és a vendégként, ugyanazzal az e-mail-címmel leadottak.',
+                                    'checked' => $wsOn('users_orders_enabled', 'true')])
+                                <div data-ws-show-when="#users_orders_enabled">
+                                    @include($wsToggle, ['name' => 'users_reorder_enabled', 'label' => 'Újrarendelés', 'sub' => true,
+                                        'hint' => 'Egy kattintással a kosárba teszi egy korábbi rendelés termékeit — a mai áron, a mai készlet szerint.',
+                                        'checked' => $wsOn('users_reorder_enabled', 'true')])
+                                </div>
+                            </div>
+                            <div class="ws-toggle-tile @if($wsOn('users_addresses_enabled', 'true')) is-on @endif">
+                                @include($wsToggle, ['name' => 'users_addresses_enabled', 'label' => 'Címek kezelése', 'icon' => 'fa-location-dot',
+                                    'hint' => 'Több szállítási és számlázási cím, elsődleges választással. A pénztár ezekkel tölt ki, és az új címet elmentheti a fiókba.',
+                                    'checked' => $wsOn('users_addresses_enabled', 'true')])
                             </div>
                         </div>
                     </div>

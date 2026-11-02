@@ -17,6 +17,7 @@
         <div class="container-xl container-fluid pb-5 mt-5">
 
             @include('site.webshop.checkout.partials.alerts')
+            @include('site.webshop.checkout.partials.account-notice')
 
             <div class="row">
                 <div class="col-lg-12">

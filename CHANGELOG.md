@@ -1,4 +1,25 @@
 ## [Unreleased]
+### Vásárlói fiókok (weboldalnet/commerce-users ^1.1)
+**1 új migráció** (`webshop_orders.commerce_user_id`, nullázható, hasColumn-őrrel) — frissítés után
+`php artisan migrate`. A funkció a `weboldalnet/commerce-users` csomaggal működik; nélküle minden ki van
+kapcsolva, és a webshop változatlanul működik.
+
+- **Webshop beállítások › Vásárlói fiókok** fül: a modul be/ki, „Vásárlás csak bejelentkezve”,
+  Rendeléseim (+ Újrarendelés) és Címek kezelése. Telepítetlen modulnál figyelmeztet.
+- **Pénztár:** vendégnek belépési / regisztrációs ajánlat; bejelentkezve a név, a telefon, az elsődleges
+  szállítási és számlázási cím a fiókból töltődik, a mentett címek közül választható, az e-mail-cím a
+  fiók címe (nem írható). „A megadott címeimet mentsd el a fiókomba” — a meglévők nem duplázódnak.
+  Kötelező belépésnél a pénztár a belépő oldalra visz, és belépés után visszahoz (a kosár megmarad).
+  A rendelés a fiókhoz kötődik (`commerce_user_id`, sosem az űrlapból).
+- **Rendeléseim** (`/fiok/rendeleseim`) a fiókmenüben: a fiókhoz kötött és a vendégként, ugyanazzal az
+  e-mail-címmel leadott rendelések, adatlappal. **Újrarendelés:** a tételek a kosárba, a mai áron és a mai
+  készlet szerint; ami már nem kapható vagy csak részben van, azt a pénztár külön jelzi.
+- Fejléc: fiók-gomb a webshop gombsorában (`site.webshop.partials.account-button`, mobil fejlécbe is
+  behúzható). Admin: „Vásárlók” menüpont, a vásárló-adatlapon a rendelései, a rendelés-adatlapon link a
+  vásárlói fiókra. A fiók törlésekor a rendelései megmaradnak, csak a kapcsolat szűnik meg.
+- A rendelés-visszaigazoló oldalt a bejelentkezett vásárló a saját rendeléseinél új munkamenetben is látja.
+- Pénztár: a `success` üzenet is megjelenik (eddig csak a hiba és a figyelmeztetés).
+
 ### Admin: átlátható termék-, kategória- és beállítás-szerkesztő, AJAX-os tulajdonságlista
 Migrációt NEM igényel, csak `composer update` + `vendor:publish --tag=webshop-assets --force`
 (a csomag admin CSS-e és JS-e is változott). Az input-nevek, az alapértékek és a mentések változatlanok;

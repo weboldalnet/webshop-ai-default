@@ -4,6 +4,7 @@ namespace Weboldalnet\WebshopAiDefault\Http\Controllers\Admin\Webshop;
 
 use App\Http\Controllers\Admin\AdminExtendedController;
 use Weboldalnet\WebshopAiDefault\Services\Webshop\WebshopSettingsService;
+use Weboldalnet\WebshopAiDefault\Services\Webshop\WebshopUserService;
 use Weboldalnet\WebshopAiDefault\Services\Webshop\Commerce\WebshopCommerceService;
 use Weboldalnet\WebshopAiDefault\Services\Webshop\Commerce\WebshopInvoiceRequestFactory;
 use Illuminate\Http\Request;
@@ -30,6 +31,8 @@ class WebshopSettingController extends AdminExtendedController
             'invoiceExtraLines' => WebshopInvoiceRequestFactory::EXTRA_LINES,
             'invoiceVatKeys' => WebshopInvoiceRequestFactory::VAT_KEYS,
             'invoiceVatKey' => WebshopInvoiceRequestFactory::vatKey(),
+            // Vásárlói fiókok: telepítve van-e a felhasználó modul (a kapcsoló önmagában nem elég)
+            'usersInstalled' => WebshopUserService::isInstalled(),
         ]);
     }
 
@@ -74,6 +77,12 @@ class WebshopSettingController extends AdminExtendedController
             'invoicing_enabled',
             // Kupon modul főkapcsoló
             'coupons_enabled',
+            // Vásárlói fiókok (weboldalnet/commerce-users) — WebshopUserService
+            WebshopUserService::SETTING_ENABLED,
+            WebshopUserService::SETTING_LOGIN_REQUIRED,
+            WebshopUserService::SETTING_ORDERS,
+            WebshopUserService::SETTING_REORDER,
+            WebshopUserService::SETTING_ADDRESSES,
         ];
 
         // Dinamikusan hozzáadjuk az online fizetési módok checkbox kulcsait.

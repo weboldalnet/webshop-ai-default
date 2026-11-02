@@ -15,6 +15,7 @@ use Weboldalnet\WebshopAiDefault\Services\Webshop\WebshopStockService;
 use Weboldalnet\WebshopAiDefault\Services\Webshop\WebshopCheckoutService;
 use Weboldalnet\WebshopAiDefault\Services\Webshop\WebshopContentService;
 use Weboldalnet\WebshopAiDefault\Services\Webshop\WebshopSettingsService;
+use Weboldalnet\WebshopAiDefault\Services\Webshop\WebshopUserService;
 use Weboldalnet\WebshopAiDefault\Services\Webshop\Commerce\WebshopCommerceService;
 
 class WebshopCheckoutController extends Controller
@@ -25,6 +26,12 @@ class WebshopCheckoutController extends Controller
         if (empty($items)) {
             return redirect()->route('site.webshop.categories.index')->with('error', 'A kosár üres.');
         }
+
+        // Vásárlás csak bejelentkezve (Webshop beállítások › Vásárlói fiókok): belépés után ide tér vissza
+        if (WebshopUserService::loginRequired() && !WebshopUserService::user()) {
+            return $this->redirectToLogin();
+        }
+        $commerceUser = WebshopUserService::user();
 
         /*
            Az aktivált kupon CSAK az adott pénztár-látogatásra érvényes:
@@ -82,7 +89,20 @@ class WebshopCheckoutController extends Controller
             'checkoutQa' => WebshopCheckoutQaService::getCheckoutQa(),
             // Csak akkor rajzoljuk ki a beváltó dobozt, ha van MOST érvényes kupon
             'couponAvailable' => WebshopCouponService::isAvailable(),
+            // Vásárlói fiók: vendégnek belépési ajánlat, bejelentkezve kitöltés a fiókból
+            'usersEnabled' => WebshopUserService::isEnabled(),
+            'commerceUser' => $commerceUser,
+            'checkoutPrefill' => WebshopUserService::checkoutPrefill($commerceUser),
         ]);
+    }
+
+    /** Belépés a pénztár előtt; a belépő oldal a sikeres belépés után a pénztárba hoz vissza. */
+    protected function redirectToLogin()
+    {
+        session()->put('url.intended', route('site.webshop.checkout.index'));
+
+        return redirect()->route('commerce-users.login')
+            ->with('info', 'A vásárláshoz jelentkezz be a fiókodba, vagy regisztrálj. A kosarad tartalma megmarad.');
     }
 
     public function store(Request $request)
@@ -90,6 +110,16 @@ class WebshopCheckoutController extends Controller
         $items = WebshopCartService::getContent();
         if (empty($items)) {
             return redirect()->route('site.webshop.categories.index')->with('error', 'A kosár üres.');
+        }
+
+        // Vásárlói fiók: kötelező belépésnél vendég nem rendelhet; bejelentkezve a rendelés a fiók
+        // e-mail-címével megy (a fiók rendelései ehhez kötődnek, a mező a pénztárban nem írható)
+        $commerceUser = WebshopUserService::user();
+        if (WebshopUserService::loginRequired() && !$commerceUser) {
+            return $this->redirectToLogin();
+        }
+        if ($commerceUser) {
+            $request->merge(['email' => $commerceUser->email]);
         }
 
         $checkoutMode = WebshopSettingsService::get('site_checkout_mode', 'order');
@@ -215,13 +245,22 @@ class WebshopCheckoutController extends Controller
         }
 
         try {
+            // a fiók-azonosító SOSEM jön az űrlapból: csak a bejelentkezett vásárlóból
+            $orderData = $request->except('commerce_user_id');
+            $orderData['commerce_user_id'] = $commerceUser->id ?? null;
+
             $checkoutService = new WebshopCheckoutService();
-            $result = $checkoutService->process($request->all(), $items);
+            $result = $checkoutService->process($orderData, $items);
             $order = $result['order'];
             $commerceResult = $result['commerceResult'];
 
             // A rendelés adatlapja csak annak nyílik meg, aki le is adta.
             self::rememberOwnOrder($order);
+
+            // „A címeimet mentsd el a fiókomba” — a rendeléstől függetlenül, hibánál csak naplóz
+            if ($commerceUser && $request->boolean('save_addresses')) {
+                WebshopUserService::saveCheckoutAddresses($commerceUser, $orderData);
+            }
 
             WebshopCartService::clear();
             WebshopCouponService::clear();
@@ -293,6 +332,12 @@ class WebshopCheckoutController extends Controller
         }
 
         if (auth('admin')->check()) {
+            return;
+        }
+
+        // a bejelentkezett vásárló a saját rendeléseit (commerce-users) egy új munkamenetben is látja
+        $commerceUser = WebshopUserService::user();
+        if ($commerceUser && WebshopOrder::forCommerceUser($commerceUser)->whereKey($order->id)->exists()) {
             return;
         }
 

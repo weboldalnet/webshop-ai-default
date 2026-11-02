@@ -17,5 +17,8 @@
             }
         }
     },
-    "require": {}
+    "require": {},
+    "suggest": {
+        "weboldalnet/commerce-users": "^1.1 — vásárlói fiókok: regisztráció, belépés, címek, Rendeléseim (Webshop beállítások › Vásárlói fiókok)"
+    }
 }

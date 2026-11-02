@@ -131,20 +131,35 @@
                     <h5 class="border-bottom pb-2 font-weight-bold">Szállítási cím</h5>
                 @endif
 
+                {{-- Bejelentkezett vásárló mentett címei (commerce-users): választáskor kitölti a mezőket --}}
+                @php $wsSavedShipping = $checkoutPrefill['shipping_addresses'] ?? []; @endphp
+                @if(count($wsSavedShipping) > 1)
+                    <div class="form-group">
+                        <label for="ws_saved_shipping">Mentett címeim</label>
+                        <select id="ws_saved_shipping" class="form-control js-ws-saved-address" data-target="shipping">
+                            @foreach($wsSavedShipping as $wsSaved)
+                                <option value="{{ $wsSaved['id'] }}" data-address='@json($wsSaved)'>
+                                    {{ $wsSaved['zip'] }} {{ $wsSaved['city'] }}, {{ $wsSaved['address'] }}
+                                </option>
+                            @endforeach
+                        </select>
+                    </div>
+                @endif
+
                 <div class="row">
                     <div class="col-md-3 form-group">
                         <label>Irsz. <span class="text-danger">*</span></label>
-                        <input type="text" name="shipping[zip]" id="shipping_zip" class="form-control ws-shipping-address-input @error('shipping.zip') is-invalid @enderror" value="{{ old('shipping.zip') }}">
+                        <input type="text" name="shipping[zip]" id="shipping_zip" class="form-control ws-shipping-address-input @error('shipping.zip') is-invalid @enderror" value="{{ old('shipping.zip', $checkoutPrefill['shipping']['zip'] ?? '') }}">
                         @error('shipping.zip') <div class="invalid-feedback">{{ $message }}</div> @enderror
                     </div>
                     <div class="col-md-9 form-group">
                         <label>Város <span class="text-danger">*</span></label>
-                        <input type="text" name="shipping[city]" id="shipping_city" class="form-control ws-shipping-address-input @error('shipping.city') is-invalid @enderror" value="{{ old('shipping.city') }}">
+                        <input type="text" name="shipping[city]" id="shipping_city" class="form-control ws-shipping-address-input @error('shipping.city') is-invalid @enderror" value="{{ old('shipping.city', $checkoutPrefill['shipping']['city'] ?? '') }}">
                         @error('shipping.city') <div class="invalid-feedback">{{ $message }}</div> @enderror
                     </div>
                     <div class="col-md-12 form-group mb-0">
                         <label>Utca, házszám <span class="text-danger">*</span></label>
-                        <input type="text" name="shipping[address]" id="shipping_address" class="form-control ws-shipping-address-input @error('shipping.address') is-invalid @enderror" value="{{ old('shipping.address') }}">
+                        <input type="text" name="shipping[address]" id="shipping_address" class="form-control ws-shipping-address-input @error('shipping.address') is-invalid @enderror" value="{{ old('shipping.address', $checkoutPrefill['shipping']['address'] ?? '') }}">
                         @error('shipping.address') <div class="invalid-feedback">{{ $message }}</div> @enderror
                     </div>
                 </div>

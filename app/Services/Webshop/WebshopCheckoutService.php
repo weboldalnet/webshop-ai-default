@@ -118,6 +118,9 @@ class WebshopCheckoutService
                 'customer_phone' => $data['phone'] ?? null,
                 'customer_company' => $data['company'] ?? null,
                 'customer_tax_number' => $data['tax_number'] ?? null,
+                // Vásárlói fiók (commerce-users): a controller tölti ki a bejelentkezett vásárlóból,
+                // a beküldött űrlapból sosem (lásd WebshopCheckoutController::store)
+                'commerce_user_id' => $data['commerce_user_id'] ?? null,
                 // A modellen 'array' cast van, tehát tömbként adjuk át (a json_encode dupla kódolást okozna).
                 'billing_data' => $billingData ?: null,
                 'shipping_data' => $shippingData,

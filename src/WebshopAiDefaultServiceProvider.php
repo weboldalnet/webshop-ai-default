@@ -34,6 +34,10 @@ class WebshopAiDefaultServiceProvider extends ServiceProvider
 
         $this->registerBuiltinShippingProviders();
 
+        // Vásárlói fiókok (weboldalnet/commerce-users): a kapcsolók a Webshop beállításokból,
+        // a fiókmenübe a Rendeléseim. Telepített modul nélkül nem csinál semmit.
+        \Weboldalnet\WebshopAiDefault\Services\Webshop\WebshopUserService::registerWithModule();
+
         // Route-ok betöltése
         $this->loadRoutesFrom(__DIR__.'/../routes/web.php');
 

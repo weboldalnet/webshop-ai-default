@@ -17,6 +17,7 @@ use Weboldalnet\WebshopAiDefault\Http\Controllers\Site\Webshop\WebshopCartContro
 use Weboldalnet\WebshopAiDefault\Http\Controllers\Site\Webshop\WebshopCompareController;
 use Weboldalnet\WebshopAiDefault\Http\Controllers\Site\Webshop\WebshopCheckoutController;
 use Weboldalnet\WebshopAiDefault\Http\Controllers\Site\Webshop\WebshopReviewController;
+use Weboldalnet\WebshopAiDefault\Http\Controllers\Site\Webshop\WebshopAccountOrderController;
 use Weboldalnet\WebshopAiDefault\Http\Controllers\Site\Webshop\WebshopWithdrawalController as SiteWithdrawalController;
 use Weboldalnet\WebshopAiDefault\Http\Controllers\Admin\Webshop\WebshopWithdrawalController as AdminWithdrawalController;
 
@@ -84,6 +85,22 @@ Route::middleware('web')->group(function () {
                 ->middleware('throttle:10,1')
                 ->name('withdrawals.store');
         });
+
+    // Vásárlói fiók: Rendeléseim és újrarendelés — a felhasználó modul (weboldalnet/commerce-users)
+    // fiókoldalán, annak előtagjával (/fiok/rendeleseim). Csak telepített modul mellett, mert a
+    // middleware-eket az adja; a kapcsolót (Webshop beállítások) a controller nézi.
+    if (class_exists(\Weboldalnet\CommerceUsers\CommerceUsers::class)) {
+        Route::domain(getSiteDomain())
+            ->middleware(['site_share', 'commerce-users.enabled', 'commerce-users.auth'])
+            ->prefix(config('commerce-users.route_prefix', 'fiok') ?: 'fiok')
+            ->name('site.webshop.account.')
+            ->group(function () {
+                Route::get('/rendeleseim', [WebshopAccountOrderController::class, 'index'])->name('orders');
+                Route::get('/rendeleseim/{order}', [WebshopAccountOrderController::class, 'show'])->whereNumber('order')->name('orders.show');
+                Route::post('/rendeleseim/{order}/ujrarendeles', [WebshopAccountOrderController::class, 'reorder'])
+                    ->whereNumber('order')->middleware('throttle:20,1')->name('orders.reorder');
+            });
+    }
 
     // Admin oldali route-ok
     Route::prefix('webshop')

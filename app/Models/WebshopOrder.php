@@ -128,6 +128,8 @@ class WebshopOrder extends Model
         'shipping_method', 'shipping_status',
         'commerce_payment_transaction_id', 'commerce_invoice_document_id', 'commerce_shipment_id',
         'paid_at', 'invoiced_at', 'shipped_at',
+        // vásárlói fiók (weboldalnet/commerce-users) — vendégrendelésnél üres
+        'commerce_user_id',
     ];
 
     protected $casts = [
@@ -407,6 +409,22 @@ class WebshopOrder extends Model
     public function scopeCompleted($query, $completed)
     {
         return ($completed !== null && $completed !== '') ? $query->where('is_completed', $completed === '1' || $completed === true) : $query;
+    }
+
+    /**
+     * Egy vásárlói fiók rendelései: a fiókhoz kötöttek, és a fiók NÉLKÜL (vendégként) ugyanazzal
+     * az e-mail-címmel leadottak is — a cím a fiók aktiválásakor igazolt, tehát a vásárlóé.
+     * A más fiókhoz kötött rendelés akkor sem jelenik meg, ha az e-mail-cím egyezik.
+     */
+    public function scopeForCommerceUser($query, $user)
+    {
+        return $query->where(function ($q) use ($user) {
+            $q->where('commerce_user_id', $user->id)
+                ->orWhere(function ($guest) use ($user) {
+                    $guest->whereNull('commerce_user_id')
+                        ->whereRaw('lower(customer_email) = ?', [mb_strtolower((string) $user->email)]);
+                });
+        });
     }
 
     // --- Attribute accessors ---
