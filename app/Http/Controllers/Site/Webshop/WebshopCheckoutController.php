@@ -5,8 +5,6 @@ namespace Weboldalnet\WebshopAiDefault\Http\Controllers\Site\Webshop;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
-use \Illuminate\Support\Facades\Mail;
-use Weboldalnet\WebshopAiDefault\Mail\WebshopOrderMail;
 use Weboldalnet\WebshopAiDefault\Models\WebshopOrder;
 use Weboldalnet\WebshopAiDefault\Services\Webshop\WebshopCartService;
 use Weboldalnet\WebshopAiDefault\Services\Webshop\WebshopCheckoutQaService;
@@ -265,7 +263,8 @@ class WebshopCheckoutController extends Controller
             WebshopCartService::clear();
             WebshopCouponService::clear();
 
-            // Online fizetés esetén redirect a fizetési oldalra
+            // Online fizetés esetén redirect a fizetési oldalra. A visszaigazoló levél ilyenkor a
+            // sikeres fizetés után megy ki (HandlePaymentSucceeded), nem itt.
             if ($commerceResult && !empty($commerceResult['requiresRedirect']) && !empty($commerceResult['redirectUrl'])) {
                 return redirect()->away($commerceResult['redirectUrl']);
             }
@@ -280,14 +279,8 @@ class WebshopCheckoutController extends Controller
                     ->with('warning', 'A rendelés létrejött, de a fizetés indítása sikertelen volt. Kérjük, próbálja újra.');
             }
 
-            // Email küldése
-            if ($order->customer_email) {
-                try {
-                    Mail::to($order->customer_email)->send(new WebshopOrderMail($order));
-                } catch (\Exception $e) {
-                    Log::error('Rendelés visszaigazoló email hiba: ' . $e->getMessage());
-                }
-            }
+            // Visszaigazoló levél (utánvét, átutalás, személyes fizetés)
+            WebshopCheckoutService::sendConfirmationMail($order);
 
             return redirect()->route('site.webshop.checkout.success', $order)->with('success', 'Rendelés sikeresen leadva.');
         } catch (\Throwable $e) {

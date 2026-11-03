@@ -3,7 +3,11 @@
 namespace Weboldalnet\WebshopAiDefault\Services\Webshop;
 
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
+use Weboldalnet\WebshopAiDefault\Mail\WebshopOrderMail;
 use Weboldalnet\WebshopAiDefault\Models\WebshopOrder;
 use Weboldalnet\WebshopAiDefault\Models\WebshopOrderItem;
 use Weboldalnet\WebshopAiDefault\Services\Webshop\WebshopCouponService;
@@ -14,6 +18,48 @@ class WebshopCheckoutService
 {
     /** Az utánvétes fizetési mód kódja */
     const PAYMENT_METHOD_COD = 'cod';
+
+    /**
+     * Rendelés-visszaigazoló levél a vásárlónak — PONTOSAN EGYSZER.
+     *
+     * Utánvétnél és átutalásnál a pénztár küldi a rendelés leadásakor. Online fizetésnél
+     * (Barion, SimplePay, Stripe) a pénztár a fizetési oldalra irányít, ott még nincs mit
+     * visszaigazolni: a levelet a sikeres fizetés eseménye küldi (HandlePaymentSucceeded).
+     * A visszahívás (IPN) és a visszatérő oldal lekérdezése egyszerre is kiválthatja az
+     * eseményt, ezért a küldést a `confirmation_mail_sent_at` atomi lefoglalása őrzi.
+     *
+     * A levélhiba nem akaszthatja meg sem a pénztárt, sem a fizetési visszahívást: csak
+     * naplózunk, és a foglalást feloldjuk, hogy egy későbbi esemény újra próbálhassa.
+     */
+    public static function sendConfirmationMail(WebshopOrder $order): void
+    {
+        if (!$order->customer_email) {
+            return;
+        }
+
+        // A migráció futása előtt is működjön (régi séma): ilyenkor őr nélkül küld, mint eddig.
+        $guarded = Schema::hasColumn($order->getTable(), 'confirmation_mail_sent_at');
+
+        if ($guarded) {
+            $claimed = WebshopOrder::whereKey($order->id)
+                ->whereNull('confirmation_mail_sent_at')
+                ->update(['confirmation_mail_sent_at' => now()]);
+
+            if (!$claimed) {
+                return;
+            }
+        }
+
+        try {
+            Mail::to($order->customer_email)->send(new WebshopOrderMail($order));
+        } catch (\Throwable $e) {
+            Log::error('Rendelés visszaigazoló email hiba: ' . $e->getMessage(), ['order_id' => $order->id]);
+
+            if ($guarded) {
+                WebshopOrder::whereKey($order->id)->update(['confirmation_mail_sent_at' => null]);
+            }
+        }
+    }
 
     /**
      * Feldolgozza a checkout adatokat, létrehozza a rendelést és elindítja a payment flow-t.

@@ -32,6 +32,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * @property int|null $commerce_invoice_document_id
  * @property int|null $commerce_shipment_id
  * @property \Illuminate\Support\Carbon|null $paid_at
+ * @property \Illuminate\Support\Carbon|null $confirmation_mail_sent_at
  * @property \Illuminate\Support\Carbon|null $invoiced_at
  * @property \Illuminate\Support\Carbon|null $shipped_at
  * @property-read \Illuminate\Database\Eloquent\Collection $items
@@ -148,6 +149,7 @@ class WebshopOrder extends Model
         'is_completed' => 'boolean',
         'completed_at' => 'datetime',
         'paid_at' => 'datetime',
+        'confirmation_mail_sent_at' => 'datetime',
         'invoiced_at' => 'datetime',
         'shipped_at' => 'datetime',
         'billing_data' => 'array',

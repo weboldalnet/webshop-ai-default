@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\Log;
 use Weboldalnet\WebshopAiDefault\Models\WebshopOrder;
 use Weboldalnet\WebshopAiDefault\Jobs\Commerce\CreateInvoiceForOrder;
 use Weboldalnet\WebshopAiDefault\Services\Webshop\Commerce\WebshopCommerceService;
+use Weboldalnet\WebshopAiDefault\Services\Webshop\WebshopCheckoutService;
 
 class HandlePaymentSucceeded
 {
@@ -54,6 +55,11 @@ class HandlePaymentSucceeded
 
             $order->update($updateData);
         });
+
+        // Visszaigazoló levél: online fizetésnél a pénztár a fizetési oldalra irányít, ott még nincs
+        // mit visszaigazolni — a levél a sikeres fizetés után megy ki, egyszer (sendConfirmationMail őrzi).
+        // A számla előtt: a számlázó akár fél percig is futhat, a vásárló addig ne várjon.
+        WebshopCheckoutService::sendConfirmationMail($order->refresh());
 
         // Számlázás job indítása transaction után
         if ($this->shouldAutoInvoice()) {

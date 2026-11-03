@@ -1,4 +1,16 @@
 ## [Unreleased]
+### Javítás: online fizetésnél nem ment ki a rendelés-visszaigazoló levél
+**1 új migráció** (`webshop_orders.confirmation_mail_sent_at`, nullázható, hasColumn-őrrel) — frissítés után
+`php artisan migrate`.
+- A pénztár online fizetésnél (Barion, SimplePay, Stripe) a fizetési oldalra irányított, mielőtt a levelet
+  elküldte volna, és a sikeres fizetés után sem küldte el senki. Most a `HandlePaymentSucceeded` küldi, a sikeres
+  fizetés után (a számlakészítés előtt). Sikertelen vagy félbehagyott fizetésnél nem megy levél.
+- **Pontosan egy levél:** a visszahívás (IPN) és a visszatérő oldal lekérdezése egyszerre is kiválthatja az
+  eseményt; a küldést a `confirmation_mail_sent_at` atomi lefoglalása őrzi. Levélhibánál a foglalás feloldódik, a
+  fizetés feldolgozása nem áll le.
+- Közös függvény: `WebshopCheckoutService::sendConfirmationMail()` — az utánvét/átutalás útja is ezt használja.
+  A meglévő rendelésekre visszamenőleg nem megy levél.
+
 ### Vásárlói fiókok (weboldalnet/commerce-users ^1.1)
 **1 új migráció** (`webshop_orders.commerce_user_id`, nullázható, hasColumn-őrrel) — frissítés után
 `php artisan migrate` és `vendor:publish --tag=webshop-assets --force` (a webshop-site.css változott).
