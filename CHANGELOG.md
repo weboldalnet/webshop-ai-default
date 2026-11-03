@@ -1,4 +1,15 @@
 ## [Unreleased]
+### Többnyelvű webshop — pénztár: GLS-térkép és fizetés-újrapróba a vásárló nyelvén (az 1.1.21 után)
+Migrációt NEM igényel.
+- A GLS csomagpont-térkép (gls-dpm) felülete az oldal nyelvén (`language` attribútum; a komponens nyelvei: cs, hr, hu,
+  ro, sk, sl, sr, pl, en, de, fr, it, es — más nyelven a komponens alapértéke marad). Magyarul változatlan.
+- Fizetés újrapróbálása: a vásárló a saját nyelvén kap rövid üzenetet (`checkout.messages.retry_started` /
+  `retry_failed`); a fizetési szolgáltató magyar, gyakran technikai üzenete (pl. kivétel szövege) csak a naplóba
+  kerül — mint a rendelés leadásakor. Ez magyarul is változás: a nyers szolgáltatói szöveg helyett a rövid üzenet.
+- A kuponüzenetek nyelve a commerce-coupons következő verziójától jön (`commerce-coupons::messages.…`); a webshop
+  változatlanul továbbadja őket. A Stripe fizetőoldal nyelvét a commerce-stripe következő verziója veszi át a
+  rendelés nyelvéből (a webshop eddig is átadta: `PaymentRequestData::$language`).
+
 ### Többnyelvű webshop — javítások a valódi többnyelvű próbából (az 1.1.20 után)
 Migrációt NEM igényel. Magyarul a kimenet változatlan.
 - A beállításokban megadott webshop-szövegek (ÁSZF- és adatvédelmi felirat, pénztár-értesítők, nyitóoldal H1/SEO,

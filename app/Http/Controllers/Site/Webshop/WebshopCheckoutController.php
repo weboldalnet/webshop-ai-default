@@ -506,9 +506,18 @@ class WebshopCheckoutController extends Controller
                     : $order->status,
             ]);
 
+            // A szolgáltató üzenete magyar és gyakran technikai (kivétel szövege) — a naplóba megy, a vásárló a saját
+            // nyelvén kap rövid üzenetet (ugyanígy, mint a rendelés leadásakor).
+            if (!$commerceResult['success']) {
+                Log::warning('Retry payment: a fizetés újraindítása sikertelen.', [
+                    'order_id' => $order->id,
+                    'message' => $commerceResult['message'] ?? '',
+                ]);
+            }
+
             return redirect()->to(WebshopUrl::route('site.webshop.payment.result', $order))
                 ->with($commerceResult['success'] ? 'success' : 'error',
-                    $commerceResult['message'] ?? ($commerceResult['success'] ? __('webshop::checkout.messages.retry_started') : __('webshop::checkout.messages.retry_failed')));
+                    $commerceResult['success'] ? __('webshop::checkout.messages.retry_started') : __('webshop::checkout.messages.retry_failed'));
         } catch (\Throwable $e) {
             Log::error('Retry payment hiba: ' . $e->getMessage(), ['order_id' => $order->id]);
             return redirect()->to(WebshopUrl::route('site.webshop.payment.result', $order))

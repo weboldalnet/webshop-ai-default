@@ -66,6 +66,8 @@
 
         var parcelShopCode = '{{ $glsParcelShopCode ?? 'gls_parcel_shop' }}';
         var country = '{{ strtolower($glsCountry ?? 'hu') }}';
+        {{-- a térkép felülete az oldal nyelvén (a gls-dpm ezeket ismeri); más nyelven a komponens alapértéke marad --}}
+        var language = '{{ in_array(app()->getLocale(), ['cs', 'hr', 'hu', 'ro', 'sk', 'sl', 'sr', 'pl', 'en', 'de', 'fr', 'it', 'es'], true) ? app()->getLocale() : '' }}';
         var map = null;
 
         function setValue(id, value) {
@@ -125,6 +127,9 @@
 
             map = document.createElement('gls-dpm');
             map.setAttribute('country', country);
+            if (language) {
+                map.setAttribute('language', language);
+            }
             map.setAttribute('dropoffpoints-only', '');
             map.id = 'gls-parcel-map';
             map.addEventListener('change', onShopSelected);
