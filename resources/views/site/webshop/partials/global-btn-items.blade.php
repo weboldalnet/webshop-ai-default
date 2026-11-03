@@ -10,7 +10,7 @@
         @include('site.webshop.partials.header-search')
     @endif
 
-    @include('site.webshop.partials.account-button')
     @include('site.webshop.partials.compare-button')
     @include('site.webshop.partials.cart-button')
+    @include('site.webshop.partials.account-button')
 </div>

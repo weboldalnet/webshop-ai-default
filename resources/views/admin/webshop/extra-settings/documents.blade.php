@@ -97,10 +97,15 @@
                 <div class="col-lg-12">
                     <h3 class="header-box product-info mb-1">Adatvédelmi tájékoztató</h3>
                     <div class="content-box bordered mb-3">
-                        <div class="custom-control custom-switch mb-3">
+                        <div class="custom-control custom-switch mb-1">
                             <input type="checkbox" class="custom-control-input" id="site_checkout_privacy_enabled" name="site_checkout_privacy_enabled" value="1" @if(($ws['site_checkout_privacy_enabled'] ?? 'false') === 'true') checked @endif>
-                            <label class="custom-control-label" for="site_checkout_privacy_enabled">Megjelenik a checkout oldalon</label>
+                            <label class="custom-control-label" for="site_checkout_privacy_enabled">Elfogadtató jelölőnégyzet a pénztárban</label>
                         </div>
+                        <span class="text-muted fs-14 d-block mb-3">
+                            Kikapcsolva a rendelés gombja fölött csak egy tájékoztató sor jelenik meg a dokumentum linkjével.
+                            Az adatkezelési tájékoztatót nem kell elfogadtatni (a rendelés adatait a szerződés teljesítéséhez
+                            kezeljük), de a rendeléskor elérhetővé kell tenni — ezért a linket vagy a fájlt mindenképp add meg.
+                        </span>
                         <div class="form-group">
                             <label for="privacy_label">Megjelenő szöveg (label)</label>
                             <input type="text" class="form-control" id="privacy_label" name="privacy_label" value="{{ $ws['site_checkout_privacy_label'] ?? 'Elfogadom az Adatvédelmi tájékoztatót' }}">

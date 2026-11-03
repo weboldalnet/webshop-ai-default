@@ -37,6 +37,8 @@
             var shippingBlock = $('#ws-shipping-address-block');
             var billingSameBlock = $('#billingSameAsShipping').closest('.custom-control');
             var billingCollapse = $('.js-billing-collapse');
+            // a számlázási mezők felső térköze csak a látható „Megegyezik…” jelölő alatt kell
+            var billingFields = billingCollapse.find('.js-billing-fields');
 
             // Provider-független: minden átvevőpontos módnál a csomag az
             // átvevőpontra megy, nem a vásárló címére.
@@ -51,6 +53,7 @@
                     shippingBlock.find('.ws-shipping-address-input').prop('required', false);
                 }
                 billingSameBlock.hide();
+                billingFields.removeClass('pt-3');
                 $('#billingSameAsShipping').prop('checked', false);
                 billingCollapse.addClass('show');
                 billingCollapse.find('.js-billing-required').prop('required', true);
@@ -61,6 +64,7 @@
                     shippingBlock.find('.ws-shipping-address-input').prop('required', true);
                 }
                 billingSameBlock.show();
+                billingFields.addClass('pt-3');
                 if ($('#billingSameAsShipping').is(':checked')) {
                     billingCollapse.removeClass('show');
                     billingCollapse.find('.js-billing-required').prop('required', false);

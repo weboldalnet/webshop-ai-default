@@ -6,6 +6,7 @@ use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Route;
 use Weboldalnet\WebshopAiDefault\Models\WebshopOrder;
+use Weboldalnet\WebshopAiDefault\Services\Webshop\Commerce\WebshopCommerceService;
 
 /**
  * Híd a webshop és a felhasználó modul (weboldalnet/commerce-users) között.
@@ -179,11 +180,19 @@ class WebshopUserService
     }
 
     /**
-     * A pénztárban megadott címek mentése a fiókba („A címeimet mentsd el a fiókomba”).
+     * A pénztárban megadott címek mentése a fiókba.
+     *
+     * - Ha a vásárlónak még nincs szállítási / számlázási címe (első rendelés), az adott típus
+     *   magától mentődik; ha már van, csak a „Az új címeimet is mentsd el” jelölővel ($saveNew).
+     * - Szállítási cím csak házhozszállításnál: a csomagpont és a személyes átvétel helye nem a
+     *   vásárló címe.
+     * - „Megegyezik a szállítással” esetén a szállítási cím számlázási címként is mentődik —
+     *   szintén csak házhozszállításnál.
+     *
      * Ami már szerepel a mentett címek között, nem kerül be még egyszer; az első mentett cím
      * lesz az elsődleges.
      */
-    public static function saveCheckoutAddresses($user, array $data): void
+    public static function saveCheckoutAddresses($user, array $data, bool $saveNew = false): void
     {
         if (!$user || !self::addressesEnabled()) {
             return;
@@ -191,17 +200,38 @@ class WebshopUserService
 
         $addressClass = self::ADDRESS_CLASS;
         $service = self::ADDRESS_SERVICE_CLASS;
+        $complete = fn (array $a) => !empty($a['zip']) && !empty($a['city']) && !empty($a['address']);
 
         try {
+            $method = $data['shipping_method'] ?? null;
+            $homeDelivery = $method !== 'pickup' && !WebshopCommerceService::isParcelShopMethod($method);
             $shipping = $data['shipping'] ?? [];
-            if (!empty($shipping['zip']) && !empty($shipping['city']) && !empty($shipping['address']) && empty($shipping['parcel_shop_id'])) {
-                $shipping['name'] = $shipping['name'] ?? ($data['name'] ?? $user->full_name);
-                $shipping['phone'] = $data['phone'] ?? null;
-                self::saveIfNew($user, $addressClass::TYPE_SHIPPING, $shipping, $service);
+            $shippingUsable = $homeDelivery && empty($shipping['parcel_shop_id']) && $complete($shipping);
+
+            if ($shippingUsable && ($saveNew || $service::countOfType($user, $addressClass::TYPE_SHIPPING) === 0)) {
+                self::saveIfNew($user, $addressClass::TYPE_SHIPPING, [
+                    'name' => $shipping['name'] ?? ($data['name'] ?? $user->full_name),
+                    'phone' => $data['phone'] ?? null,
+                    'country' => $shipping['country'] ?? null,
+                    'zip' => $shipping['zip'],
+                    'city' => $shipping['city'],
+                    'address' => $shipping['address'],
+                ], $service);
             }
 
-            $billing = empty($data['billing_same_as_shipping']) ? ($data['billing'] ?? []) : [];
-            if (!empty($billing['name']) && !empty($billing['zip']) && !empty($billing['city']) && !empty($billing['address'])) {
+            if (!empty($data['billing_same_as_shipping'])) {
+                $billing = $shippingUsable ? [
+                    'name' => $data['name'] ?? $user->full_name,
+                    'zip' => $shipping['zip'],
+                    'city' => $shipping['city'],
+                    'address' => $shipping['address'],
+                ] : [];
+            } else {
+                $billing = $data['billing'] ?? [];
+            }
+
+            if (!empty($billing['name']) && $complete($billing)
+                && ($saveNew || $service::countOfType($user, $addressClass::TYPE_BILLING) === 0)) {
                 $billing['company'] = $data['company'] ?? null;
                 $billing['tax_number'] = $data['tax_number'] ?? null;
                 self::saveIfNew($user, $addressClass::TYPE_BILLING, $billing, $service);

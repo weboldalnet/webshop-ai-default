@@ -5,7 +5,7 @@
     jelenik meg – ezt a wsUpdateOnSitePayment() kapcsolgatja
     (partials/scripts.blade.php).
 --}}
-<div class="card shadow-sm border-0">
+<div class="card shadow-sm border-0 mb-4">
     <div class="card-header bg-primary text-white font-weight-bold h5">Fizetési lehetőségek</div>
     <div class="card-body">
         @if(!empty($paymentMethods))

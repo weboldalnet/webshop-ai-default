@@ -8,9 +8,8 @@
         $wsPricesVisible = ($ws['site_product_prices_visible'] ?? 'true') === 'true';
         // Van-e egyáltalán választható szállítási mód (ajánlatkérésnél nincs)
         $wsShippingEnabled = !$isQuoteMode && !empty($shippingMethods);
+        // Kér-e a pénztár szállítási címet (külön doboz a szállítási mód alatt)
         $wsAddressEnabled = ($ws['site_checkout_shipping_enabled'] ?? 'false') === 'true';
-        // A szállítási doboznak csak akkor van tartalma, ha van mód VAGY cím
-        $wsHasShippingCard = $wsShippingEnabled || $wsAddressEnabled;
     @endphp
 
     <div class="ws-page-container ws-checkout-index">
@@ -44,18 +43,31 @@
             <form method="POST" action="{{ route('site.webshop.checkout.store') }}" class="row">
                 @csrf
 
-                {{-- 2. Személyes adatok --}}
-                <div class="col-lg-6 mb-4">
+                {{-- Dobozok: balra a személyes adatok és a szállítási mód, jobbra a szállítási cím, alatta a
+                     számlázási adatok és a fizetés. Mobilon ugyanez a kitöltési sorrend.
+                     Minden doboz csak ALSÓ margót kap (mb-4), az oszlop nem: így ha a szállítási cím
+                     doboza elrejtődik (személyes átvétel, csomagpont), a számlázási doboz pontosan az
+                     oszlop tetején kezdődik, a két oszlop teteje egy vonalban marad. --}}
+                <div class="col-lg-6">
+                    {{-- 2. Személyes adatok --}}
                     @include('site.webshop.checkout.partials.personal-data')
-                </div>
 
-                <div class="col-lg-6 mb-4">
-                    {{-- 3. Szállítási adatok --}}
-                    @if($wsHasShippingCard)
+                    {{-- 3. Szállítási mód --}}
+                    @if($wsShippingEnabled)
                         @include('site.webshop.checkout.partials.shipping')
                     @endif
+                </div>
 
-                    {{-- 4. Fizetési lehetőségek --}}
+                <div class="col-lg-6">
+                    {{-- 4. Szállítási cím, alatta a számlázási adatok („Megegyezik a szállítással”) --}}
+                    @if($wsAddressEnabled)
+                        @include('site.webshop.checkout.partials.shipping-address')
+                    @endif
+                    @if(($ws['site_checkout_billing_enabled'] ?? 'false') === 'true')
+                        @include('site.webshop.checkout.partials.billing')
+                    @endif
+
+                    {{-- 5. Fizetési lehetőségek --}}
                     @if(!$isQuoteMode)
                         @include('site.webshop.checkout.partials.payment')
                     @endif

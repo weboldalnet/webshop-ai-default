@@ -1,12 +1,13 @@
 {{--
-    Pénztár / 3. blokk: szállítási adatok.
+    Pénztár / 3. blokk: szállítási mód (csoportosítva) és az átvevőpont-választók.
 
-    Két rész: a kézbesítés módja (csoportosítva) és a szállítási cím.
-    A cím személyes átvételnél és átvevőpontos módoknál elrejtődik – ezt a
-    lap alján lévő wsUpdateShippingAddress() intézi (partials/scripts.blade.php).
+    A bal oszlopban, a személyes adatok alatt áll; a szállítási cím külön doboz a jobb oszlop
+    tetején (shipping-address.blade.php). Személyes átvételnél és átvevőpontos módoknál az a
+    doboz elrejtődik – ezt a lap alján lévő
+    wsUpdateShippingAddress() intézi (partials/scripts.blade.php).
 --}}
 <div class="card shadow-sm border-0 mb-4">
-    <div class="card-header bg-primary text-white font-weight-bold h5">Szállítási adatok</div>
+    <div class="card-header bg-primary text-white font-weight-bold h5">Szállítási mód</div>
     <div class="card-body">
         @if($wsShippingEnabled)
             @error('shipping_method') <div class="alert alert-danger py-1 mb-2">{{ $message }}</div> @enderror
@@ -36,7 +37,7 @@
                 }
             @endphp
 
-            <div class="form-group ws-shipping-groups">
+            <div class="form-group mb-0 ws-shipping-groups">
                 @foreach(($shippingGroups ?? []) as $wsKind => $wsGroup)
                     <div class="custom-control custom-radio mb-2">
                         <input type="radio" name="shipping_group" id="sg_{{ $wsKind }}" value="{{ $wsKind }}"
@@ -123,47 +124,6 @@
             @if(isset($foxpostCode) && array_key_exists($foxpostCode, $shippingMethods))
                 @include('site.webshop.checkout.partials.foxpost-apm')
             @endif
-        @endif
-
-        @if($wsAddressEnabled)
-            <div id="ws-shipping-address-block" class="{{ $wsShippingEnabled ? 'mt-4' : '' }}">
-                @if($wsShippingEnabled)
-                    <h5 class="border-bottom pb-2 font-weight-bold">Szállítási cím</h5>
-                @endif
-
-                {{-- Bejelentkezett vásárló mentett címei (commerce-users): választáskor kitölti a mezőket --}}
-                @php $wsSavedShipping = $checkoutPrefill['shipping_addresses'] ?? []; @endphp
-                @if(count($wsSavedShipping) > 1)
-                    <div class="form-group">
-                        <label for="ws_saved_shipping">Mentett címeim</label>
-                        <select id="ws_saved_shipping" class="form-control js-ws-saved-address" data-target="shipping">
-                            @foreach($wsSavedShipping as $wsSaved)
-                                <option value="{{ $wsSaved['id'] }}" data-address='@json($wsSaved)'>
-                                    {{ $wsSaved['zip'] }} {{ $wsSaved['city'] }}, {{ $wsSaved['address'] }}
-                                </option>
-                            @endforeach
-                        </select>
-                    </div>
-                @endif
-
-                <div class="row">
-                    <div class="col-md-3 form-group">
-                        <label>Irsz. <span class="text-danger">*</span></label>
-                        <input type="text" name="shipping[zip]" id="shipping_zip" class="form-control ws-shipping-address-input @error('shipping.zip') is-invalid @enderror" value="{{ old('shipping.zip', $checkoutPrefill['shipping']['zip'] ?? '') }}">
-                        @error('shipping.zip') <div class="invalid-feedback">{{ $message }}</div> @enderror
-                    </div>
-                    <div class="col-md-9 form-group">
-                        <label>Város <span class="text-danger">*</span></label>
-                        <input type="text" name="shipping[city]" id="shipping_city" class="form-control ws-shipping-address-input @error('shipping.city') is-invalid @enderror" value="{{ old('shipping.city', $checkoutPrefill['shipping']['city'] ?? '') }}">
-                        @error('shipping.city') <div class="invalid-feedback">{{ $message }}</div> @enderror
-                    </div>
-                    <div class="col-md-12 form-group mb-0">
-                        <label>Utca, házszám <span class="text-danger">*</span></label>
-                        <input type="text" name="shipping[address]" id="shipping_address" class="form-control ws-shipping-address-input @error('shipping.address') is-invalid @enderror" value="{{ old('shipping.address', $checkoutPrefill['shipping']['address'] ?? '') }}">
-                        @error('shipping.address') <div class="invalid-feedback">{{ $message }}</div> @enderror
-                    </div>
-                </div>
-            </div>
         @endif
     </div>
 </div>

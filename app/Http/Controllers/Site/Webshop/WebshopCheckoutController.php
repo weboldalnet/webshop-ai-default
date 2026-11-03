@@ -257,9 +257,9 @@ class WebshopCheckoutController extends Controller
             // A rendelés adatlapja csak annak nyílik meg, aki le is adta.
             self::rememberOwnOrder($order);
 
-            // „A címeimet mentsd el a fiókomba” — a rendeléstől függetlenül, hibánál csak naplóz
-            if ($commerceUser && $request->boolean('save_addresses')) {
-                WebshopUserService::saveCheckoutAddresses($commerceUser, $orderData);
+            // Címek a fiókba: a hiányzó típus magától, az újak a jelölővel — hibánál csak naplóz
+            if ($commerceUser) {
+                WebshopUserService::saveCheckoutAddresses($commerceUser, $orderData, $request->boolean('save_addresses'));
             }
 
             WebshopCartService::clear();

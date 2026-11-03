@@ -1,20 +1,35 @@
 ## [Unreleased]
 ### Vásárlói fiókok (weboldalnet/commerce-users ^1.1)
 **1 új migráció** (`webshop_orders.commerce_user_id`, nullázható, hasColumn-őrrel) — frissítés után
-`php artisan migrate`. A funkció a `weboldalnet/commerce-users` csomaggal működik; nélküle minden ki van
-kapcsolva, és a webshop változatlanul működik.
+`php artisan migrate` és `vendor:publish --tag=webshop-assets --force` (a webshop-site.css változott).
+A funkció a `weboldalnet/commerce-users` csomaggal működik; nélküle minden ki van kapcsolva, és a
+webshop változatlanul működik.
 
 - **Webshop beállítások › Vásárlói fiókok** fül: a modul be/ki, „Vásárlás csak bejelentkezve”,
   Rendeléseim (+ Újrarendelés) és Címek kezelése. Telepítetlen modulnál figyelmeztet.
 - **Pénztár:** vendégnek belépési / regisztrációs ajánlat; bejelentkezve a név, a telefon, az elsődleges
   szállítási és számlázási cím a fiókból töltődik, a mentett címek közül választható, az e-mail-cím a
-  fiók címe (nem írható). „A megadott címeimet mentsd el a fiókomba” — a meglévők nem duplázódnak.
+  fiók címe (nem írható). **Címek a fiókba:** amíg a vásárlónak nincs szállítási / számlázási címe
+  (első rendelés), az adott típus magától mentődik — „Megegyezik a szállítással” esetén a szállítási cím
+  számlázási címként is; ha már van, az újakat „Az új címeimet is mentsd el a fiókomba” jelölővel. A
+  csomagpont és a személyes átvétel helye nem kerül a címek közé; a meglévők nem duplázódnak.
   Kötelező belépésnél a pénztár a belépő oldalra visz, és belépés után visszahoz (a kosár megmarad).
   A rendelés a fiókhoz kötődik (`commerce_user_id`, sosem az űrlapból).
 - **Rendeléseim** (`/fiok/rendeleseim`) a fiókmenüben: a fiókhoz kötött és a vendégként, ugyanazzal az
   e-mail-címmel leadott rendelések, adatlappal. **Újrarendelés:** a tételek a kosárba, a mai áron és a mai
   készlet szerint; ami már nem kapható vagy csak részben van, azt a pénztár külön jelzi.
-- Fejléc: fiók-gomb a webshop gombsorában (`site.webshop.partials.account-button`, mobil fejlécbe is
+- **Adatkezelési tájékoztató a pénztárban:** ha az elfogadtató jelölő ki van kapcsolva, a rendelés gombja
+  fölött tájékoztató sor jelenik meg a dokumentum linkjével (a tájékoztatót nem kell elfogadtatni — a
+  rendelés adatait a szerződés teljesítéséhez kezeljük —, de a rendeléskor elérhetővé kell tenni).
+  Admin › Dokumentumok: a kapcsoló felirata „Elfogadtató jelölőnégyzet a pénztárban”, alatta súgó.
+- **Pénztár dobozai:** balra Személyes adatok → Szállítási mód (a régi „Szállítási adatok”), jobbra
+  Szállítási cím (`checkout.partials.shipping-address`) → Számlázási adatok (`checkout.partials.billing`)
+  → Fizetési lehetőségek; mobilon ugyanez a sorrend. A szállítási cím doboza személyes átvételnél és
+  csomagpontnál eltűnik, ilyenkor a számlázási doboz az oszlop tetejére kerül. Minden doboz csak alsó
+  margót kap (`mb-4`), az oszlopok nem.
+- Fejléc: fiók-gomb a webshop gombsorában, a kosártól jobbra, a kosár-gomb formájában
+  (`.ws-account-button`, színe `btn-secondary`, a projekt témája felülírhatja); kijelentkezve kulcs,
+  bejelentkezve felhasználó ikon (`site.webshop.partials.account-button`, mobil fejlécbe is
   behúzható). Admin: „Vásárlók” menüpont, a vásárló-adatlapon a rendelései, a rendelés-adatlapon link a
   vásárlói fiókra. A fiók törlésekor a rendelései megmaradnak, csak a kapcsolat szűnik meg.
 - A rendelés-visszaigazoló oldalt a bejelentkezett vásárló a saját rendeléseinél új munkamenetben is látja.

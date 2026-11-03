@@ -100,6 +100,15 @@
                                 </label>
                                 @error('accept_privacy') <div class="invalid-feedback d-block">{{ $message }}</div> @enderror
                             </div>
+                        @elseif($privLink !== '')
+                            {{-- Jelölő nélkül: az adatkezelési tájékoztatót nem kell elfogadtatni (a rendelés adatait a
+                                 szerződés teljesítéséhez kezeljük, GDPR 6. cikk (1) b) pont), de a rendeléskor
+                                 elérhetővé kell tenni (GDPR 13. cikk) --}}
+                            <p class="small text-muted mt-2 mb-0">
+                                <i class="fa fa-circle-info mr-1"></i>
+                                A rendeléssel kapcsolatos adatkezelésről az
+                                <a href="{{ $privLink }}" target="_blank" rel="noopener">Adatkezelési tájékoztatóban</a> olvashatsz.
+                            </p>
                         @endif
                     </div>
 
