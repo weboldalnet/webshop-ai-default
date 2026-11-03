@@ -21,7 +21,7 @@ class WebshopTranslationOverviewService
         'partial' => 'Részben kész',
         'outdated' => 'Elavult',
         'done' => 'Kész',
-        'manual' => 'Kézzel javított',
+        'manual' => 'Kézi fordítás',
     ];
 
     /** Típusonként: keresett oszlopok, van-e is_active, előtöltött kapcsolatok, rendezés */
@@ -221,7 +221,7 @@ class WebshopTranslationOverviewService
             case 'home_block':
                 return $record->type;
             case 'setting':
-                return 'ÁSZF/adatvédelem felirat, pénztár-értesítők, webshop-nyitóoldal SEO, számlatételek';
+                return 'ÁSZF és adatvédelem (felirat, fájl / link), pénztár-értesítők, nyitóoldal SEO, számlatételek, termékinformációk alapértékei';
             default:
                 return null;
         }

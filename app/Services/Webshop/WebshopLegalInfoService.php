@@ -101,15 +101,36 @@ class WebshopLegalInfoService
      */
     public static function termsUrl(): ?string
     {
-        $url = trim((string) WebshopSettingsService::get('site_checkout_tos_url', ''));
+        $value = self::documentSetting(['site_checkout_tos_url', 'site_checkout_tos_path']);
 
-        if ($url !== '') {
-            return self::absolute($url);
+        return $value !== null ? self::absolute($value) : null;
+    }
+
+    /**
+     * Egy dokumentum (link vagy feltöltött fájl) a kérés / a rendelés nyelvén: nem alapnyelven előbb a nyelvi
+     * változat (Fordítások › Webshop-szövegek), bármelyik formában — csak ha nincs, akkor az alapnyelvi, a
+     * megadott sorrendben (link, fájl).
+     */
+    private static function documentSetting(array $keys): ?string
+    {
+        $locale = WebshopTranslationService::siteLocale();
+        if ($locale !== null) {
+            foreach ($keys as $key) {
+                $value = trim((string) WebshopTranslationService::get('setting', 0, $locale, $key));
+                if ($value !== '') {
+                    return $value;
+                }
+            }
         }
 
-        $path = trim((string) WebshopSettingsService::get('site_checkout_tos_path', ''));
+        foreach ($keys as $key) {
+            $value = trim((string) WebshopSettingsService::original($key, ''));
+            if ($value !== '') {
+                return $value;
+            }
+        }
 
-        return $path !== '' ? self::absolute($path) : null;
+        return null;
     }
 
     /**
@@ -117,7 +138,20 @@ class WebshopLegalInfoService
      */
     public static function termsLocalPdf(): ?string
     {
-        $path = trim((string) WebshopSettingsService::get('site_checkout_tos_path', ''));
+        $path = trim((string) WebshopSettingsService::original('site_checkout_tos_path', ''));
+
+        // a rendelés nyelvén (a levél WebshopOrderLocale::run alatt készül): a nyelvi fájl; ha a nyelvi ÁSZF csak
+        // linkként van megadva, a más nyelvű fájlt nem csatoljuk
+        $locale = WebshopTranslationService::siteLocale();
+        if ($locale !== null) {
+            $localPath = trim((string) WebshopTranslationService::get('setting', 0, $locale, 'site_checkout_tos_path'));
+            $localUrl = trim((string) WebshopTranslationService::get('setting', 0, $locale, 'site_checkout_tos_url'));
+            if ($localPath !== '') {
+                $path = $localPath;
+            } elseif ($localUrl !== '') {
+                return null;
+            }
+        }
 
         if ($path === '' || !str_starts_with($path, '/storage/') || strtolower(pathinfo($path, PATHINFO_EXTENSION)) !== 'pdf') {
             return null;
@@ -135,11 +169,9 @@ class WebshopLegalInfoService
      */
     public static function privacyUrl(): ?string
     {
-        foreach (['site_checkout_privacy_url', 'site_checkout_privacy_path'] as $key) {
-            $value = trim((string) WebshopSettingsService::get($key, ''));
-            if ($value !== '') {
-                return self::absolute($value);
-            }
+        $value = self::documentSetting(['site_checkout_privacy_url', 'site_checkout_privacy_path']);
+        if ($value !== null) {
+            return self::absolute($value);
         }
 
         $docs = self::coreDocuments();

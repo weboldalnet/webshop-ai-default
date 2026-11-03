@@ -8,6 +8,8 @@ return [
     'index' => [
         'title' => 'Choose a category',
         'meta_title' => 'Shop categories',
+        // link a teljes kínálatra (pl. a lábléc webshop-hasábjában)
+        'all_products' => 'All products',
     ],
 
     'list' => [
@@ -48,7 +50,7 @@ return [
     ],
 
     'search' => [
-        'placeholder' => '{1} Search (min. :count character)|[2,*] Search (min. :count characters)',
+        'placeholder' => '{1} Search (min. :count char)|[2,*] Search (min. :count chars)',
         'label' => 'Product search',
         'more' => '{1} :count more result — please refine your search.|[2,*] :count more results — please refine your search.',
         'empty' => 'No results found.',

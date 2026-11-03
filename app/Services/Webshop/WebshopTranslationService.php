@@ -119,6 +119,36 @@ class WebshopTranslationService
         ],
     ];
 
+    /**
+     * Nyelvenkénti dokumentumok (ÁSZF, adatvédelmi tájékoztató): a célnyelven saját fájl vagy link. Ezeket nem az AI
+     * fordítja, hanem a fordítás-szerkesztőben tölthetők fel / adhatók meg (fájl: webshop/documents/{nyelv}/).
+     */
+    const DOCUMENT_FIELDS = [
+        'site_checkout_tos_path' => 'file',
+        'site_checkout_tos_url' => 'url',
+        'site_checkout_privacy_path' => 'file',
+        'site_checkout_privacy_url' => 'url',
+    ];
+
+    /** A fordítható webshop-szövegek (setting típus) felirata a fordítás-szerkesztőben */
+    const SETTING_LABELS = [
+        'site_checkout_tos_path' => 'ÁSZF: feltöltött fájl',
+        'site_checkout_tos_url' => 'ÁSZF: külső link',
+        'site_checkout_privacy_path' => 'Adatvédelmi tájékoztató: feltöltött fájl',
+        'site_checkout_privacy_url' => 'Adatvédelmi tájékoztató: külső link',
+        'product_extra_gallery_title' => 'Termékoldal: a második galéria címe',
+        'site_checkout_tos_label' => 'Pénztár: az ÁSZF elfogadásának felirata',
+        'site_checkout_privacy_label' => 'Pénztár: az adatvédelmi nyilatkozat felirata',
+        'site_checkout_notice_top_content' => 'Pénztár: felső értesítő doboz',
+        'site_checkout_notice_bottom_content' => 'Pénztár: alsó értesítő doboz',
+        'site_home_page_h1' => 'Webshop-nyitóoldal: főcím (H1)',
+        'site_home_page_meta_title' => 'Webshop-nyitóoldal: SEO-cím',
+        'site_home_page_meta_description' => 'Webshop-nyitóoldal: SEO-leírás',
+        'invoice_line_shipping_name' => 'Számla: a szállítási díj tételneve',
+        'invoice_line_cod_name' => 'Számla: az utánvét díjának tételneve',
+        'invoice_line_coupon_name' => 'Számla: a kuponkedvezmény tételneve',
+    ];
+
     /** Kérésen belüli gyorsítótár: [type][locale][record_id][field] => value */
     private static array $cache = [];
 
@@ -170,9 +200,55 @@ class WebshopTranslationService
         return array_values(array_diff(self::locales(), [self::defaultLocale()]));
     }
 
+    /**
+     * A típus fordítható mezői. A webshop-szövegekhez (setting) a dokumentumok (nyelvenkénti fájl / link) és a
+     * termékinformációk bolti alapszövegei is hozzátartoznak.
+     */
     public static function fields(string $type): array
     {
-        return self::TYPES[$type]['fields'] ?? [];
+        $fields = self::TYPES[$type]['fields'] ?? [];
+
+        if ($type === 'setting') {
+            $fields += self::DOCUMENT_FIELDS + self::legalDefaultFields();
+        }
+
+        return $fields;
+    }
+
+    /** A termékinformációk bolti alapszövegei (Webshop beállítások › Termékinformációk), pl. legal_default_general_manufacturer */
+    public static function legalDefaultFields(): array
+    {
+        static $fields = null;
+        if ($fields === null) {
+            $fields = [];
+            foreach (WebshopProductLegalInfoService::PROFILES as $profile => $definition) {
+                foreach ($definition['fields'] as $field => $config) {
+                    if (($config['default'] ?? false) && in_array($config['type'], ['text', 'textarea'], true)) {
+                        $fields[WebshopProductLegalInfoService::defaultSettingKey($profile, $field)] = 'textarea';
+                    }
+                }
+            }
+        }
+
+        return $fields;
+    }
+
+    /** Egy webshop-szöveg felirata a fordítás-szerkesztőben */
+    public static function settingLabel(string $key): string
+    {
+        if (isset(self::SETTING_LABELS[$key])) {
+            return self::SETTING_LABELS[$key];
+        }
+
+        foreach (WebshopProductLegalInfoService::PROFILES as $profile => $definition) {
+            foreach (array_keys($definition['fields']) as $field) {
+                if (WebshopProductLegalInfoService::defaultSettingKey($profile, $field) === $key) {
+                    return 'Termékinformáció, bolti alapérték: ' . WebshopProductLegalInfoService::fieldLabel($field);
+                }
+            }
+        }
+
+        return $key;
     }
 
     /**

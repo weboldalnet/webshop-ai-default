@@ -11,6 +11,15 @@
 
         @include('admin.webshop.partials.alerts')
 
+        {{-- többnyelvű projektben a bolti alapszövegek (Gyártó, Uniós felelős személy …) más nyelvű változata --}}
+        @if(\Weboldalnet\WebshopAiDefault\Services\Webshop\WebshopTranslationService::isMultiLanguage() && \Illuminate\Support\Facades\Route::has('admin.webshop.translations.edit'))
+            <div class="alert alert-info fs-14">
+                <i class="fa-solid fa-language mr-1"></i> A bolti alapértékek más nyelvű változata:
+                <a href="{{ route('admin.webshop.translations.edit', ['setting', 0, \Weboldalnet\WebshopAiDefault\Services\Webshop\WebshopTranslationService::targetLocales()[0] ?? 'en']) }}">Fordítások › Webshop-szövegek</a>
+                (fordítás nélkül a többi nyelven is ez a szöveg jelenik meg).
+            </div>
+        @endif
+
         <form action="{{ route('admin.webshop.extra-settings.product-info.store') }}" method="POST">
             @csrf
 

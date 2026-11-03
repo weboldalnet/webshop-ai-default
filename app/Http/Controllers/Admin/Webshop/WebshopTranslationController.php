@@ -98,9 +98,21 @@ class WebshopTranslationController extends Controller
     public function update(Request $request, string $type, int $recordId, string $locale)
     {
         [$record, $locale] = $this->resolve($type, $recordId, $locale);
+        $request->validate(['files.*' => 'nullable|file|mimes:pdf,doc,docx,odt|max:10240']);
         $sources = WebshopTranslationStatusService::sourceFields($type, $record);
         $current = WebshopTranslationStatusService::fieldStates($type, $record, $locale, $sources);
         $input = (array) $request->input('fields', []);
+
+        // nyelvenkénti dokumentum (ÁSZF, adatvédelem): a feltöltött fájl a nyelv mappájába, az eredeti nevével
+        // (pl. webshop/documents/en/aszf.pdf) — az alapnyelvi fájlt így nem írja felül
+        foreach ((array) $request->file('files', []) as $key => $file) {
+            $field = str_replace('__', '.', (string) $key);
+            if (!$file || !isset($sources[$field]) || (WebshopTranslationService::fields($type)[$field] ?? null) !== 'file') {
+                continue;
+            }
+            $name = (pathinfo($sources[$field], PATHINFO_FILENAME) ?: 'dokumentum') . '.' . strtolower($file->getClientOriginalExtension());
+            $input[$key] = '/storage/' . $file->storeAs('webshop/documents/' . $locale, $name, 'public');
+        }
         $adminId = auth('admin')->id();
         $changed = 0;
 

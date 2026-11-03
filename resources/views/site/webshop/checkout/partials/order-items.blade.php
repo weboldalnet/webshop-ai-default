@@ -51,7 +51,7 @@
                         @if($showPrices && $order->total_price > 0)
                             <td class="text-right align-middle ws-nowrap">{{ WsFormat::money($item->unit_price) }}</td>
                         @endif
-                        <td class="text-center align-middle ws-nowrap">{{ $item->quantity }} {{ __('webshop::common.pcs') }}</td>
+                        <td class="text-center align-middle ws-nowrap">{{ trans_choice('webshop::common.quantity_pcs', $item->quantity, ['count' => $item->quantity]) }}</td>
                         @if($showPrices && $order->total_price > 0)
                             <td class="text-right align-middle ws-nowrap fw-600">{{ WsFormat::money($item->total_price) }}</td>
                         @endif

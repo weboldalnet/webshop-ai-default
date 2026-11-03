@@ -21,6 +21,8 @@ return [
     ],
 
     'pcs' => 'db',
+    // darabszám mértékegységgel: trans_choice('webshop::common.quantity_pcs', $n, ['count' => $n])
+    'quantity_pcs' => ':count db',
     'total' => 'Összesen',
     'product' => 'Termék',
     'quantity' => 'Mennyiség',

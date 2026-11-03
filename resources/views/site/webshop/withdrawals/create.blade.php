@@ -79,7 +79,7 @@
                                                     @for($i = $max; $i >= 0; $i--)
                                                         <option value="{{ $i }}"
                                                                 @if((int) old('quantities.' . $item->id, $max) === $i) selected @endif>
-                                                            {{ $i }} {{ __('webshop::common.pcs') }}
+                                                            {{ trans_choice('webshop::common.quantity_pcs', $i, ['count' => $i]) }}
                                                         </option>
                                                     @endfor
                                                 </select>

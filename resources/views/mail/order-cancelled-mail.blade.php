@@ -50,7 +50,7 @@
                         @foreach($order->items as $item)
                             <tr>
                                 <td style="border: 1px solid #ddd; padding: 8px;">{{ $item->product_name }}</td>
-                                <td style="border: 1px solid #ddd; padding: 8px; text-align: center;">{{ $item->quantity }} {{ __('webshop::common.pcs') }}</td>
+                                <td style="border: 1px solid #ddd; padding: 8px; text-align: center;">{{ trans_choice('webshop::common.quantity_pcs', $item->quantity, ['count' => $item->quantity]) }}</td>
                                 @if($showPrices)
                                     <td style="border: 1px solid #ddd; padding: 8px; text-align: right;">{{ WsFormat::money($item->total_price) }}</td>
                                 @endif

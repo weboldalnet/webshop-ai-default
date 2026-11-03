@@ -1,4 +1,29 @@
 ## [Unreleased]
+### Többnyelvű webshop — javítások a valódi többnyelvű próbából (az 1.1.20 után)
+Migrációt NEM igényel. Magyarul a kimenet változatlan.
+- A beállításokban megadott webshop-szövegek (ÁSZF- és adatvédelmi felirat, pénztár-értesítők, nyitóoldal H1/SEO,
+  számlatételek) fordítása most a vásárlói oldalon is megjelenik (eddig csak tárolódott); a fordítás forrása
+  mindig az eredeti (`WebshopSettingsService::original()`). A szerkesztőben emberi mezőnevekkel
+  (`WebshopTranslationService::SETTING_LABELS`).
+- SEO nem alapnyelven: ha a megosztási cím / leírás nincs lefordítva, a lefordított név / leírás lép a helyére (nem
+  a magyar SEO-szöveg) — termék, kategória, webshop-nyitóoldal.
+- Darabszám angolul egyes / többes számmal („1 pc”, „2 pcs”): `common.quantity_pcs` (kosár, pénztár, elállás,
+  levelek).
+- Admin: „kézzel javított” helyett „kézi fordítás” (a kézzel írt fordítás is ide tartozik).
+- **ÁSZF és adatvédelmi tájékoztató nyelvenként** (Fordítások › Webshop-szövegek): saját fájl (feltöltés a
+  `webshop/documents/{nyelv}/` mappába, az alapnyelvit nem írja felül) vagy link. A weboldal és a rendelési levél
+  (PDF-melléklet) a nyelvit adja; ha a nyelvi ÁSZF csak link, más nyelvű fájlt nem csatol. Alapnyelven változatlan.
+- **Termékinformációk bolti alapszövegei** (Gyártó, Uniós felelős személy, Élelmiszer-vállalkozó) is fordíthatók.
+- Admin › Dokumentumok: a két fájlmező input-group + custom-file (a többi fájlmezőhöz igazítva); többnyelvű projektben
+  link a nyelvi változatokhoz (Dokumentumok, Termékinformációk oldal).
+- **Rendeléseim nyelvenként:** a vásárlói fiók nyelvi előtagjával (`/en/account/orders`, `site.webshop.{nyelv}.account.*`;
+  útszavak: `url_words.*.account_orders` / `account_reorder`), a nyelvváltó a rendelés nyelvi párjára visz. A fiókmenü
+  nyelvi címéhez a weboldalnet/commerce-users nyelvi címekkel bővített változata kell.
+- `catalog.index.all_products` („Összes termék” / „All products”) a projekt-sablonok webshop-linkjeihez.
+- **Túllógás javítva:** az Omnibusz-ár magyarázó mondata (`.ws-price-note`) törhet — eddig a `ws-nowrap` egy sorban
+  tartotta, és mobilon magyarul, angolul már asztalon is kilógott a Vásárlás dobozból (vízszintes görgetés). Az
+  angol kereső-helykitöltő rövidebb („Search (min. 3 chars)”), mert levágódott.
+
 ### Többnyelvű webshop: felületi szövegek, nyelvi címek, Fordítások összesítő, AI-fordítás, rendelés nyelve
 **1 új migráció** (`webshop_translation_runs`, `webshop_translation_run_items`, `webshop_translation_backups`) —
 frissítés után `php artisan migrate`, és `vendor:publish --tag=webshop-assets --force` (új admin JS, CSS,
@@ -24,12 +49,12 @@ nyelvi fájlos változat a fiókmenü fordításához (régebbivel a „Rendelé
   a kosár tételnevei a kérés nyelvén. **Beállítás:** „Fordítatlan termék rejtve” (Beállítások › Többnyelvű webshop).
 - **Merchant feed nyelvenként** a saját szövegeivel, címeivel és láthatóságával.
 - **Webshop › Fordítások** (csak többnyelvű projektben): nyelvenkénti állapotkártyák, szűrhető lista (típus, nyelv,
-  állapot: hiányzik / részben / elavult / kész / kézzel javított, kategória, aktív, keresés), mezőnkénti
+  állapot: hiányzik / részben / elavult / kész / kézi fordítás, kategória, aktív, keresés), mezőnkénti
   fordítás-szerkesztő (eredeti | fordítás), a szerkesztők tetején fordítási sáv és figyelmeztetés, ha az admin
   nyelvválasztója nem az alapnyelven áll.
 - **AI-fordítás** (bekötött core AI mellett, a core `AiTranslator`-ával): tömegesen (kijelöltek / a szűrésnek megfelelő
   összes) vagy rekordonként; nyelvek, mód (fordítatlan / elavult is / minden), tartalmak (szöveg, SEO, URL-szó),
-  „kézzel javítottat ne írja felül”; becslés (tétel, mező, karakter, AI-hívás, idő); böngészőből lépésenként,
+  „kézzel írtat vagy javítottat ne írja felül”; becslés (tétel, mező, karakter, AI-hívás, idő); böngészőből lépésenként,
   szüneteltethető, az állapot DB-ben (folytatható, elfogyott kreditnél szünetel); azonnal élesedik, a futás vagy egy
   tétele visszavonható (az azóta átírt mezőt nem bántja).
 - **A rendelés nyelve** (`webshop_orders.locale`) végig: rendelési, lemondó és elállási levél (a bolt példánya

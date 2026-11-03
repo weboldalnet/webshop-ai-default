@@ -17,6 +17,7 @@ return [
     ],
 
     'pcs' => 'pcs',
+    'quantity_pcs' => ':count pc|:count pcs',
     'total' => 'Total',
     'product' => 'Product',
     'quantity' => 'Quantity',

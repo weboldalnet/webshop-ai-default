@@ -17,7 +17,7 @@
                     @endif
                 </div>
                 <div class="small text-muted">
-                    {{ $item['quantity'] }} {{ __('webshop::common.pcs') }} @if(($ws['site_product_prices_visible'] ?? 'true') === 'true')× {{ WsFormat::money($item['price']) }} @endif
+                    {{ trans_choice('webshop::common.quantity_pcs', $item['quantity'], ['count' => $item['quantity']]) }} @if(($ws['site_product_prices_visible'] ?? 'true') === 'true')× {{ WsFormat::money($item['price']) }} @endif
                 </div>
             </div>
             <button type="button" class="btn btn-sm btn-link text-danger js-remove-cart-item" data-id="{{ $productId }}">

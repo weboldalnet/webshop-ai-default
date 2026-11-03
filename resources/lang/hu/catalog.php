@@ -11,6 +11,8 @@ return [
     'index' => [
         'title' => 'Válasszon kategóriát',
         'meta_title' => 'Webshop kategóriák',
+        // link a teljes kínálatra (pl. a lábléc webshop-hasábjában)
+        'all_products' => 'Összes termék',
     ],
 
     // Terméklista (categories/show, partials/product-list, product-table, product-card)

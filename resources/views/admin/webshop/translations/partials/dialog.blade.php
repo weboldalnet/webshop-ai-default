@@ -28,7 +28,7 @@
             @endforeach
             <div class="custom-control custom-checkbox mt-2">
                 <input type="checkbox" class="custom-control-input" id="trOptKeepManual" name="keep_manual" value="1" checked>
-                <label class="custom-control-label fs-14" for="trOptKeepManual">A kézzel javított fordítást ne írja felül</label>
+                <label class="custom-control-label fs-14" for="trOptKeepManual">A kézzel írt vagy javított fordítást ne írja felül</label>
             </div>
         </div>
         <div class="col-md-4 mt-3 mt-md-0">

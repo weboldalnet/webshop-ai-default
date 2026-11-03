@@ -109,17 +109,27 @@ Route::middleware('web')->group(function () {
     // Vásárlói fiók: Rendeléseim és újrarendelés — a felhasználó modul (weboldalnet/commerce-users)
     // fiókoldalán, annak előtagjával (/fiok/rendeleseim). Csak telepített modul mellett, mert a
     // middleware-eket az adja; a kapcsolót (Webshop beállítások) a controller nézi.
+    // Nyelvenként, mint a webshop többi útvonala: más nyelven a modul nyelvi előtagjával (/en/account/orders),
+    // site.webshop.{nyelv}.account.* néven.
     if (class_exists(\Weboldalnet\CommerceUsers\CommerceUsers::class)) {
-        Route::domain(getSiteDomain())
-            ->middleware(['site_share', 'commerce-users.enabled', 'commerce-users.auth'])
-            ->prefix(config('commerce-users.route_prefix', 'fiok') ?: 'fiok')
-            ->name('site.webshop.account.')
-            ->group(function () {
-                Route::get('/rendeleseim', [WebshopAccountOrderController::class, 'index'])->name('orders');
-                Route::get('/rendeleseim/{order}', [WebshopAccountOrderController::class, 'show'])->whereNumber('order')->name('orders.show');
-                Route::post('/rendeleseim/{order}/ujrarendeles', [WebshopAccountOrderController::class, 'reorder'])
-                    ->whereNumber('order')->middleware('throttle:20,1')->name('orders.reorder');
-            });
+        foreach (WebshopUrl::locales() as $wsLocale) {
+            $wsIsDefault = $wsLocale === WebshopUrl::defaultLocale();
+            $wsWord = fn (string $key) => WebshopUrl::word($key, $wsLocale);
+            $wsAccountPrefix = ($wsIsDefault || !method_exists(\Weboldalnet\CommerceUsers\CommerceUsers::class, 'word'))
+                ? (config('commerce-users.route_prefix', 'fiok') ?: 'fiok')
+                : \Weboldalnet\CommerceUsers\CommerceUsers::word('prefix', $wsLocale);
+
+            Route::domain(getSiteDomain())
+                ->middleware(['site_share', 'commerce-users.enabled', 'commerce-users.auth', SetWebshopLocaleAlternates::class])
+                ->prefix(($wsIsDefault ? '' : $wsLocale . '/') . $wsAccountPrefix)
+                ->name('site.webshop.' . ($wsIsDefault ? '' : $wsLocale . '.') . 'account.')
+                ->group(function () use ($wsWord) {
+                    Route::get('/' . $wsWord('account_orders'), [WebshopAccountOrderController::class, 'index'])->name('orders');
+                    Route::get('/' . $wsWord('account_orders') . '/{order}', [WebshopAccountOrderController::class, 'show'])->whereNumber('order')->name('orders.show');
+                    Route::post('/' . $wsWord('account_orders') . '/{order}/' . $wsWord('account_reorder'), [WebshopAccountOrderController::class, 'reorder'])
+                        ->whereNumber('order')->middleware('throttle:20,1')->name('orders.reorder');
+                });
+        }
     }
 
     // Admin oldali route-ok

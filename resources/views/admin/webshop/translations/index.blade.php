@@ -51,7 +51,7 @@
                     <div class="ws-tr-kpi-counts">
                         <a href="#" class="js-tr-state-link" data-locale="{{ $locale }}" data-state="missing"><b>{{ $wsKpi['missing'] }}</b> hiányzó</a>
                         <a href="#" class="js-tr-state-link" data-locale="{{ $locale }}" data-state="outdated"><b>{{ $wsKpi['outdated'] }}</b> elavult</a>
-                        <a href="#" class="js-tr-state-link" data-locale="{{ $locale }}" data-state="manual"><b>{{ $wsKpi['manual'] }}</b> kézzel javított</a>
+                        <a href="#" class="js-tr-state-link" data-locale="{{ $locale }}" data-state="manual"><b>{{ $wsKpi['manual'] }}</b> kézi fordítás</a>
                         <span class="text-muted">{{ $wsKpi['done'] }} / {{ $wsKpi['total'] }} mező kész</span>
                     </div>
                 </div>
@@ -156,7 +156,7 @@
             <div class="js-tr-pagination">{{ $rows->links() }}</div>
             <span class="ws-hint">
                 Az állapot mezőszám szerint: <b>kész</b> — minden mező lefordítva és naprakész; <b>elavult</b> — az eredeti szöveg
-                a fordítás óta változott; <b>kézzel javított</b> — a fordítást valaki átírta (az AI alapból nem írja felül).
+                a fordítás óta változott; <b>kézi fordítás</b> — kézzel írt vagy átírt fordítás (az AI alapból nem írja felül).
                 Az URL-szó (slug) a lefordított névből képződik, és a név későbbi változásától nem avul el.
             </span>
         </div>

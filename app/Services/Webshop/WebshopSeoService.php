@@ -32,9 +32,9 @@ class WebshopSeoService
     public static function product(WebshopProduct $product): array
     {
         return [
-            'title' => self::branded($product->og_title ?: $product->name),
+            'title' => self::branded(self::seoField($product, 'og_title') ?: $product->name),
             'description' => self::text(
-                $product->og_description,
+                self::seoField($product, 'og_description'),
                 self::usableAsDescription($product->short_desc) ? $product->short_desc : null,
                 $product->description,
                 $product->short_desc
@@ -56,8 +56,8 @@ class WebshopSeoService
     public static function category(WebshopCategory $category): array
     {
         return [
-            'title' => self::branded($category->og_title ?: $category->name_singular),
-            'description' => self::text($category->og_description, $category->description),
+            'title' => self::branded(self::seoField($category, 'og_title') ?: $category->name_singular),
+            'description' => self::text(self::seoField($category, 'og_description'), $category->description),
             'image' => self::absolute($category->og_img ?: self::categoryImage($category)),
         ];
     }
@@ -77,13 +77,38 @@ class WebshopSeoService
         }
 
         return [
-            'title' => self::branded(WebshopSettingsService::get('site_home_page_meta_title') ?: __('webshop::common.webshop')),
+            'title' => self::branded(self::seoSetting('site_home_page_meta_title') ?: __('webshop::common.webshop')),
             'description' => self::text(
-                WebshopSettingsService::get('site_home_page_meta_description'),
+                self::seoSetting('site_home_page_meta_description'),
                 self::categoryListDescription()
             ),
             'image' => self::absolute(self::homeImage()),
         ];
+    }
+
+    /**
+     * SEO-mező a kérés nyelvén. Nem alapnyelven, ha a SEO-mezőnek nincs fordítása, null — így a lefordított név /
+     * leírás lép a helyére, nem az alapnyelvi SEO-szöveg.
+     */
+    private static function seoField($model, string $field): ?string
+    {
+        $locale = WebshopTranslationService::siteLocale();
+        if ($locale !== null && !$model->hasTranslation($field, $locale)) {
+            return null;
+        }
+
+        return $model->{$field};
+    }
+
+    /** A nyitóoldal SEO-beállítása ugyanígy: fordítás híján nem alapnyelven a nyelvi alapszöveg megy */
+    private static function seoSetting(string $key): ?string
+    {
+        $locale = WebshopTranslationService::siteLocale();
+        if ($locale !== null && WebshopTranslationService::get('setting', 0, $locale, $key) === null) {
+            return null;
+        }
+
+        return WebshopSettingsService::get($key);
     }
 
     /**

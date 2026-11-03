@@ -24,6 +24,8 @@ class WebshopTranslationStatusService
     public const GROUP_TEXTS = 'texts';
     public const GROUP_SEO = 'seo';
     public const GROUP_SLUG = 'slug';
+    /** Nyelvenkénti dokumentum (fájl / link): nem AI-fordítás, a fordítás-szerkesztőben adható meg */
+    public const GROUP_DOCUMENTS = 'documents';
 
     public const GROUPS = [
         self::GROUP_TEXTS => 'Szövegek (név, leírás, jogi információk, képek alt-szövege)',
@@ -42,6 +44,9 @@ class WebshopTranslationStatusService
     public static function fieldGroup(string $field): string
     {
         $root = explode('.', $field)[0];
+        if (isset(WebshopTranslationService::DOCUMENT_FIELDS[$root])) {
+            return self::GROUP_DOCUMENTS;
+        }
         if ($root === 'slug') {
             return self::GROUP_SLUG;
         }
@@ -73,7 +78,7 @@ class WebshopTranslationStatusService
 
         foreach ($fields as $field => $kind) {
             $value = $type === 'setting'
-                ? WebshopSettingsService::get($field)
+                ? WebshopSettingsService::original($field)
                 : ($record instanceof Model ? ($record->untranslated($field) ?? null) : null);
 
             if ($kind === 'json') {

@@ -73,7 +73,18 @@
                             @if(isset($ws['site_checkout_tos_path']))
                                 <div class="mb-2 small"><a href="{{ $ws['site_checkout_tos_path'] }}" target="_blank"><i class="fa fa-file-pdf"></i> Jelenlegi fájl megnyitása</a></div>
                             @endif
-                            <input type="file" class="form-control-file" id="tos_file" name="tos_file" accept=".pdf,.doc,.docx">
+                            <div class="input-group">
+                                <div class="input-group-prepend">
+                                    <span class="input-group-text"><i class="fa-regular fa-file-pdf fs-18"></i></span>
+                                </div>
+                                <div class="custom-file">
+                                    <input type="file" class="custom-file-input" id="tos_file" name="tos_file" accept=".pdf,.doc,.docx">
+                                    <label class="custom-file-label text-muted" for="tos_file">Fájl</label>
+                                </div>
+                            </div>
+                            @if(\Weboldalnet\WebshopAiDefault\Services\Webshop\WebshopTranslationService::isMultiLanguage() && \Illuminate\Support\Facades\Route::has('admin.webshop.translations.edit'))
+                                <span class="ws-hint">A többi nyelv saját dokumentuma (fájl vagy link): <a href="{{ route('admin.webshop.translations.edit', ['setting', 0, \Weboldalnet\WebshopAiDefault\Services\Webshop\WebshopTranslationService::targetLocales()[0] ?? 'en']) }}">Fordítások › Webshop-szövegek</a>.</span>
+                            @endif
                         </div>
                         {{-- A szerződést tartós adathordozón kell visszaigazolni – egy link ennek nem felel meg,
                              a PDF-melléklet igen. Csak feltöltött PDF csatolható (külső URL nem). --}}
@@ -119,7 +130,18 @@
                             @if(isset($ws['site_checkout_privacy_path']))
                                 <div class="mb-2 small"><a href="{{ $ws['site_checkout_privacy_path'] }}" target="_blank"><i class="fa fa-file-pdf"></i> Jelenlegi fájl megnyitása</a></div>
                             @endif
-                            <input type="file" class="form-control-file" id="privacy_file" name="privacy_file" accept=".pdf,.doc,.docx">
+                            <div class="input-group">
+                                <div class="input-group-prepend">
+                                    <span class="input-group-text"><i class="fa-regular fa-file-pdf fs-18"></i></span>
+                                </div>
+                                <div class="custom-file">
+                                    <input type="file" class="custom-file-input" id="privacy_file" name="privacy_file" accept=".pdf,.doc,.docx">
+                                    <label class="custom-file-label text-muted" for="privacy_file">Fájl</label>
+                                </div>
+                            </div>
+                            @if(\Weboldalnet\WebshopAiDefault\Services\Webshop\WebshopTranslationService::isMultiLanguage() && \Illuminate\Support\Facades\Route::has('admin.webshop.translations.edit'))
+                                <span class="ws-hint">A többi nyelv saját dokumentuma (fájl vagy link): <a href="{{ route('admin.webshop.translations.edit', ['setting', 0, \Weboldalnet\WebshopAiDefault\Services\Webshop\WebshopTranslationService::targetLocales()[0] ?? 'en']) }}">Fordítások › Webshop-szövegek</a>.</span>
+                            @endif
                         </div>
                     </div>
                 </div>

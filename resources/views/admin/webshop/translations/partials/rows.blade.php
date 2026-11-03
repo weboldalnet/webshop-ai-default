@@ -33,11 +33,11 @@
             <td>
                 <a href="{{ route('admin.webshop.translations.edit', [$wsTrRow['type'], $wsTrRow['id'], $wsTrLocale]) }}"
                    class="ws-tr-state is-{{ $wsTrSummary['overall'] }}"
-                   title="{{ $wsTrStateLabels[$wsTrSummary['overall']] ?? '' }} — {{ $wsTrSummary['done'] }} / {{ $wsTrSummary['total'] }} mező kész{{ $wsTrSummary['outdated'] ? ', ' . $wsTrSummary['outdated'] . ' elavult' : '' }}{{ $wsTrSummary['manual'] ? ', ' . $wsTrSummary['manual'] . ' kézzel javított' : '' }}. Szerkesztés">
+                   title="{{ $wsTrStateLabels[$wsTrSummary['overall']] ?? '' }} — {{ $wsTrSummary['done'] }} / {{ $wsTrSummary['total'] }} mező kész{{ $wsTrSummary['outdated'] ? ', ' . $wsTrSummary['outdated'] . ' elavult' : '' }}{{ $wsTrSummary['manual'] ? ', ' . $wsTrSummary['manual'] . ' kézi fordítás' : '' }}. Szerkesztés">
                     {{ strtoupper($wsTrLocale) }} {{ $wsTrSummary['done'] }}/{{ $wsTrSummary['total'] }}
                 </a>
                 @if($wsTrSummary['manual'])
-                    <i class="fa-solid fa-user-pen text-muted fs-14 ml-1" title="Kézzel javított mező: {{ $wsTrSummary['manual'] }}"></i>
+                    <i class="fa-solid fa-user-pen text-muted fs-14 ml-1" title="Kézi fordítású mező: {{ $wsTrSummary['manual'] }}"></i>
                 @endif
             </td>
         @endforeach

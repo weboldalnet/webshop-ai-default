@@ -28,6 +28,9 @@ return [
      */
     'unpaid_order_cancel_hours' => (int) env('WEBSHOP_UNPAID_ORDER_CANCEL_HOURS', 24),
 
+    // ennél régebbi rendelésről nem megy levél (pl. az első futáskor egy régóta működő boltban) — csendben lemondja
+    'unpaid_order_mail_max_age_hours' => (int) env('WEBSHOP_UNPAID_ORDER_MAIL_MAX_AGE', 72),
+
     /*
      | Próbához: a webshop nyelvei a core nyelvkészlete (Lang::siteLocales) helyett, pl. ['hu', 'en']. Élesben üresen
      | hagyandó — a nyelvet és az URL-előtagot a core adja; felülírva csak a webshop útvonalai és fordításai többnyelvűek.
@@ -49,6 +52,9 @@ return [
             'coupon_activate' => 'kupon/aktivalas',
             'withdrawal' => 'elallas',
             'withdrawal_lookup' => 'elallas/kereses',
+            // a vásárlói fiók (commerce-users) előtagja után: /fiok/rendeleseim
+            'account_orders' => 'rendeleseim',
+            'account_reorder' => 'ujrarendeles',
         ],
         'en' => [
             'webshop' => 'webshop',
@@ -58,10 +64,10 @@ return [
             'coupon_activate' => 'coupon/activate',
             'withdrawal' => 'withdrawal',
             'withdrawal_lookup' => 'withdrawal/lookup',
+            'account_orders' => 'orders',
+            'account_reorder' => 'reorder',
         ],
     ],
-    // ennél régebbi rendelésről nem megy levél (pl. az első futáskor egy régóta működő boltban) — csendben lemondja
-    'unpaid_order_mail_max_age_hours' => (int) env('WEBSHOP_UNPAID_ORDER_MAIL_MAX_AGE', 72),
 
     /*
      | Ütemezett feladatok (a Laravel ütemezője futtatja; a szerveren a szokásos `schedule:run` cron kell). Érték:

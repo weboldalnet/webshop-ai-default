@@ -83,6 +83,11 @@ class SetWebshopLocaleAlternates
             case 'site.webshop.checkout.index':
                 return WebshopUrl::route($name, [], false, $locale);
 
+            // Rendeléseim (a vásárlói fiók oldalán): ugyanaz a rendelés a másik nyelven
+            case 'site.webshop.account.orders':
+            case 'site.webshop.account.orders.show':
+                return WebshopUrl::route($name, $parameters, false, $locale);
+
             default:
                 // rendeléshez, aláírt címhez, AJAX-hoz nincs nyelvi párja a nyelvválasztóban (főoldalra visz)
                 return null;

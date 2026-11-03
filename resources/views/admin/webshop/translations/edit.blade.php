@@ -26,7 +26,7 @@
                 return 'Jogi információ: ' . \Weboldalnet\WebshopAiDefault\Services\Webshop\WebshopProductLegalInfoService::fieldLabel($parts[2]);
             }
             if ($type === 'setting') {
-                return $field;
+                return \Weboldalnet\WebshopAiDefault\Services\Webshop\WebshopTranslationService::settingLabel($field);
             }
 
             return str_replace(['.', '_'], [' › ', ' '], $field);
@@ -50,7 +50,7 @@
                         <span class="ws-chip is-warn">{{ $wsTrSummary['outdated'] }} elavult</span>
                     @endif
                     @if($wsTrSummary['manual'])
-                        <span class="ws-chip"><i class="fa-solid fa-user-pen"></i> {{ $wsTrSummary['manual'] }} kézzel javított</span>
+                        <span class="ws-chip"><i class="fa-solid fa-user-pen"></i> {{ $wsTrSummary['manual'] }} kézi fordítás</span>
                     @endif
                 </div>
             </div>
@@ -81,7 +81,7 @@
             </ul>
         @endif
 
-        <form method="POST" action="{{ route('admin.webshop.translations.update', [$type, $recordId, $locale]) }}" class="js-tr-edit-form">
+        <form method="POST" action="{{ route('admin.webshop.translations.update', [$type, $recordId, $locale]) }}" class="js-tr-edit-form" enctype="multipart/form-data">
             @csrf
             <div class="ws-card">
                 @forelse($fields as $field => $wsTrField)
@@ -89,6 +89,9 @@
                         $wsTrKey = WsTrController::inputKey($field);
                         $wsTrKind = $kinds[explode('.', $field)[0]] ?? 'text';
                         $wsTrIsHtml = $wsTrKind === 'html';
+                        // nyelvenkénti dokumentum (ÁSZF, adatvédelem): fájl vagy link, nem szövegfordítás
+                        $wsTrIsFile = $wsTrKind === 'file';
+                        $wsTrIsUrl = $wsTrKind === 'url';
                         $wsTrIsLong = in_array($wsTrKind, ['textarea', 'html', 'json'], true) || mb_strlen($wsTrField['source']) > 120;
                         $wsTrState = $wsTrStateLabels[$wsTrField['state']] ?? ['', ''];
                     @endphp
@@ -103,7 +106,9 @@
                         <div class="row">
                             <div class="col-lg-6">
                                 <div class="ws-tr-source @if($wsTrIsHtml) is-html @endif">
-                                    @if($wsTrIsHtml)
+                                    @if($wsTrIsFile || $wsTrIsUrl)
+                                        <a href="{{ $wsTrField['source'] }}" target="_blank" rel="noopener"><i class="fa-regular fa-file-lines"></i> {{ $wsTrIsFile ? basename($wsTrField['source']) : $wsTrField['source'] }}</a>
+                                    @elseif($wsTrIsHtml)
                                         {!! strip_tags($wsTrField['source'], '<p><br><b><strong><i><em><u><ul><ol><li><h2><h3><h4><a><span><table><tr><td><th><thead><tbody>') !!}
                                     @else
                                         {!! nl2br(e($wsTrField['source'])) !!}
@@ -112,13 +117,33 @@
                                 <span class="ws-hint">Eredeti ({{ $localeNames[\Weboldalnet\WebshopAiDefault\Services\Webshop\WebshopTranslationService::defaultLocale()] ?? '' }})</span>
                             </div>
                             <div class="col-lg-6 mt-2 mt-lg-0">
-                                @if($wsTrIsLong)
+                                @if($wsTrIsFile)
+                                    @if($wsTrField['value'])
+                                        <div class="mb-2 fs-14"><a href="{{ $wsTrField['value'] }}" target="_blank" rel="noopener"><i class="fa-regular fa-file-lines"></i> {{ basename($wsTrField['value']) }}</a></div>
+                                    @endif
+                                    <input type="hidden" name="fields[{{ $wsTrKey }}]" value="{{ $wsTrField['value'] }}">
+                                    <div class="input-group">
+                                        <div class="input-group-prepend">
+                                            <span class="input-group-text"><i class="fa-regular fa-file-pdf fs-18"></i></span>
+                                        </div>
+                                        <div class="custom-file">
+                                            <input type="file" class="custom-file-input" id="trField_{{ $wsTrKey }}" name="files[{{ $wsTrKey }}]" accept=".pdf,.doc,.docx,.odt">
+                                            <label class="custom-file-label text-muted" for="trField_{{ $wsTrKey }}">{{ $wsTrField['value'] ? 'Csere másik fájlra' : 'Fájl' }}</label>
+                                        </div>
+                                    </div>
+                                @elseif($wsTrIsUrl)
+                                    <input type="url" class="form-control" id="trField_{{ $wsTrKey }}" name="fields[{{ $wsTrKey }}]" value="{{ $wsTrField['value'] }}" placeholder="https://">
+                                @elseif($wsTrIsLong)
                                     <textarea class="form-control @if($wsTrIsHtml) js-tinymce @endif" id="trField_{{ $wsTrKey }}" name="fields[{{ $wsTrKey }}]"
                                               rows="{{ $wsTrIsHtml ? 8 : 4 }}">{{ $wsTrField['value'] }}</textarea>
                                 @else
                                     <input type="text" class="form-control" id="trField_{{ $wsTrKey }}" name="fields[{{ $wsTrKey }}]" value="{{ $wsTrField['value'] }}">
                                 @endif
-                                @if($field === 'slug')
+                                @if($wsTrIsFile)
+                                    <span class="ws-hint">A dokumentum ezen a nyelven (PDF, DOC, DOCX, ODT, legfeljebb 10 MB). Az ezen a nyelven leadott rendelések visszaigazoló levele ezt csatolja; ha nincs, a weboldal az eredetit mutatja.</span>
+                                @elseif($wsTrIsUrl)
+                                    <span class="ws-hint">A dokumentum címe ezen a nyelven. Ha ez és a feltöltött fájl is üres, a weboldal az eredetit mutatja.</span>
+                                @elseif($field === 'slug')
                                     <span class="ws-hint">Kisbetűs, ékezet nélküli URL-szó; mentéskor egységesítjük, és ha foglalt, sorszámot kap. Üresen a weboldal az eredeti címszót használja.</span>
                                 @elseif($wsTrField['state'] === 'outdated')
                                     <div class="custom-control custom-checkbox mt-1">

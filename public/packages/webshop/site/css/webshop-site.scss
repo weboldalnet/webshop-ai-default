@@ -1083,6 +1083,12 @@
         white-space: nowrap;
         max-width: 100%;
     }
+
+    /* A magyarázó mondat (Omnibusz-ár) törhet: a `ws-nowrap` csak az árakat tartsa egyben — angolul a mondat
+       hosszabb, és egy sorban kilógott a Vásárlás dobozból (2026-11-03). */
+    .ws-price-note {
+        white-space: normal;
+    }
 }
 
 /* --------------------------------------------------------------------------

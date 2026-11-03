@@ -203,7 +203,7 @@
                             </p>
                             <p style="margin: 0 0 6px;">
                                 {{ __('webshop::mail.withdrawal_form.declaration') }}
-                                @foreach($order->items as $item){{ $item->product_name }} ({{ $item->quantity }} {{ __('webshop::common.pcs') }})@if(!$loop->last), @endif @endforeach
+                                @foreach($order->items as $item){{ $item->product_name }} ({{ trans_choice('webshop::common.quantity_pcs', $item->quantity, ['count' => $item->quantity]) }})@if(!$loop->last), @endif @endforeach
                                 – {{ __('webshop::mail.withdrawal_form.order_number', ['number' => $order->order_number]) }}
                             </p>
                             <p style="margin: 0 0 6px;">
