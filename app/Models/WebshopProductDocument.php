@@ -3,9 +3,17 @@
 namespace Weboldalnet\WebshopAiDefault\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Weboldalnet\WebshopAiDefault\Models\Concerns\UsesWebshopConnection;
+use Weboldalnet\WebshopAiDefault\Models\Concerns\HasWebshopTranslations;
 
 class WebshopProductDocument extends Model
 {
+    use UsesWebshopConnection;
+    use HasWebshopTranslations;
+
+    /** WebshopTranslationService::TYPES kulcsa */
+    const TRANSLATION_TYPE = 'document';
+
     protected $table = 'public.webshop_product_documents';
 
     protected $fillable = [

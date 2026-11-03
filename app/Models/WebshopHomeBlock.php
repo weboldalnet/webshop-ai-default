@@ -3,6 +3,8 @@
 namespace Weboldalnet\WebshopAiDefault\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Weboldalnet\WebshopAiDefault\Models\Concerns\UsesWebshopConnection;
+use Weboldalnet\WebshopAiDefault\Models\Concerns\HasWebshopTranslations;
 
 /**
  * A webshop egyedi nyitóoldalának egy blokkja.
@@ -14,6 +16,12 @@ use Illuminate\Database\Eloquent\Model;
  */
 class WebshopHomeBlock extends Model
 {
+    use UsesWebshopConnection;
+    use HasWebshopTranslations;
+
+    /** WebshopTranslationService::TYPES kulcsa */
+    const TRANSLATION_TYPE = 'home_block';
+
     protected $table = 'public.webshop_home_blocks';
 
     protected $fillable = [

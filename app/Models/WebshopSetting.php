@@ -3,6 +3,7 @@
 namespace Weboldalnet\WebshopAiDefault\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Weboldalnet\WebshopAiDefault\Models\Concerns\UsesWebshopConnection;
 
 /**
  * @property int $id
@@ -14,6 +15,8 @@ use Illuminate\Database\Eloquent\Model;
  */
 class WebshopSetting extends Model
 {
+    use UsesWebshopConnection;
+
     protected $table = 'public.webshop_settings';
 
     protected $fillable = ['key', 'value', 'type', 'group'];

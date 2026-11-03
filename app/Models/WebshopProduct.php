@@ -5,6 +5,8 @@ namespace Weboldalnet\WebshopAiDefault\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Weboldalnet\WebshopAiDefault\Services\Webshop\WebshopPriceHistoryService;
+use Weboldalnet\WebshopAiDefault\Models\Concerns\UsesWebshopConnection;
+use Weboldalnet\WebshopAiDefault\Models\Concerns\HasWebshopTranslations;
 
 /**
  * @property int $id
@@ -35,6 +37,12 @@ use Weboldalnet\WebshopAiDefault\Services\Webshop\WebshopPriceHistoryService;
  */
 class WebshopProduct extends Model
 {
+    use UsesWebshopConnection;
+    use HasWebshopTranslations;
+
+    /** WebshopTranslationService::TYPES kulcsa */
+    const TRANSLATION_TYPE = 'product';
+
     use SoftDeletes;
 
     protected $table = 'public.webshop_products';

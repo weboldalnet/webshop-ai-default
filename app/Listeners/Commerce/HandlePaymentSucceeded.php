@@ -2,12 +2,13 @@
 
 namespace Weboldalnet\WebshopAiDefault\Listeners\Commerce;
 
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Weboldalnet\WebshopAiDefault\Models\WebshopOrder;
 use Weboldalnet\WebshopAiDefault\Jobs\Commerce\CreateInvoiceForOrder;
 use Weboldalnet\WebshopAiDefault\Services\Webshop\Commerce\WebshopCommerceService;
 use Weboldalnet\WebshopAiDefault\Services\Webshop\WebshopCheckoutService;
+use Weboldalnet\WebshopAiDefault\Services\Webshop\WebshopStockService;
+use Weboldalnet\WebshopAiDefault\Support\WebshopConnection;
 
 class HandlePaymentSucceeded
 {
@@ -29,7 +30,12 @@ class HandlePaymentSucceeded
             return;
         }
 
-        DB::transaction(function () use ($order, $event) {
+        // Lemondott rendelésre utólag megérkezett fizetés (pl. a 24 órás automatikus lemondás után): a pénz megjött, ezért
+        // a rendelés újra feldolgozás alá kerül — de a készlete már felszabadult, és az adminnak döntenie kell
+        // (teljesítés vagy visszatérítés).
+        $wasCancelled = in_array($order->status, [WebshopOrder::STATUS_CANCELLED, WebshopOrder::STATUS_FAILED], true);
+
+        WebshopConnection::db()->transaction(function () use ($order, $event, $wasCancelled) {
             $transactionId = null;
             if (!empty($event->transaction) && is_object($event->transaction)) {
                 $transactionId = $event->transaction->id ?? null;
@@ -53,8 +59,24 @@ class HandlePaymentSucceeded
                 $updateData['invoice_status'] = WebshopOrder::INVOICE_STATUS_PENDING;
             }
 
+            if ($wasCancelled) {
+                $updateData['admin_note'] = trim(($order->admin_note ? $order->admin_note . "\n" : '') . '[' . now()->format('Y. m. d. H:i')
+                    . '] FIGYELEM: a lemondott rendelés fizetése utólag megérkezett — a rendelés újra feldolgozás alatt. '
+                    . 'Ellenőrizd a készletet, és teljesítsd vagy térítsd vissza.');
+            }
+
             $order->update($updateData);
         });
+
+        if ($wasCancelled) {
+            Log::warning('HandlePaymentSucceeded: lemondott rendelés fizetése utólag megérkezett.', ['order' => $order->order_number]);
+            try {
+                WebshopConnection::db()->transaction(fn () => WebshopStockService::reserve($order->refresh()->load('items')));
+            } catch (\RuntimeException $e) {
+                // nincs elég készlet: a fizetés ettől még rögzítve marad, az admin dönt
+                $order->update(['admin_note' => trim($order->admin_note . "\n" . 'A készlet nem volt újra lefoglalható: ' . $e->getMessage())]);
+            }
+        }
 
         // Visszaigazoló levél: online fizetésnél a pénztár a fizetési oldalra irányít, ott még nincs
         // mit visszaigazolni — a levél a sikeres fizetés után megy ki, egyszer (sendConfirmationMail őrzi).

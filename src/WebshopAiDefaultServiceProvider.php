@@ -9,6 +9,7 @@ use Weboldalnet\WebshopAiDefault\Models\WebshopCategory;
 use Weboldalnet\WebshopAiDefault\Services\Webshop\WebshopCartService;
 use Weboldalnet\WebshopAiDefault\Services\Webshop\WebshopCompareService;
 use Weboldalnet\WebshopAiDefault\Services\Webshop\WebshopSettingsService;
+use Weboldalnet\WebshopAiDefault\Console\Commands\CancelUnpaidOrders;
 use Weboldalnet\WebshopAiDefault\Console\Commands\GenerateMerchantFeeds;
 use Weboldalnet\WebshopAiDefault\Support\PackageHelper;
 use Weboldalnet\WebshopAiDefault\Console\ExtendViewsArticlesCommand;
@@ -33,6 +34,8 @@ class WebshopAiDefaultServiceProvider extends ServiceProvider
         }
 
         $this->registerBuiltinShippingProviders();
+
+        $this->registerSchedule();
 
         // Vásárlói fiókok (weboldalnet/commerce-users): a kapcsolók a Webshop beállításokból,
         // a fiókmenübe a Rendeléseim. Telepített modul nélkül nem csinál semmit.
@@ -117,6 +120,47 @@ class WebshopAiDefaultServiceProvider extends ServiceProvider
     }
 
     /**
+     * Ütemezett feladatok a Laravel ütemezőjében — a szerveren a szokásos `* * * * * php artisan schedule:run` cron kell,
+     * külön cron-sor nem. Mindkettő kikapcsolható a config/.env-ből (webshop.schedule.*: üres = kikapcsolva).
+     *
+     * - Merchant feed (Google / Facebook XML): a fájl magától nem frissül, és az elavult ár / készlet miatt a Merchant
+     *   Center letilthatja a terméket. Csak bekapcsolt merchant feed beállításnál fut.
+     * - Félbehagyott online fizetésű rendelések lemondása (webshop:cancel-unpaid-orders): a lefoglalt készlet
+     *   felszabadítása, a vásárló értesítése.
+     */
+    protected function registerSchedule(): void
+    {
+        $this->callAfterResolving(\Illuminate\Console\Scheduling\Schedule::class, function ($schedule) {
+            $frequency = function ($event, $value, string $fallback) {
+                // metódusnév (daily, hourly …) vagy cron-kifejezés (15 3 * * *)
+                if (str_contains((string) $value, ' ')) {
+                    return $event->cron((string) $value);
+                }
+
+                return method_exists($event, (string) $value) ? $event->{$value}() : $event->{$fallback}();
+            };
+
+            if ($feeds = config('webshop.schedule.merchant_feeds')) {
+                $frequency(
+                    $schedule->command('webshop:generate-merchant-feeds')
+                        ->withoutOverlapping(60)
+                        ->when(fn () => WebshopSettingsService::getBool('category_merchant_feed_enabled')),
+                    $feeds,
+                    'daily'
+                );
+            }
+
+            if (($cancel = config('webshop.schedule.cancel_unpaid_orders')) && (int) config('webshop.unpaid_order_cancel_hours', 24) > 0) {
+                $frequency(
+                    $schedule->command('webshop:cancel-unpaid-orders')->withoutOverlapping(30),
+                    $cancel,
+                    'hourly'
+                );
+            }
+        });
+    }
+
+    /**
      * A webshop saját, beépített szállítási módjai (külön csomag nélkül).
      *
      * MPL futárszolgálat: nincs API-kapcsolat – a pénztárban házhoz szállításként,
@@ -157,6 +201,7 @@ class WebshopAiDefaultServiceProvider extends ServiceProvider
         $this->commands([
             InstallArticlesCommand::class,
             GenerateMerchantFeeds::class,
+            CancelUnpaidOrders::class,
         ]);
 
         $this->commands([

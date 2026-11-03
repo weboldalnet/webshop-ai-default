@@ -2,10 +2,8 @@
 
 namespace Weboldalnet\WebshopAiDefault\Services\Webshop;
 
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
-use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
 use Weboldalnet\WebshopAiDefault\Mail\WebshopOrderMail;
 use Weboldalnet\WebshopAiDefault\Models\WebshopOrder;
@@ -13,6 +11,7 @@ use Weboldalnet\WebshopAiDefault\Models\WebshopOrderItem;
 use Weboldalnet\WebshopAiDefault\Services\Webshop\WebshopCouponService;
 use Weboldalnet\WebshopAiDefault\Services\Webshop\WebshopStockService;
 use Weboldalnet\WebshopAiDefault\Services\Webshop\Commerce\WebshopCommerceService;
+use Weboldalnet\WebshopAiDefault\Support\WebshopConnection;
 
 class WebshopCheckoutService
 {
@@ -38,7 +37,7 @@ class WebshopCheckoutService
         }
 
         // A migráció futása előtt is működjön (régi séma): ilyenkor őr nélkül küld, mint eddig.
-        $guarded = Schema::hasColumn($order->getTable(), 'confirmation_mail_sent_at');
+        $guarded = WebshopConnection::schema()->hasColumn($order->getTable(), 'confirmation_mail_sent_at');
 
         if ($guarded) {
             $claimed = WebshopOrder::whereKey($order->id)
@@ -68,7 +67,7 @@ class WebshopCheckoutService
      */
     public function process(array $data, array $cartItems): array
     {
-        return DB::transaction(function () use ($data, $cartItems) {
+        return WebshopConnection::db()->transaction(function () use ($data, $cartItems) {
             // Szerver oldalon újraszámolt összeg (sosem kliensből)
             $itemsTotal = 0;
             foreach ($cartItems as $item) {
@@ -176,6 +175,9 @@ class WebshopCheckoutService
                 // enélkül a rendelés utólag nem bontható tételekre (számla, adatlap).
                 'cod_fee' => $codFee,
                 'currency' => 'HUF',
+                // A pénztár nyelve: ezen a nyelven megy a levél, a számla és a fizetési oldal. Régi sémánál
+                // (a migráció előtt) kimarad, hogy a rendelés akkor is létrejöjjön.
+                ...(WebshopConnection::schema()->hasColumn('public.webshop_orders', 'locale') ? ['locale' => app()->getLocale()] : []),
                 'note' => $data['note'] ?? null,
                 // A pénztárban kitöltött kérdőív kérdés-válasz párjai
                 'qa_data' => WebshopCheckoutQaService::buildOrderQaData($data),

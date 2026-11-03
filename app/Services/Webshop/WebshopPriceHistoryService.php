@@ -3,9 +3,8 @@
 namespace Weboldalnet\WebshopAiDefault\Services\Webshop;
 
 use Carbon\Carbon;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Schema;
 use Weboldalnet\WebshopAiDefault\Models\WebshopProduct;
+use Weboldalnet\WebshopAiDefault\Support\WebshopConnection;
 
 /**
  * Ártörténet és az akciós „korábbi ár” (uniós Omnibusz-irányelv).
@@ -34,8 +33,8 @@ class WebshopPriceHistoryService
     {
         if (self::$enabled === null) {
             try {
-                self::$enabled = Schema::hasTable(self::TABLE)
-                    && Schema::hasColumn('public.webshop_products', 'sale_reference_price');
+                self::$enabled = WebshopConnection::schema()->hasTable(self::TABLE)
+                    && WebshopConnection::schema()->hasColumn('public.webshop_products', 'sale_reference_price');
             } catch (\Throwable $e) {
                 self::$enabled = false;
             }
@@ -69,14 +68,14 @@ class WebshopPriceHistoryService
         $before = $before ?: Carbon::now();
         $windowStart = $before->copy()->subDays(self::WINDOW_DAYS);
 
-        $inWindow = DB::table(self::TABLE)
+        $inWindow = WebshopConnection::db()->table(self::TABLE)
             ->where('product_id', $productId)
             ->where('recorded_at', '>=', $windowStart)
             // <=: az időbélyeg másodperc pontosságú, az azonos másodpercben rögzített ár is „korábbi”
             ->where('recorded_at', '<=', $before)
             ->min('price');
 
-        $atWindowStart = DB::table(self::TABLE)
+        $atWindowStart = WebshopConnection::db()->table(self::TABLE)
             ->where('product_id', $productId)
             ->where('recorded_at', '<', $windowStart)
             ->orderByDesc('recorded_at')
@@ -142,7 +141,7 @@ class WebshopPriceHistoryService
             return;
         }
 
-        $last = DB::table(self::TABLE)
+        $last = WebshopConnection::db()->table(self::TABLE)
             ->where('product_id', $product->id)
             ->orderByDesc('recorded_at')
             ->orderByDesc('id')
@@ -152,7 +151,7 @@ class WebshopPriceHistoryService
             return;
         }
 
-        DB::table(self::TABLE)->insert([
+        WebshopConnection::db()->table(self::TABLE)->insert([
             'product_id' => $product->id,
             'price' => $price,
             'recorded_at' => Carbon::now(),

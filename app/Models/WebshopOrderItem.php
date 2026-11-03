@@ -3,6 +3,7 @@
 namespace Weboldalnet\WebshopAiDefault\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Weboldalnet\WebshopAiDefault\Models\Concerns\UsesWebshopConnection;
 
 /**
  * @property int $id
@@ -16,6 +17,8 @@ use Illuminate\Database\Eloquent\Model;
  */
 class WebshopOrderItem extends Model
 {
+    use UsesWebshopConnection;
+
     protected $table = 'public.webshop_order_items';
 
     protected $fillable = ['order_id', 'product_id', 'product_name', 'quantity', 'unit_price', 'total_price', 'weight'];

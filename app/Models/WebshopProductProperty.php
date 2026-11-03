@@ -3,6 +3,7 @@
 namespace Weboldalnet\WebshopAiDefault\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Weboldalnet\WebshopAiDefault\Models\Concerns\UsesWebshopConnection;
 
 /**
  * @property int $id
@@ -14,6 +15,8 @@ use Illuminate\Database\Eloquent\Model;
  */
 class WebshopProductProperty extends Model
 {
+    use UsesWebshopConnection;
+
     protected $table = 'public.webshop_product_properties';
 
     protected $fillable = ['product_id', 'property_category_id', 'property_id', 'number_value'];

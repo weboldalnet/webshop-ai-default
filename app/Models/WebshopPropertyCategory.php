@@ -4,6 +4,8 @@ namespace Weboldalnet\WebshopAiDefault\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Weboldalnet\WebshopAiDefault\Models\Concerns\UsesWebshopConnection;
+use Weboldalnet\WebshopAiDefault\Models\Concerns\HasWebshopTranslations;
 
 /**
  * @property int $id
@@ -22,6 +24,12 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  */
 class WebshopPropertyCategory extends Model
 {
+    use UsesWebshopConnection;
+    use HasWebshopTranslations;
+
+    /** WebshopTranslationService::TYPES kulcsa */
+    const TRANSLATION_TYPE = 'property_category';
+
     use SoftDeletes;
 
     protected $table = 'public.webshop_property_categories';

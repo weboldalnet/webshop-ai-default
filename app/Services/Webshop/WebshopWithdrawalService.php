@@ -2,11 +2,11 @@
 
 namespace Weboldalnet\WebshopAiDefault\Services\Webshop;
 
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\URL;
 use Weboldalnet\WebshopAiDefault\Models\WebshopOrder;
 use Weboldalnet\WebshopAiDefault\Models\WebshopWithdrawal;
 use Weboldalnet\WebshopAiDefault\Models\WebshopWithdrawalItem;
+use Weboldalnet\WebshopAiDefault\Support\WebshopConnection;
 
 /**
  * Elállási kérelmek logikája.
@@ -121,7 +121,7 @@ class WebshopWithdrawalService
         $remaining = self::remainingQuantities($order);
         $itemsById = $order->items->keyBy('id');
 
-        return DB::transaction(function () use ($order, $quantities, $reason, $remaining, $itemsById) {
+        return WebshopConnection::db()->transaction(function () use ($order, $quantities, $reason, $remaining, $itemsById) {
             $withdrawal = WebshopWithdrawal::create([
                 'order_id' => $order->id,
                 'order_number' => $order->order_number,

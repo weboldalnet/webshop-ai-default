@@ -11,9 +11,9 @@ use Weboldalnet\WebshopAiDefault\Jobs\Commerce\CreateShipmentForOrder;
 use Weboldalnet\WebshopAiDefault\Services\Webshop\Commerce\WebshopCommerceService;
 use Weboldalnet\WebshopAiDefault\Services\Webshop\WebshopStockService;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
+use Weboldalnet\WebshopAiDefault\Support\WebshopConnection;
 
 class WebshopOrderController extends AdminExtendedController
 {
@@ -35,11 +35,12 @@ class WebshopOrderController extends AdminExtendedController
             'customer_company' => 'nullable|string|max:255',
             'customer_tax_number' => 'nullable|string|max:20',
             'items' => 'required|array|min:1',
-            'items.*.product_id' => 'required|exists:public.webshop_products,id',
+            // modell-osztállyal: a validátor így a termék saját (közös) kapcsolatán ellenőriz, nem a kérés nyelvi DB-jén
+            'items.*.product_id' => ['required', \Illuminate\Validation\Rule::exists(WebshopProduct::class, 'id')],
             'items.*.quantity' => 'required|integer|min:1',
         ]);
 
-        return DB::transaction(function () use ($request) {
+        return WebshopConnection::db()->transaction(function () use ($request) {
             $totalPrice = 0;
             $orderItemsData = [];
 
@@ -254,7 +255,7 @@ class WebshopOrderController extends AdminExtendedController
         }
 
         try {
-            DB::transaction(fn() => WebshopStockService::reserve($order));
+            WebshopConnection::db()->transaction(fn() => WebshopStockService::reserve($order));
         } catch (\RuntimeException $exception) {
             return $exception->getMessage();
         }
@@ -348,7 +349,7 @@ class WebshopOrderController extends AdminExtendedController
             return redirect()->route('admin.webshop.orders.edit', $order)->with('info', 'A rendelés már fizetett.');
         }
 
-        DB::transaction(function () use ($order) {
+        WebshopConnection::db()->transaction(function () use ($order) {
             $order->markPaid();
             $order->update(['status' => WebshopOrder::STATUS_PROCESSING]);
         });

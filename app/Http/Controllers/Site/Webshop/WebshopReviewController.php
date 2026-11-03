@@ -29,7 +29,8 @@ class WebshopReviewController extends Controller
         $verifiedOnly = WebshopReviewService::verifiedOnly();
 
         $request->validate([
-            'product_id' => 'required|exists:webshop_products,id',
+            // modell-osztállyal: a termék közös (alapnyelvi) adatbázisában ellenőriz, nem a látogató nyelvi DB-jében
+            'product_id' => ['required', \Illuminate\Validation\Rule::exists(\Weboldalnet\WebshopAiDefault\Models\WebshopProduct::class, 'id')],
             'name' => 'required|string|max:255',
             'rating' => 'required|integer|min:1|max:5',
             'review' => 'required|string|max:1000',

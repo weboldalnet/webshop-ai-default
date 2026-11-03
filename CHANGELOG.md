@@ -1,4 +1,25 @@
 ## [Unreleased]
+### Ütemezett feladatok: merchant feed, félbehagyott online rendelések lemondása
+Migrációt NEM igényel. A Laravel ütemezője futtatja (a szerveren a szokásos `* * * * * php artisan schedule:run` cron
+kell, külön sor nem). A fizetés-egyeztetést a commerce-core (`commerce:reconcile-payments`) végzi.
+
+- **Merchant feed** (`webshop:generate-merchant-feeds`): naponta 03:15-kor újragenerálódik, ha a merchant feed
+  beállítás be van kapcsolva — eddig senki nem futtatta, a Google / Facebook feed elavult árat és készletet mutatott.
+- **Félbehagyott online fizetésű rendelések** (`webshop:cancel-unpaid-orders`, óránként): ha egy online fizetésű
+  (Barion, SimplePay, Stripe …) rendelés 24 órán belül nem fizetett, lemondja, visszaadja a lefoglalt készletet,
+  megjegyzést ír a rendeléshez, és levélben értesíti a vásárlót (`WebshopOrderCancelledMail`, `mail.order-cancelled-mail`,
+  a gomb a projekt márkaszínével). Utánvét, átutalás, helyszíni fizetés kimarad. Nem mondja le, ha van fizetett
+  tranzakciója (naplóz, az admin nézze meg), ha az utolsó fizetési kísérlet 24 óránál frissebb, vagy ha a lemondás
+  előtti szolgáltatói lekérdezés szerint fizetve / még folyamatban van / nem kérdezhető le (a kifizetettet fel is
+  dolgozza). A 72 óránál régebbi rendelést levél nélkül mondja le (az első futáskor egy régóta működő boltban ne
+  kapjanak a vásárlók hetekkel későbbi levelet; `WEBSHOP_UNPAID_ORDER_MAIL_MAX_AGE`). `--dry-run` próba (csak olvas).
+- **Javítás:** lemondott / meghiúsult rendelés fizetése nem próbálható újra (`isPaymentRetryable()`) — eddig csak a
+  fizetési állapotot nézte, így egy lemondott, készletét már felszabadított rendelést is ki lehetett fizetni.
+- Ha egy lemondott rendelés fizetése utólag mégis megérkezik, a rendelés újra feldolgozás alá kerül, a készlet újra
+  lefoglalódik (ha van), és az admin figyelmeztető megjegyzést kap (teljesítés vagy visszatérítés).
+- `.env`: `WEBSHOP_UNPAID_ORDER_CANCEL_HOURS` (alapból 24, 0 = ki), `WEBSHOP_UNPAID_ORDER_SCHEDULE`,
+  `WEBSHOP_MERCHANT_FEED_SCHEDULE` (metódusnév vagy cron-kifejezés; üresen kikapcsolva).
+
 ### Javítás: online fizetésnél nem ment ki a rendelés-visszaigazoló levél
 **1 új migráció** (`webshop_orders.confirmation_mail_sent_at`, nullázható, hasColumn-őrrel) — frissítés után
 `php artisan migrate`.

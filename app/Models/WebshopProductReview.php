@@ -4,6 +4,7 @@ namespace Weboldalnet\WebshopAiDefault\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Weboldalnet\WebshopAiDefault\Models\Concerns\UsesWebshopConnection;
 
 /**
  * @property int $id
@@ -20,6 +21,8 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  */
 class WebshopProductReview extends Model
 {
+    use UsesWebshopConnection;
+
     use SoftDeletes;
 
     protected $table = 'public.webshop_product_reviews';

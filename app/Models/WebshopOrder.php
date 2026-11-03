@@ -4,6 +4,7 @@ namespace Weboldalnet\WebshopAiDefault\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Weboldalnet\WebshopAiDefault\Models\Concerns\UsesWebshopConnection;
 
 /**
  * @property int $id
@@ -40,6 +41,8 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  */
 class WebshopOrder extends Model
 {
+    use UsesWebshopConnection;
+
     use SoftDeletes;
 
     protected $table = 'public.webshop_orders';
@@ -131,6 +134,8 @@ class WebshopOrder extends Model
         'paid_at', 'invoiced_at', 'shipped_at',
         // vásárlói fiók (weboldalnet/commerce-users) — vendégrendelésnél üres
         'commerce_user_id',
+        // a pénztár nyelve a leadáskor (levél, számla, fizetési oldal nyelve); üres = alapnyelv
+        'locale',
     ];
 
     protected $casts = [
@@ -297,6 +302,12 @@ class WebshopOrder extends Model
 
     public function isPaymentRetryable(): bool
     {
+        // lemondott / meghiúsult rendelés nem fizethető ki utólag: a készlete már felszabadult (pl. a 24 órás
+        // automatikus lemondás után — webshop:cancel-unpaid-orders)
+        if (in_array($this->status, [self::STATUS_CANCELLED, self::STATUS_FAILED], true)) {
+            return false;
+        }
+
         return in_array($this->payment_status, [
             self::PAYMENT_STATUS_FAILED,
             self::PAYMENT_STATUS_CANCELLED,

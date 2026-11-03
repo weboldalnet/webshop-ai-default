@@ -2,9 +2,9 @@
 
 namespace Weboldalnet\WebshopAiDefault\Services\Webshop;
 
-use Illuminate\Support\Facades\DB;
 use Weboldalnet\WebshopAiDefault\Models\WebshopOrder;
 use Weboldalnet\WebshopAiDefault\Models\WebshopProduct;
+use Weboldalnet\WebshopAiDefault\Support\WebshopConnection;
 
 /**
  * Készletkezelés.
@@ -134,7 +134,7 @@ class WebshopStockService
             return;
         }
 
-        DB::transaction(function () use ($order) {
+        WebshopConnection::db()->transaction(function () use ($order) {
             foreach ($order->items as $item) {
                 if (!$item->product_id) {
                     continue;
