@@ -50,7 +50,8 @@ class WebshopCheckoutService
         }
 
         try {
-            Mail::to($order->customer_email)->send(new WebshopOrderMail($order));
+            // a rendelés nyelvén (fizetési visszahívásból is, ahol nincs kérés-nyelv)
+            \Weboldalnet\WebshopAiDefault\Support\WebshopOrderLocale::mail($order->customer_email, new WebshopOrderMail($order), \Weboldalnet\WebshopAiDefault\Support\WebshopOrderLocale::of($order));
         } catch (\Throwable $e) {
             Log::error('Rendelés visszaigazoló email hiba: ' . $e->getMessage(), ['order_id' => $order->id]);
 

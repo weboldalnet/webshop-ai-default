@@ -7,6 +7,8 @@
 
         <div class="row"><div class="col-lg-12"><h2 class="header-box my-2">Termék címke szerkesztése: {{ $label->name }}</h2></div></div>
 
+        @include('admin.webshop.translations.partials.record-bar', ['type' => 'label', 'record' => $label])
+
         <form method="POST" action="{{ route('admin.webshop.labels.update', $label) }}">
             @csrf
             @method('PUT')

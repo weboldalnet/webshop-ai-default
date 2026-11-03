@@ -8,7 +8,7 @@
         </button>
         <div class="dropdown-menu dropdown-menu-right px-lg-3 px-2 py-2 shadow-lg js-cart-dropdown" style="min-width: 320px; max-height: 80vh; overflow-y: auto;">
             <div class="text-center p-4">
-                <i class="fa fa-spinner fa-spin"></i> Betöltés...
+                <i class="fa fa-spinner fa-spin"></i> {{ __('webshop::catalog.header.loading') }}
             </div>
         </div>
     </div>

@@ -9,11 +9,11 @@
     (shipping[parcel_shop_id]) – így a pénztár egységesen kezeli az átvevőpontokat.
 --}}
 <div id="foxpost-apm-wrapper" class="ws-foxpost-apm mt-3" style="display: none;">
-    <h5 class="mb-2">FoxPost automata választása <span class="text-danger">*</span></h5>
+    <h5 class="mb-2">{{ __('webshop::checkout.foxpost.title') }} <span class="text-danger">*</span></h5>
 
     <div class="form-group mb-2">
         <input type="text" id="foxpostApmSearch" class="form-control"
-               placeholder="Keresés irányítószámra, városra vagy névre…" autocomplete="off">
+               placeholder="{{ __('webshop::checkout.foxpost.search_placeholder') }}" autocomplete="off">
     </div>
 
     <div id="foxpostApmList" class="border rounded"
@@ -21,14 +21,14 @@
 
     <div class="mt-2">
         <input type="text" id="foxpostSelectedApm" class="form-control"
-               placeholder="Válassz automatát a listából!" readonly tabindex="-1" value="">
+               placeholder="{{ __('webshop::checkout.foxpost.selected_placeholder') }}" readonly tabindex="-1" value="">
 
         {{-- Ez megy a rendeléssel: a címkéhez ez az azonosító kell. --}}
         <input type="hidden" name="shipping[parcel_shop_id]" id="foxpostApmId" value="">
         <input type="hidden" name="shipping[parcel_shop_name]" id="foxpostApmName" value="">
 
         <div id="foxpostApmError" class="text-danger small mt-1 d-none">
-            A csomagautomatás szállításhoz ki kell választani egy automatát.
+            {{ __('webshop::checkout.foxpost.required') }}
         </div>
     </div>
 </div>
@@ -49,10 +49,13 @@
         var foxpostCode = '{{ $foxpostCode ?? 'foxpost' }}';
         var searchTimer = null;
         var loaded = false;
+        var noResultsText = @json(__('webshop::checkout.foxpost.no_results'));
+        var loadingText = @json(__('webshop::common.loading'));
+        var loadErrorText = @json(__('webshop::checkout.foxpost.load_error'));
 
         function render(items) {
             if (!items.length) {
-                list.innerHTML = '<div class="p-3 text-muted small">Nincs találat.</div>';
+                list.innerHTML = '<div class="p-3 text-muted small">' + noResultsText + '</div>';
                 return;
             }
 
@@ -70,7 +73,7 @@
         }
 
         function load(term) {
-            list.innerHTML = '<div class="p-3 text-muted small">Betöltés…</div>';
+            list.innerHTML = '<div class="p-3 text-muted small">' + loadingText + '</div>';
 
             fetch('{{ route('commerce.foxpost.apms') }}?q=' + encodeURIComponent(term || ''), {
                 headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' }
@@ -78,7 +81,7 @@
             .then(function (r) { return r.json(); })
             .then(function (data) { render(data.items || []); })
             .catch(function () {
-                list.innerHTML = '<div class="p-3 text-danger small">Az automaták betöltése nem sikerült.</div>';
+                list.innerHTML = '<div class="p-3 text-danger small">' + loadErrorText + '</div>';
             });
         }
 

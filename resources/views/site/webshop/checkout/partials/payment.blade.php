@@ -6,7 +6,7 @@
     (partials/scripts.blade.php).
 --}}
 <div class="card shadow-sm border-0 mb-4">
-    <div class="card-header bg-primary text-white font-weight-bold h5">Fizetési lehetőségek</div>
+    <div class="card-header bg-primary text-white font-weight-bold h5">{{ __('webshop::checkout.payment.title') }}</div>
     <div class="card-body">
         @if(!empty($paymentMethods))
             @error('payment_method') <div class="alert alert-danger py-1 mb-2">{{ $message }}</div> @enderror
@@ -26,12 +26,12 @@
                         <input type="radio" name="payment_method" id="pm_on_site" value="on_site"
                             class="custom-control-input @error('payment_method') is-invalid @enderror"
                             {{ old('payment_method') === 'on_site' ? 'checked' : '' }}>
-                        <label class="custom-control-label" for="pm_on_site">Fizetés a helyszínen</label>
+                        <label class="custom-control-label" for="pm_on_site">{{ __('webshop::checkout.payment.on_site') }}</label>
                     </div>
                 @endif
             </div>
         @else
-            <div class="alert alert-warning mb-0">Jelenleg nincs elérhető fizetési mód.</div>
+            <div class="alert alert-warning mb-0">{{ __('webshop::checkout.payment.none') }}</div>
         @endif
     </div>
 </div>

@@ -7,20 +7,20 @@
                 <div class="alert alert-light border d-flex flex-wrap align-items-center justify-content-between mb-4" style="gap: 8px 16px">
                     <span>
                         <i class="fa-solid fa-user-check mr-1 text-primary"></i>
-                        Bejelentkezve: <strong>{{ $commerceUser->full_name }}</strong> ({{ $commerceUser->email }}).
-                        Az adataidat a fiókodból töltöttük ki.
+                        {{ __('webshop::checkout.account.logged_in_as') }} <strong>{{ $commerceUser->full_name }}</strong> ({{ $commerceUser->email }}).
+                        {{ __('webshop::checkout.account.prefilled') }}
                     </span>
-                    <a href="{{ route('commerce-users.account') }}" class="font-weight-bold">Fiókom</a>
+                    <a href="{{ route('commerce-users.account') }}" class="font-weight-bold">{{ __('webshop::checkout.account.my_account') }}</a>
                 </div>
             @else
                 <div class="alert alert-info d-flex flex-wrap align-items-center justify-content-between mb-4" style="gap: 8px 16px">
                     <span>
                         <i class="fa-solid fa-user mr-1"></i>
-                        Van már fiókod? Jelentkezz be, és kitöltjük helyetted az adataidat és a címeidet.
+                        {{ __('webshop::checkout.account.guest_prompt') }}
                     </span>
                     <span class="d-flex flex-wrap" style="gap: 8px">
-                        <a href="{{ route('commerce-users.login', ['redirect' => route('site.webshop.checkout.index', [], false)]) }}" class="btn btn-sm btn-primary">Bejelentkezés</a>
-                        <a href="{{ route('commerce-users.register') }}" class="btn btn-sm btn-outline-primary">Regisztráció</a>
+                        <a href="{{ route('commerce-users.login', ['redirect' => WsUrl::route('site.webshop.checkout.index', [], false)]) }}" class="btn btn-sm btn-primary">{{ __('webshop::checkout.account.login') }}</a>
+                        <a href="{{ route('commerce-users.register') }}" class="btn btn-sm btn-outline-primary">{{ __('webshop::checkout.account.register') }}</a>
                     </span>
                 </div>
             @endif

@@ -38,23 +38,23 @@
                             <div class="d-flex align-items-center mt-2 mt-md-0">
                                 @if(($ws['site_category_view_switcher_enabled'] ?? 'false') === 'true')
                                     <div class="btn-group btn-group-sm mr-2 ws-view-switcher" role="group">
-                                        <button type="button" class="btn btn-outline-dark @if(($ws['site_product_list_default_view'] ?? 'card') == 'card') active @endif js-view-mode" data-mode="card" title="Kártyás nézet"><i class="fa fa-th-large"></i></button>
-                                        <button type="button" class="btn btn-outline-dark @if(($ws['site_product_list_default_view'] ?? 'card') == 'table') active @endif js-view-mode" data-mode="table" title="Táblázatos nézet"><i class="fa fa-list"></i></button>
+                                        <button type="button" class="btn btn-outline-dark @if(($ws['site_product_list_default_view'] ?? 'card') == 'card') active @endif js-view-mode" data-mode="card" title="{{ __('webshop::catalog.list.view_card') }}"><i class="fa fa-th-large"></i></button>
+                                        <button type="button" class="btn btn-outline-dark @if(($ws['site_product_list_default_view'] ?? 'card') == 'table') active @endif js-view-mode" data-mode="table" title="{{ __('webshop::catalog.list.view_table') }}"><i class="fa fa-list"></i></button>
                                     </div>
                                 @endif
 
                                 <select class="form-control form-control-sm w-auto mr-2 js-sort-select">
-                                    <option value="newest" @if(request('sort') == 'newest') selected @endif>Legújabbak elöl</option>
-                                    <option value="price_asc" @if(request('sort') == 'price_asc') selected @endif>Ár szerint növekvő</option>
-                                    <option value="price_desc" @if(request('sort') == 'price_desc') selected @endif>Ár szerint csökkenő</option>
-                                    <option value="name_asc" @if(request('sort') == 'name_asc') selected @endif>Név szerint (A-Z)</option>
-                                    <option value="name_desc" @if(request('sort') == 'name_desc') selected @endif>Név szerint (Z-A)</option>
+                                    <option value="newest" @if(request('sort') == 'newest') selected @endif>{{ __('webshop::catalog.sort.newest') }}</option>
+                                    <option value="price_asc" @if(request('sort') == 'price_asc') selected @endif>{{ __('webshop::catalog.sort.price_asc') }}</option>
+                                    <option value="price_desc" @if(request('sort') == 'price_desc') selected @endif>{{ __('webshop::catalog.sort.price_desc') }}</option>
+                                    <option value="name_asc" @if(request('sort') == 'name_asc') selected @endif>{{ __('webshop::catalog.sort.name_asc') }}</option>
+                                    <option value="name_desc" @if(request('sort') == 'name_desc') selected @endif>{{ __('webshop::catalog.sort.name_desc') }}</option>
                                 </select>
 
                                 <select class="form-control form-control-sm w-auto js-per-page-select px-1">
-                                    <option value="30" @if(request('per_page') == '30') selected @endif>30/oldal</option>
-                                    <option value="60" @if(request('per_page') == '60') selected @endif>60/oldal</option>
-                                    <option value="90" @if(request('per_page') == '90') selected @endif>90/oldal</option>
+                                    <option value="30" @if(request('per_page') == '30') selected @endif>{{ __('webshop::catalog.list.per_page', ['count' => 30]) }}</option>
+                                    <option value="60" @if(request('per_page') == '60') selected @endif>{{ __('webshop::catalog.list.per_page', ['count' => 60]) }}</option>
+                                    <option value="90" @if(request('per_page') == '90') selected @endif>{{ __('webshop::catalog.list.per_page', ['count' => 90]) }}</option>
                                 </select>
                             </div>
                         </div>
@@ -85,10 +85,10 @@
                 @if($wsRelatedCats->isNotEmpty())
                     <div class="row mt-5">
                         <div class="col-lg-12">
-                            <h2 class="h4 font-weight-bold mb-3">Kapcsolódó kategóriák</h2>
+                            <h2 class="h4 font-weight-bold mb-3">{{ __('webshop::catalog.list.related_categories') }}</h2>
                             <div class="ws-related-categories d-flex flex-wrap">
                                 @foreach($wsRelatedCats as $wsRelCat)
-                                    <a href="{{ route('site.webshop.categories.show', $wsRelCat) }}"
+                                    <a href="{{ WsUrl::category($wsRelCat) }}"
                                        class="ws-related-category d-inline-flex align-items-center mr-2 mb-2 px-3 py-2 bg-white border rounded shadow-sm">
                                         @if($wsRelCat->icon)
                                             <img src="{{ $wsRelCat->icon }}" alt="" class="ws-related-category-icon mr-2">
@@ -118,10 +118,11 @@
     </div>
 
     @push('scripts')
+        @include('site.webshop.partials.js-i18n')
         <script src="/packages/webshop/site/js/webshop-site.js"></script>
         <script>
             $(function() {
-                WebshopSite.initProductList('{{ route('site.webshop.categories.products', $category) }}', {
+                WebshopSite.initProductList('{{ WsUrl::route('site.webshop.categories.products', ['categorySlug' => WsUrl::categoryKey($category)]) }}', {
                     category_key: '{{ $category->getRouteKey() }}',
                     view_mode: '{{ $ws['site_product_list_default_view'] ?? 'card' }}',
                     sort: '{{ request('sort', 'newest') }}',

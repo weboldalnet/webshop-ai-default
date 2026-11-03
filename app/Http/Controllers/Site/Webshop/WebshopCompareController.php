@@ -2,6 +2,7 @@
 
 namespace Weboldalnet\WebshopAiDefault\Http\Controllers\Site\Webshop;
 
+use Weboldalnet\WebshopAiDefault\Helpers\WebshopUrl;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Weboldalnet\WebshopAiDefault\Services\Webshop\WebshopCompareService;
@@ -19,12 +20,12 @@ class WebshopCompareController extends Controller
             $firstItem = reset($items);
             $product = WebshopProduct::active()->find($firstItem['product_id']);
             if ($product && $product->category) {
-                return redirect()->route('site.webshop.categories.show', $product->category->slug);
+                return redirect()->to(WebshopUrl::category($product->category));
             }
         }
 
         if (count($items) < 2) {
-            return redirect()->route('site.webshop.categories.index')->with('error', 'Legalább 2 termék szükséges az összehasonlításhoz.');
+            return redirect()->to(WebshopUrl::route('site.webshop.categories.index'))->with('error', __('webshop::catalog.compare.min_items'));
         }
 
         $products = WebshopProduct::active()->whereIn('id', array_keys($items))->with('productProperties.propertyCategory')->get();
@@ -49,7 +50,7 @@ class WebshopCompareController extends Controller
     public function add(Request $request)
     {
         if (!WebshopSettingsService::getBool('site_product_compare_enabled')) {
-            return response()->json(['success' => false, 'message' => 'Összehasonlítás funkció kikapcsolva.']);
+            return response()->json(['success' => false, 'message' => __('webshop::catalog.compare.disabled')]);
         }
 
         $productId = $request->input('product_id');

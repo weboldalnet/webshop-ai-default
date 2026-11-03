@@ -1,5 +1,5 @@
 @if($products->isEmpty())
-    <div class="alert alert-info">Nincs a megadott feltételeknek megfelelő termék a kategóriában.</div>
+    <div class="alert alert-info">{{ __('webshop::catalog.list.empty') }}</div>
 @else
     @if($viewMode === 'table')
         @include('site.webshop.categories.partials.product-table', ['products' => $products, 'ws' => $ws])

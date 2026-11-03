@@ -114,14 +114,14 @@
                                  tehát írás-only volt. A "Terméklistán rövid leírás..."
                                  kapcsoló a LISTA kártyáira vonatkozik, nem erre. --}}
                             @if($product->short_desc)
-                                <h4 class="font-weight-bold mb-2 border-bottom pb-2">Rövid leírás</h4>
+                                <h4 class="font-weight-bold mb-2 border-bottom pb-2">{{ __('webshop::product.show.short_desc') }}</h4>
                                 <div class="ws-product-short-desc text-muted mb-4">{{ $product->short_desc }}</div>
                             @endif
 
                             {{-- A címet CSAK akkor írjuk ki, ha van megjeleníthető tulajdonság: üres
                                  listánál eddig egy cím állt a semmi fölött. --}}
                             @if($product->productProperties->isNotEmpty())
-                                <h4 class="font-weight-bold mb-3 border-bottom pb-2">Tulajdonságok</h4>
+                                <h4 class="font-weight-bold mb-3 border-bottom pb-2">{{ __('webshop::product.show.properties') }}</h4>
                             @endif
                             <div class="ws-product-properties">
                                 @foreach($product->productProperties->groupBy('property_category_id') as $pcId => $pProps)
@@ -137,7 +137,7 @@
                                                              SEM a szűrő JS nem dolgozta fel, így a link odavitt a kategóriára,
                                                              de szűrés nélkül - és a böngésző Vissza gombja is emiatt viselkedett
                                                              furcsán. --}}
-                                                        <a href="{{ route('site.webshop.categories.show', $product->category) }};{{ $pp->property->slug }}-f{{ $pp->property->id }}" class="badge badge-secondary mr-1">{{ $pp->property->name }}</a>
+                                                        <a href="{{ WsUrl::category($product->category) }};{{ $pp->property->slug }}-f{{ $pp->property->id }}" class="badge badge-secondary mr-1">{{ $pp->property->name }}</a>
                                                     @elseif($pp->number_value !== null)
                                                         <span class="fw-600">{{ $pc->formatNumberValue($pp->number_value) }}</span>
                                                     @endif
@@ -155,7 +155,7 @@
                 <div class="col-lg-4 col-md-6 mb-4 order-2 order-lg-3">
                     <div class="card shadow-sm bg-light">
                         <div class="card-body d-flex flex-column">
-                            <h4 class="font-weight-bold mb-4 border-bottom pb-2 text-primary">Vásárlás</h4>
+                            <h4 class="font-weight-bold mb-4 border-bottom pb-2 text-primary">{{ __('webshop::product.show.buy') }}</h4>
 
                             @include('site.webshop.partials.product-price', [
                                 'product' => $product,
@@ -175,16 +175,16 @@
                                 <div class="ws-product-stock mb-3">
                                     @if($wsStock <= 0)
                                         <span class="badge badge-danger px-3 py-2 fs-14">
-                                            <i class="fa fa-circle-xmark mr-1"></i> Elfogyott
+                                            <i class="fa fa-circle-xmark mr-1"></i> {{ __('webshop::product.stock.out_of_stock') }}
                                         </span>
                                     @elseif($wsStock <= 5)
                                         <span class="badge badge-warning px-3 py-2 fs-14">
                                             <i class="fa fa-triangle-exclamation mr-1"></i>
-                                            Utolsó {{ $wsStock }} db
+                                            {{ trans_choice('webshop::product.stock.last_items', $wsStock, ['count' => $wsStock]) }}
                                         </span>
                                     @else
                                         <span class="badge badge-success px-3 py-2 fs-14">
-                                            <i class="fa fa-circle-check mr-1"></i> Raktáron
+                                            <i class="fa fa-circle-check mr-1"></i> {{ __('webshop::product.stock.in_stock') }}
                                         </span>
                                     @endif
                                 </div>
@@ -192,12 +192,12 @@
 
                             @if($wsStock === null || $wsStock > 0)
                                 <div class="form-group mb-4">
-                                    <label for="quantity" class="font-weight-bold">Mennyiség:</label>
+                                    <label for="quantity" class="font-weight-bold">{{ __('webshop::product.actions.quantity') }}</label>
                                     <select id="quantity" class="form-control form-control w-100 js-quantity-select">
                                         {{-- Legfeljebb annyi választható, amennyi raktáron van --}}
                                         @php($wsMaxQuantity = $wsStock === null ? 10 : min(10, $wsStock))
                                         @for($i = 1; $i <= $wsMaxQuantity; $i++)
-                                            <option value="{{ $i }}">{{ $i }} db</option>
+                                            <option value="{{ $i }}">{{ trans_choice('webshop::product.actions.quantity_option', $i, ['count' => $i]) }}</option>
                                         @endfor
                                     </select>
                                 </div>
@@ -206,17 +206,17 @@
                             <div class="mt-auto">
                                 @if($wsStock !== null && $wsStock <= 0)
                                     <button type="button" class="btn btn-secondary btn-lg btn-block font-weight-bold py-3 mb-2" disabled>
-                                        <i class="fa fa-circle-xmark mr-2"></i> Jelenleg nem rendelhető
+                                        <i class="fa fa-circle-xmark mr-2"></i> {{ __('webshop::product.actions.unavailable') }}
                                     </button>
                                 @else
                                     <button type="button" class="btn btn-primary btn-lg btn-block font-weight-bold py-3 mb-2 js-add-to-cart" data-id="{{ $product->id }}" data-with-qty="true">
-                                        <i class="fa fa-shopping-cart mr-2"></i> Kosárba rakom
+                                        <i class="fa fa-shopping-cart mr-2"></i> {{ __('webshop::product.actions.add_to_cart_long') }}
                                     </button>
                                 @endif
 
                                 @if(($ws['site_product_compare_enabled'] ?? 'false') === 'true')
                                     <button type="button" class="btn btn-outline-info btn-block js-add-to-compare" data-id="{{ $product->id }}">
-                                        <i class="fa fa-scale-balanced mr-2"></i> Összehasonlítás
+                                        <i class="fa fa-scale-balanced mr-2"></i> {{ __('webshop::product.actions.compare') }}
                                     </button>
                                 @endif
                             </div>
@@ -254,7 +254,7 @@
                         ])
                     </div>
                     <button type="button" class="btn btn-primary font-weight-bold ws-sticky-buy__btn">
-                        <i class="fa fa-shopping-cart mr-2"></i> Kosárba
+                        <i class="fa fa-shopping-cart mr-2"></i> {{ __('webshop::product.actions.add_to_cart') }}
                     </button>
                 </div>
             @endif
@@ -312,10 +312,10 @@
                         </div>
                     </div>
 
-                    <span class="scroll-left default-arrows carousel-arrows left" aria-label="Előző képek">
+                    <span class="scroll-left default-arrows carousel-arrows left" aria-label="{{ __('webshop::product.show.gallery_prev') }}">
                         <i class="fa fa-arrow-left"></i>
                     </span>
-                    <span class="scroll-right default-arrows carousel-arrows right" aria-label="További képek">
+                    <span class="scroll-right default-arrows carousel-arrows right" aria-label="{{ __('webshop::product.show.gallery_next') }}">
                         <i class="fa fa-arrow-right"></i>
                     </span>
                 </div>
@@ -333,11 +333,11 @@
                         <div class="card-header bg-white p-0">
                             <ul class="nav nav-tabs ws-tabs" role="tablist">
                                 <li class="nav-item">
-                                    <a class="nav-link active px-4 py-2 font-weight-bold fs-20" id="desc-tab" data-toggle="tab" href="#desc" role="tab">Leírás</a>
+                                    <a class="nav-link active px-4 py-2 font-weight-bold fs-20" id="desc-tab" data-toggle="tab" href="#desc" role="tab">{{ __('webshop::product.tabs.description') }}</a>
                                 </li>
                                 @if($wsLegalHasInfo)
                                     <li class="nav-item">
-                                        <a class="nav-link px-4 py-2 font-weight-bold fs-20" id="legal-info-tab" data-toggle="tab" href="#legal-info" role="tab">Termékinformációk</a>
+                                        <a class="nav-link px-4 py-2 font-weight-bold fs-20" id="legal-info-tab" data-toggle="tab" href="#legal-info" role="tab">{{ __('webshop::product.tabs.legal_info') }}</a>
                                     </li>
                                 @endif
                                 {{-- A Vélemények fül GOMBJA. A tartalma (tab-pane) korábban is
@@ -346,7 +346,7 @@
                                 @if(($ws['site_product_reviews_enabled'] ?? 'false') === 'true')
                                     <li class="nav-item">
                                         <a class="nav-link px-4 py-2 font-weight-bold fs-20" id="reviews-tab" data-toggle="tab" href="#reviews" role="tab">
-                                            Vélemények
+                                            {{ __('webshop::product.tabs.reviews') }}
                                             @php($wsReviewCount = $product->reviews()->active()->count())
                                             @if($wsReviewCount)
                                                 <span class="badge badge-secondary ml-1">{{ $wsReviewCount }}</span>
@@ -357,7 +357,7 @@
 
                                 @if(($ws['product_document_upload_enabled'] ?? 'false') === 'true' && $product->productDocuments->isNotEmpty())
                                     <li class="nav-item">
-                                        <a class="nav-link px-4 py-2 font-weight-bold fs-20" id="docs-tab" data-toggle="tab" href="#docs" role="tab">Dokumentumok</a>
+                                        <a class="nav-link px-4 py-2 font-weight-bold fs-20" id="docs-tab" data-toggle="tab" href="#docs" role="tab">{{ __('webshop::product.tabs.documents') }}</a>
                                     </li>
                                 @endif
                             </ul>
@@ -382,7 +382,7 @@
                                         <table class="table table-bordered table-striped">
                                             <thead>
                                                 <tr>
-                                                    <th>Dokumentum neve</th>
+                                                    <th>{{ __('webshop::product.tabs.document_name') }}</th>
                                                     <th style="width: 150px"></th>
                                                 </tr>
                                             </thead>
@@ -392,7 +392,7 @@
                                                         <td class="align-middle fw-600 fs-18">{{ $doc->name }}</td>
                                                         <td class="text-center">
                                                             <a href="{{ $doc->type === 'link' ? $doc->url : $doc->file_path }}" target="_blank" class="btn btn-primary btn-sm">
-                                                                Megnyitás <i class="fa fa-external-link-alt ml-1"></i>
+                                                                {{ __('webshop::common.open') }} <i class="fa fa-external-link-alt ml-1"></i>
                                                             </a>
                                                         </td>
                                                     </tr>
@@ -409,7 +409,7 @@
 
             @if($product->relatedProducts->isNotEmpty())
                 <div class="row mt-5">
-                    <div class="col-lg-12"><h3 class="font-weight-bold mb-4 border-bottom pb-2">Kapcsolódó termékek</h3></div>
+                    <div class="col-lg-12"><h3 class="font-weight-bold mb-4 border-bottom pb-2">{{ __('webshop::product.show.related') }}</h3></div>
                     @foreach($product->relatedProducts->take(4) as $relProd)
                         <div class="col-lg-3 col-md-6 mb-4">
                             @include('site.webshop.categories.partials.product-card', ['product' => $relProd, 'ws' => $ws])
@@ -420,7 +420,7 @@
 
             @if($similarProducts->isNotEmpty())
                 <div class="row mt-5">
-                    <div class="col-lg-12"><h3 class="font-weight-bold mb-4 border-bottom pb-2">Hasonló termékek</h3></div>
+                    <div class="col-lg-12"><h3 class="font-weight-bold mb-4 border-bottom pb-2">{{ __('webshop::product.show.similar') }}</h3></div>
                     @foreach($similarProducts->take(4) as $simProd)
                         <div class="col-lg-3 col-md-6 mb-4">
                             @include('site.webshop.categories.partials.product-card', ['product' => $simProd, 'ws' => $ws])
@@ -434,6 +434,7 @@
     @include('site.webshop.modals.review-form')
 
     @push('scripts')
+        @include('site.webshop.partials.js-i18n')
         <script src="/packages/webshop/site/js/webshop-site.js"></script>
         <script type="application/ld+json">
             {!! (new \Weboldalnet\WebshopAiDefault\Services\Webshop\ProductSchemaService())->generateJson($product) !!}

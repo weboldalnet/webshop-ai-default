@@ -10,16 +10,16 @@
             </button>
         </div>
     @empty
-        <div class="text-center p-3 text-muted">Az összehasonlítási lista üres.</div>
+        <div class="text-center p-3 text-muted">{{ __('webshop::catalog.compare.empty') }}</div>
     @endforelse
 </div>
 
 @if(count($items) >= 2)
     <div class="mt-2">
-        <a href="{{ route('site.webshop.compare.index') }}" class="btn btn-info btn-block fw-600 fs-16">
-            Összehasonlítás <i class="fa fa-scale-balanced ml-2"></i>
+        <a href="{{ WsUrl::route('site.webshop.compare.index') }}" class="btn btn-info btn-block fw-600 fs-16">
+            {{ __('webshop::product.actions.compare') }} <i class="fa fa-scale-balanced ml-2"></i>
         </a>
     </div>
 @elseif(count($items) == 1)
-    <div class="alert alert-warning small mt-2">Legalább 2 termék szükséges az összehasonlításhoz.</div>
+    <div class="alert alert-warning small mt-2">{{ __('webshop::catalog.compare.min_items') }}</div>
 @endif

@@ -28,7 +28,7 @@
             {{ $product->label->name }}
         </div>
     @endif
-    <a href="{{ route('site.webshop.products.show', $product) }}" class="ws-product-card-img text-center bg-light d-flex align-items-center justify-content-center overflow-hidden" style="height: 220px;">
+    <a href="{{ WsUrl::product($product) }}" class="ws-product-card-img text-center bg-light d-flex align-items-center justify-content-center overflow-hidden" style="height: 220px;">
         @if($product->primary_image)
             <img src="{{ $product->primary_image }}" alt="{{ $product->name }}"
                  width="{{ $wsKepSzelesseg }}" height="{{ $wsKepMagassag }}"
@@ -41,7 +41,7 @@
     <div class="card-body d-flex py-3 flex-column">
         @if(($ws['product_secondary_name_enabled'] ?? 'false') === 'true' && $product->secondary_name)
             <h5 class="ws-product-card-title sec-title font-weight-bold mb-0">
-                <a href="{{ route('site.webshop.products.show', $product) }}"
+                <a href="{{ WsUrl::product($product) }}"
                    class="text-dark text-decoration-none">
                     {{ $product->name }}
                 </a>
@@ -49,7 +49,7 @@
             <div class="ws-product-card-sec-title fs-14 text-muted mb-1">{{ $product->secondary_name }}</div>
         @else
             <h5 class="ws-product-card-title font-weight-bold">
-                <a href="{{ route('site.webshop.products.show', $product) }}"
+                <a href="{{ WsUrl::product($product) }}"
                    class="text-dark text-decoration-none">
                     {{ $product->name }}
                 </a>
@@ -70,7 +70,7 @@
 
         @if($wsCardStockBadge !== null && $wsCardStockBadge > 0 && $wsCardStockBadge <= 5)
             <div class="mb-2">
-                <span class="badge badge-warning">Utolsó {{ $wsCardStockBadge }} db</span>
+                <span class="badge badge-warning">{{ trans_choice('webshop::product.stock.last_items', $wsCardStockBadge, ['count' => $wsCardStockBadge]) }}</span>
             </div>
         @endif
 
@@ -78,7 +78,7 @@
             <div class="ws-product-card-variations mb-2">
                 <span class="badge badge-pill badge-light border">
                     <i class="fa fa-layer-group mr-1"></i>
-                    {{ $product->variations_count + 1 }} változat
+                    {{ trans_choice('webshop::catalog.list.variations', $product->variations_count + 1, ['count' => $product->variations_count + 1]) }}
                 </span>
             </div>
         @endif
@@ -143,7 +143,7 @@
 
             <div class="ws-product-card-actions ws-nowrap">
                 @if(($ws['site_product_compare_enabled'] ?? 'false') === 'true')
-                    <button type="button" class="btn btn-sm btn-outline-info js-add-to-compare" data-id="{{ $product->id }}" title="Összehasonlítás">
+                    <button type="button" class="btn btn-sm btn-outline-info js-add-to-compare" data-id="{{ $product->id }}" title="{{ __('webshop::product.actions.compare') }}">
                         <i class="fa fa-scale-balanced"></i>
                     </button>
                 @endif
@@ -155,11 +155,11 @@
 
                 @if($wsCardStock !== null && $wsCardStock <= 0)
                     <button type="button" class="btn btn-sm btn-secondary" disabled>
-                        <i class="fa fa-circle-xmark"></i> Elfogyott
+                        <i class="fa fa-circle-xmark"></i> {{ __('webshop::product.stock.out_of_stock') }}
                     </button>
                 @else
                     <button type="button" class="btn btn-sm btn-primary js-add-to-cart" data-id="{{ $product->id }}">
-                        <i class="fa fa-shopping-cart"></i> Kosárba
+                        <i class="fa fa-shopping-cart"></i> {{ __('webshop::product.actions.add_to_cart') }}
                     </button>
                 @endif
             </div>

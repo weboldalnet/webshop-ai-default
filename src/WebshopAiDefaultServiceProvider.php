@@ -54,6 +54,17 @@ class WebshopAiDefaultServiceProvider extends ServiceProvider
         // Korábbi settings/views kezelés
         $this->loadViewsFrom(__DIR__.'/../settings/views', PackageHelper::PACKAGE_PREFIX);
 
+        // Felületi szövegek: __('webshop::checkout.…'). A projekt felülírhatja: lang/vendor/webshop/{locale}/*.php
+        $this->loadTranslationsFrom(__DIR__.'/../resources/lang', 'webshop');
+        $this->publishes([
+            __DIR__.'/../resources/lang' => $this->app->langPath('vendor/webshop'),
+        ], PackageHelper::PACKAGE_PREFIX . '-lang');
+
+        // Nyelvfüggő ár- és dátumformázás a nézetekben: {{ WsFormat::money($x) }}
+        \Illuminate\Foundation\AliasLoader::getInstance()->alias('WsFormat', \Weboldalnet\WebshopAiDefault\Helpers\WebshopHelper::class);
+        // Nyelvkövető címek: {{ WsUrl::route('site.webshop.checkout.index') }}, WsUrl::product($p), WsUrl::category($c)
+        \Illuminate\Foundation\AliasLoader::getInstance()->alias('WsUrl', \Weboldalnet\WebshopAiDefault\Helpers\WebshopUrl::class);
+
         // Migrációk betöltése
         $this->loadMigrationsFrom(__DIR__.'/../database/migrations');
 
@@ -95,7 +106,7 @@ class WebshopAiDefaultServiceProvider extends ServiceProvider
 
         // View Composers a Site oldalhoz
         View::composer(['site.webshop.*', 'site.layouts.*'], function ($view) {
-            if (request()->is('webshop*') || (request()->route() && str_starts_with(request()->route()->getName(), 'site.webshop.'))) {
+            if (\Weboldalnet\WebshopAiDefault\Helpers\WebshopUrl::isWebshopRequest()) {
                 // A gyerek szinteket UGYANÚGY szűrni kell, mint a gyökeret.
                 // Enélkül egy inaktív vagy a menüsorból kikapcsolt alkategória is
                 // megjelenne a lenyílóban – az adminban kikapcsolnád, és mégis kint
@@ -185,7 +196,7 @@ class WebshopAiDefaultServiceProvider extends ServiceProvider
                 'mpl',
                 new \Weboldalnet\WebshopAiDefault\Services\Webshop\Commerce\Shipping\ManualCourierShippingProvider(
                     'mpl',
-                    'MPL futárszolgálat',
+                    'webshop::order.shipping_method.mpl',
                     'https://www.posta.hu/nyomkovetes/nyitooldal?searchvalue={code}'
                 )
             );

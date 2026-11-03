@@ -2,7 +2,7 @@
     $image = $cat->getListImageUrl();
 @endphp
 <div class="card ws-category-card shadow-sm h-100">
-    <a href="{{ route('site.webshop.categories.show', $cat) }}" class="text-decoration-none text-dark h-100">
+    <a href="{{ WsUrl::category($cat) }}" class="text-decoration-none text-dark h-100">
         @if($image)
             @if($cat->list_image_mode === 'cropped_upload' && (int)$cat->card_width_units > 1)
                 <div class="card-img-top text-center bg-light d-flex align-items-center justify-content-center">

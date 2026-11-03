@@ -5,8 +5,10 @@ namespace Weboldalnet\WebshopAiDefault\Console\Commands;
 use App\Helpers\Lang;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Storage;
+use Weboldalnet\WebshopAiDefault\Helpers\WebshopUrl;
 use Weboldalnet\WebshopAiDefault\Models\WebshopCategory;
 use Weboldalnet\WebshopAiDefault\Models\WebshopProduct;
+use Weboldalnet\WebshopAiDefault\Services\Webshop\WebshopTranslationService;
 use Weboldalnet\WebshopAiDefault\Services\Webshop\WebshopUnitPriceService;
 use XMLWriter;
 
@@ -25,14 +27,25 @@ class GenerateMerchantFeeds extends Command
         }
 
         foreach ($languages as $lang) {
-            $this->generateFeed($lang, 'google');
-            $this->generateFeed($lang, 'facebook');
+            // a feed a nyelv szövegeivel és címeivel; egynyelvű site-on minden fájl az alapnyelvi tartalmat adja
+            $contentLocale = in_array($lang, WebshopUrl::locales(), true) ? $lang : WebshopUrl::defaultLocale();
+            $previousLocale = app()->getLocale();
+            app()->setLocale($contentLocale);
+            WebshopTranslationService::useSiteLocale($contentLocale);
+
+            try {
+                $this->generateFeed($lang, 'google', $contentLocale);
+                $this->generateFeed($lang, 'facebook', $contentLocale);
+            } finally {
+                app()->setLocale($previousLocale);
+                WebshopTranslationService::useSiteLocale(null, true);
+            }
         }
 
         return 0;
     }
 
-    private function generateFeed(string $lang, string $type)
+    private function generateFeed(string $lang, string $type, string $contentLocale)
     {
         $filename = "{$type}-merchant-{$lang}.xml";
         $path = "public/feeds/{$filename}";
@@ -71,6 +84,8 @@ class GenerateMerchantFeeds extends Command
 
         $products = WebshopProduct::active()
             ->whereIn('category_id', $categories)
+            // „fordítatlan termék rejtve” beállításnál a nyelv feedjébe sem kerül
+            ->tap(fn ($query) => WebshopTranslationService::restrictToVisibleProducts($query, $contentLocale))
             ->with(['category', 'label'])
             ->get();
 
@@ -79,7 +94,7 @@ class GenerateMerchantFeeds extends Command
             $xml->writeElement('g:id', $product->id);
             $xml->writeElement('g:title', $product->name);
             $xml->writeElement('g:description', strip_tags($product->short_desc ?? $product->description ?? $product->name));
-            $xml->writeElement('g:link', route('site.webshop.products.show', $product));
+            $xml->writeElement('g:link', WebshopUrl::product($product, $contentLocale));
             $xml->writeElement('g:image_link', $product->primary_image ? url($product->primary_image) : '');
             $xml->writeElement('g:availability', $product->stock_enabled && $product->stock_quantity <= 0 ? 'out of stock' : 'in stock');
 

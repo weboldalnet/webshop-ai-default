@@ -33,32 +33,32 @@
 <div class="row">
     <div class="col-lg-6 mb-4">
         <div class="card shadow-sm border-0 h-100">
-            <div class="card-header bg-primary text-white font-weight-bold h5">Elérhetőség és számlázás</div>
+            <div class="card-header bg-primary text-white font-weight-bold h5">{{ __('webshop::checkout.order.contact_title') }}</div>
             <div class="card-body">
                 <dl class="row mb-0">
-                    <dt class="col-sm-4 py-1">Név</dt>
+                    <dt class="col-sm-4 py-1">{{ __('webshop::checkout.order.name') }}</dt>
                     <dd class="col-sm-8 py-1">{{ $order->customer_name ?: '—' }}</dd>
 
-                    <dt class="col-sm-4 py-1">E-mail</dt>
+                    <dt class="col-sm-4 py-1">{{ __('webshop::checkout.order.email') }}</dt>
                     <dd class="col-sm-8 py-1">{{ $order->customer_email ?: '—' }}</dd>
 
                     @if($order->customer_phone)
-                        <dt class="col-sm-4 py-1">Telefon</dt>
+                        <dt class="col-sm-4 py-1">{{ __('webshop::checkout.order.phone') }}</dt>
                         <dd class="col-sm-8 py-1">{{ $order->customer_phone }}</dd>
                     @endif
 
                     @if($order->customer_company)
-                        <dt class="col-sm-4 py-1">Cégnév</dt>
+                        <dt class="col-sm-4 py-1">{{ __('webshop::checkout.order.company') }}</dt>
                         <dd class="col-sm-8 py-1">{{ $order->customer_company }}</dd>
                     @endif
 
                     @if($order->customer_tax_number)
-                        <dt class="col-sm-4 py-1">Adószám</dt>
+                        <dt class="col-sm-4 py-1">{{ __('webshop::checkout.order.tax_number') }}</dt>
                         <dd class="col-sm-8 py-1">{{ $order->customer_tax_number }}</dd>
                     @endif
 
                     @if($wsBillingAddress)
-                        <dt class="col-sm-4 py-1">Számlázási cím</dt>
+                        <dt class="col-sm-4 py-1">{{ __('webshop::checkout.order.billing_address') }}</dt>
                         <dd class="col-sm-8 py-1 mb-0">
                             @if(!empty($wsBilling['name']) && $wsBilling['name'] !== $order->customer_name)
                                 {{ $wsBilling['name'] }}<br>
@@ -73,15 +73,15 @@
 
     <div class="col-lg-6 mb-4">
         <div class="card shadow-sm border-0 h-100">
-            <div class="card-header bg-primary text-white font-weight-bold h5">Átvétel</div>
+            <div class="card-header bg-primary text-white font-weight-bold h5">{{ __('webshop::checkout.order.delivery_title') }}</div>
             <div class="card-body">
                 @if($wsPickupPoint || $wsPickupPointAddress)
-                    <p class="mb-1 font-weight-bold">{{ $wsPickupPoint ?: 'Átvevőpont' }}</p>
+                    <p class="mb-1 font-weight-bold">{{ $wsPickupPoint ?: __('webshop::checkout.order.pickup_point') }}</p>
                     @if($wsPickupPointAddress)
                         <p class="mb-0 text-muted">{{ $wsPickupPointAddress }}</p>
                     @endif
                 @elseif($wsShippingAddress)
-                    <p class="mb-1 font-weight-bold">Szállítási cím</p>
+                    <p class="mb-1 font-weight-bold">{{ __('webshop::checkout.order.shipping_address') }}</p>
                     <p class="mb-0 text-muted">
                         @if(!empty($wsShipping['name']))
                             {{ $wsShipping['name'] }}<br>
@@ -90,7 +90,7 @@
                     </p>
                 @else
                     <p class="mb-0 text-muted">
-                        Személyes átvétel – a részleteket a visszaigazoló e-mailben küldjük.
+                        {{ __('webshop::checkout.order.personal_pickup') }}
                     </p>
                 @endif
             </div>

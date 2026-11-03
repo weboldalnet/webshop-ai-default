@@ -17,12 +17,12 @@
     Ez a részlet csak bekapcsolt keresőnél kerül ki (a feltétel a
     global-btn-items.blade.php-ban van), így a JS is csak akkor töltődik le.
 --}}
-<div class="ws-search-container" data-url="{{ route('site.webshop.products.search') }}">
+<div class="ws-search-container" data-url="{{ WsUrl::route('site.webshop.products.search') }}">
     <input type="text"
            class="form-control ws-search-input h-100 border-0"
-           placeholder="Keresés (min. 3 karakter)"
+           placeholder="{{ trans_choice('webshop::catalog.search.placeholder', 3, ['count' => 3]) }}"
            autocomplete="off"
-           aria-label="Termékkeresés">
+           aria-label="{{ __('webshop::catalog.search.label') }}">
 
     <div class="ws-search-results d-none"></div>
 </div>

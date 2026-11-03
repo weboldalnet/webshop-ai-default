@@ -17,10 +17,10 @@
 @if($variations->count() > 1)
     <div class="card shadow-sm mt-3 ws-product-variations">
         <div class="card-body">
-            <h5 class="font-weight-bold mb-3 border-bottom pb-2">Variációk</h5>
+            <h5 class="font-weight-bold mb-3 border-bottom pb-2">{{ __('webshop::product.variations.title') }}</h5>
             <div class="ws-variation-list">
                 @foreach($variations as $var)
-                    <a href="{{ route('site.webshop.products.show', $var) }}" class="ws-product-variation-card d-flex align-items-center p-2 mb-2 border rounded text-decoration-none text-dark {{ $product->id === $var->id ? 'active border-primary bg-light' : '' }}">
+                    <a href="{{ WsUrl::product($var) }}" class="ws-product-variation-card d-flex align-items-center p-2 mb-2 border rounded text-decoration-none text-dark {{ $product->id === $var->id ? 'active border-primary bg-light' : '' }}">
                         <div class="ws-product-variation-img mr-2" style="width: 60px; height: 60px;">
                             @if($var->primary_image_thumb || $var->primary_image)
                                 <img src="{{ $var->primary_image_thumb ?? $var->primary_image }}" alt="{{ $var->name }}" class="img-fluid rounded" style="width: 60px; height: 60px; object-fit: cover;">

@@ -8,17 +8,17 @@
     A böngésző CSAK a kódot küldi; az összeget mindig a szerver számolja.
 --}}
 <div class="card shadow-sm border-0 h-100">
-    <div class="card-header bg-primary text-white font-weight-bold h5">Kuponbeváltás</div>
+    <div class="card-header bg-primary text-white font-weight-bold h5">{{ __('webshop::checkout.coupon.title') }}</div>
     <div class="card-body">
-        <label for="ws-coupon-code" class="sr-only">Kuponkód</label>
+        <label for="ws-coupon-code" class="sr-only">{{ __('webshop::checkout.coupon.code') }}</label>
 
         <div class="input-group">
             <input type="text" class="form-control" id="ws-coupon-code"
-                   placeholder="Kuponkód" autocomplete="off"
-                   data-url="{{ route('site.webshop.coupon.activate') }}">
+                   placeholder="{{ __('webshop::checkout.coupon.code') }}" autocomplete="off"
+                   data-url="{{ WsUrl::route('site.webshop.coupon.activate') }}">
             <div class="input-group-append">
                 <button type="button" class="btn btn-primary font-weight-bold" id="ws-coupon-apply">
-                    Aktiválás
+                    {{ __('webshop::checkout.coupon.apply') }}
                 </button>
             </div>
         </div>
@@ -38,20 +38,20 @@
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title" id="wsCouponModalLabel">
-                    <i class="fa fa-check-circle text-success mr-1"></i> Sikeres kuponaktiválás
+                    <i class="fa fa-check-circle text-success mr-1"></i> {{ __('webshop::checkout.coupon.modal_title') }}
                 </h5>
-                <button type="button" class="close" data-dismiss="modal" aria-label="Bezárás">
+                <button type="button" class="close" data-dismiss="modal" aria-label="{{ __('webshop::common.close') }}">
                     <span aria-hidden="true">&times;</span>
                 </button>
             </div>
             <div class="modal-body">
                 <p class="mb-1" id="ws-coupon-modal-name"></p>
                 <p class="h4 mb-0">
-                    Megtakarítás: <span class="text-success font-weight-bold" id="ws-coupon-modal-amount"></span>
+                    {{ __('webshop::checkout.coupon.savings') }} <span class="text-success font-weight-bold" id="ws-coupon-modal-amount"></span>
                 </p>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-dismiss="modal">Bezárás</button>
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">{{ __('webshop::common.close') }}</button>
             </div>
         </div>
     </div>

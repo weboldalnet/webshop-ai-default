@@ -4,8 +4,11 @@ namespace Weboldalnet\WebshopAiDefault\Http\Controllers\Site\Webshop;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
+use Weboldalnet\WebshopAiDefault\Helpers\WebshopUrl;
 use Weboldalnet\WebshopAiDefault\Models\WebshopProduct;
+use Weboldalnet\WebshopAiDefault\Models\WebshopTranslation;
 use Weboldalnet\WebshopAiDefault\Services\Webshop\WebshopSettingsService;
+use Weboldalnet\WebshopAiDefault\Services\Webshop\WebshopTranslationService;
 
 class WebshopProductController extends Controller
 {
@@ -43,13 +46,25 @@ class WebshopProductController extends Controller
         $escapeCharacters = '%_' . chr(92);
         $pattern = '%' . addcslashes($searchTerm, $escapeCharacters) . '%';
 
+        $siteLocale = WebshopTranslationService::siteLocale();
+
         $query = WebshopProduct::active()
             ->with('category')
-            ->where(function ($q) use ($pattern) {
+            ->where(function ($q) use ($pattern, $siteLocale) {
                 $q->where('name', 'ilike', $pattern)
                     ->orWhere('secondary_name', 'ilike', $pattern)
                     ->orWhere('sku', 'ilike', $pattern)
                     ->orWhere('short_desc', 'ilike', $pattern);
+
+                // nem alapnyelven a lefordított név és leírás is találat
+                if ($siteLocale !== null) {
+                    $q->orWhereIn('id', WebshopTranslation::query()
+                        ->select('record_id')
+                        ->where('type', WebshopProduct::TRANSLATION_TYPE)
+                        ->where('locale', $siteLocale)
+                        ->whereIn('field', ['name', 'secondary_name', 'short_desc'])
+                        ->where('value', 'ilike', $pattern));
+                }
             });
 
         $totalCount = (clone $query)->count();
@@ -64,9 +79,33 @@ class WebshopProductController extends Controller
             'resultCount' => $totalCount,
         ])->render();
     }
+    /**
+     * Termékoldal nem alapnyelven (/en/webshop/product/{slug}): a slug a fordítástáblából, hiányában az eredeti.
+     * Az eredeti slugról — ha a terméknek van nyelvi slugja — 301 a nyelvire, hogy nyelvenként egy címe legyen.
+     */
+    public function showLocalized(string $productSlug)
+    {
+        $locale = WebshopUrl::urlLocale();
+        $id = WebshopTranslationService::recordIdBySlug(WebshopProduct::TRANSLATION_TYPE, $locale, $productSlug);
+        $product = $id
+            ? WebshopProduct::query()->find($id)
+            : WebshopProduct::query()->where('slug', $productSlug)->first();
+
+        if (!$product) abort(404);
+
+        if (!$id && $product->translated('slug', $locale) !== $productSlug) {
+            return redirect()->to(WebshopUrl::product($product, $locale), 301);
+        }
+
+        return $this->show($product);
+    }
+
     public function show(WebshopProduct $product)
     {
         if (!$product->is_active) abort(404);
+
+        // „fordítatlan termék rejtve” beállításnál a nyelvi oldala sincs meg
+        if (!WebshopTranslationService::isVisibleInLocale($product, WebshopUrl::urlLocale())) abort(404);
 
         /*
            A tulajdonságokat SZŰRVE töltjük be. Enélkül egy adminban inaktivált

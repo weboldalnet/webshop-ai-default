@@ -8,8 +8,8 @@
     <div class="modal-dialog" role="document">
         <div class="modal-content border-0 shadow-lg">
             <div class="modal-header">
-                <h5 class="modal-title font-weight-bold">Vélemény írása</h5>
-                <button type="button" class="btn btn-sm btn-light shadow-none lh-1" data-dismiss="modal" aria-label="Bezárás">
+                <h5 class="modal-title font-weight-bold">{{ __('webshop::product.reviews.write') }}</h5>
+                <button type="button" class="btn btn-sm btn-light shadow-none lh-1" data-dismiss="modal" aria-label="{{ __('webshop::common.close') }}">
                     <i class="fa fa-times fs-20"></i>
                 </button>
             </div>
@@ -18,7 +18,7 @@
                 <input type="hidden" name="product_id" value="{{ $product->id }}">
                 <div class="modal-body p-4">
                     <div class="form-group">
-                        <label class="font-weight-bold">Értékelés <span class="text-danger">*</span></label>
+                        <label class="font-weight-bold">{{ __('webshop::product.review_form.rating') }} <span class="text-danger">*</span></label>
                         <div class="ws-rating-input h4 text-warning">
                             <i class="fa-regular fa-star js-star-input" data-rating="1" style="cursor: pointer;"></i>
                             <i class="fa-regular fa-star js-star-input" data-rating="2" style="cursor: pointer;"></i>
@@ -29,11 +29,11 @@
                         </div>
                     </div>
                     <div class="form-group">
-                        <label for="review_name" class="font-weight-bold">Az Ön neve <span class="text-danger">*</span></label>
+                        <label for="review_name" class="font-weight-bold">{{ __('webshop::product.review_form.name') }} <span class="text-danger">*</span></label>
                         <input type="text" name="name" id="review_name" class="form-control" required>
                     </div>
                     <div class="form-group">
-                        <label for="review_text" class="font-weight-bold">Vélemény <span class="text-danger">*</span></label>
+                        <label for="review_text" class="font-weight-bold">{{ __('webshop::product.review_form.review') }} <span class="text-danger">*</span></label>
                         <textarea name="review" id="review_text" class="form-control" rows="5" required></textarea>
                     </div>
 
@@ -43,26 +43,24 @@
                     @php $wsReviewVerifiedOnly = \Weboldalnet\WebshopAiDefault\Services\Webshop\WebshopReviewService::verifiedOnly(); @endphp
                     <div class="border-top pt-3 mt-3">
                         <p class="font-weight-bold mb-1">
-                            Vásárlás igazolása
-                            @unless($wsReviewVerifiedOnly)<span class="font-weight-normal text-muted">(nem kötelező)</span>@endunless
+                            {{ __('webshop::product.review_form.purchase_proof') }}
+                            @unless($wsReviewVerifiedOnly)<span class="font-weight-normal text-muted">{{ __('webshop::product.review_form.optional') }}</span>@endunless
                         </p>
                         <p class="text-muted small mb-2">
                             @if($wsReviewVerifiedOnly)
-                                Véleményt csak a terméket nálunk megvásárló vevők írhatnak. Add meg a rendelésszámodat és a
-                                rendeléskor használt e-mail-címedet.
+                                {{ __('webshop::product.review_form.proof_required_help') }}
                             @else
-                                Ha a terméket nálunk vásároltad, add meg a rendelésszámodat és a rendeléskor használt
-                                e-mail-címedet – a véleményed így „Ellenőrzött vásárló” jelölést kap.
+                                {{ __('webshop::product.review_form.proof_optional_help') }}
                             @endif
                         </p>
                         <div class="form-row">
                             <div class="form-group col-sm-6 mb-sm-0">
-                                <label for="review_order_number" class="small font-weight-bold">Rendelésszám</label>
+                                <label for="review_order_number" class="small font-weight-bold">{{ __('webshop::common.order_number') }}</label>
                                 <input type="text" name="order_number" id="review_order_number" class="form-control"
                                        autocomplete="off" @if($wsReviewVerifiedOnly) required @endif>
                             </div>
                             <div class="form-group col-sm-6 mb-0">
-                                <label for="review_order_email" class="small font-weight-bold">E-mail-cím</label>
+                                <label for="review_order_email" class="small font-weight-bold">{{ __('webshop::product.review_form.email') }}</label>
                                 <input type="email" name="order_email" id="review_order_email" class="form-control"
                                        autocomplete="email" @if($wsReviewVerifiedOnly) required @endif>
                             </div>
@@ -72,8 +70,8 @@
                 <div class="modal-footer">
                     {{-- A core modáljainak gomb-készlete (`primary-btn btn-main-color`), hogy a gomb
                          a gazdaprojekt palettáján jelenjen meg, ne a Bootstrap kékjén. --}}
-                    <button type="button" class="btn btn-default btn-outline-secondary" data-dismiss="modal">Mégse</button>
-                    <button type="submit" class="btn btn-default primary-btn btn-main-color">Küldés <i class="fa fa-paper-plane ml-2"></i></button>
+                    <button type="button" class="btn btn-default btn-outline-secondary" data-dismiss="modal">{{ __('webshop::common.cancel') }}</button>
+                    <button type="submit" class="btn btn-default primary-btn btn-main-color">{{ __('webshop::product.review_form.submit') }} <i class="fa fa-paper-plane ml-2"></i></button>
                 </div>
             </form>
         </div>

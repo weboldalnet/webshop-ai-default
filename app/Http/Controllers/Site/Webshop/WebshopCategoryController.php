@@ -25,7 +25,7 @@ class WebshopCategoryController extends Controller
                 'blocks' => WebshopHomeBlockService::hydrateForSite(),
                 'h1' => WebshopSettingsService::get('site_home_page_h1') ?: null,
                 'metaTitle' => WebshopSettingsService::get('site_home_page_meta_title')
-                    ?: 'Webshop kategóriák',
+                    ?: __('webshop::catalog.index.meta_title'),
                 'metaDescription' => WebshopSettingsService::get('site_home_page_meta_description') ?: null,
             ]);
         }

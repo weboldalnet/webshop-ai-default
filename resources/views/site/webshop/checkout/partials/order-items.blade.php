@@ -17,20 +17,20 @@
 @endphp
 
 <div class="card shadow-sm border-0 mb-4">
-    <div class="card-header bg-dark text-white font-weight-bold h5">Rendelt termékek</div>
+    <div class="card-header bg-dark text-white font-weight-bold h5">{{ __('webshop::checkout.order.items_title') }}</div>
     <div class="card-body">
         <div class="table-responsive">
             <table class="table mb-0">
                 <thead>
                 <tr>
                     <th></th>
-                    <th>Termék</th>
+                    <th>{{ __('webshop::common.product') }}</th>
                     @if($showPrices && $order->total_price > 0)
-                        <th class="text-right">Egységár</th>
+                        <th class="text-right">{{ __('webshop::common.unit_price_label') }}</th>
                     @endif
-                    <th class="text-center">Mennyiség</th>
+                    <th class="text-center">{{ __('webshop::common.quantity') }}</th>
                     @if($showPrices && $order->total_price > 0)
-                        <th class="text-right">Sorösszeg</th>
+                        <th class="text-right">{{ __('webshop::checkout.order.line_total') }}</th>
                     @endif
                 </tr>
                 </thead>
@@ -49,11 +49,11 @@
                             @endif
                         </td>
                         @if($showPrices && $order->total_price > 0)
-                            <td class="text-right align-middle ws-nowrap">{{ hufFormat($item->unit_price) }}</td>
+                            <td class="text-right align-middle ws-nowrap">{{ WsFormat::money($item->unit_price) }}</td>
                         @endif
-                        <td class="text-center align-middle ws-nowrap">{{ $item->quantity }} db</td>
+                        <td class="text-center align-middle ws-nowrap">{{ $item->quantity }} {{ __('webshop::common.pcs') }}</td>
                         @if($showPrices && $order->total_price > 0)
-                            <td class="text-right align-middle ws-nowrap fw-600">{{ hufFormat($item->total_price) }}</td>
+                            <td class="text-right align-middle ws-nowrap fw-600">{{ WsFormat::money($item->total_price) }}</td>
                         @endif
                     </tr>
                 @endforeach
@@ -65,46 +65,46 @@
             <div class="row mt-3">
                 <div class="col-lg-6 ml-auto">
                     <div class="d-flex justify-content-between py-2 border-top">
-                        <span>Termékek összesen</span>
-                        <span class="font-weight-bold">{{ hufFormat($wsBreakdown['items']) }}</span>
+                        <span>{{ __('webshop::checkout.order.items_total') }}</span>
+                        <span class="font-weight-bold">{{ WsFormat::money($wsBreakdown['items']) }}</span>
                     </div>
 
                     @if($order->shipping_method)
                         <div class="d-flex justify-content-between py-2 border-top">
-                            <span>Szállítási díj</span>
-                            <span class="font-weight-bold">{{ $wsBreakdown['shipping'] > 0 ? hufFormat($wsBreakdown['shipping']) : 'Ingyenes' }}</span>
+                            <span>{{ __('webshop::checkout.order.shipping_fee') }}</span>
+                            <span class="font-weight-bold">{{ $wsBreakdown['shipping'] > 0 ? WsFormat::money($wsBreakdown['shipping']) : __('webshop::checkout.order.free') }}</span>
                         </div>
                     @endif
 
                     @if($wsBreakdown['discount'] > 0)
                         <div class="d-flex justify-content-between py-2 border-top">
                             <span>
-                                Kuponkedvezmény
+                                {{ __('webshop::checkout.order.coupon_discount') }}
                                 @if($order->coupon_code)
                                     <span class="text-muted fs-14">({{ $order->coupon_code }})</span>
                                 @endif
                             </span>
-                            <span class="font-weight-bold text-success">-{{ hufFormat($wsBreakdown['discount']) }}</span>
+                            <span class="font-weight-bold text-success">-{{ WsFormat::money($wsBreakdown['discount']) }}</span>
                         </div>
                     @endif
 
                     @if($wsBreakdown['cod'] > 0)
                         <div class="d-flex justify-content-between py-2 border-top">
-                            <span>Utánvét díja</span>
-                            <span class="font-weight-bold">{{ hufFormat($wsBreakdown['cod']) }}</span>
+                            <span>{{ __('webshop::checkout.order.cod_fee') }}</span>
+                            <span class="font-weight-bold">{{ WsFormat::money($wsBreakdown['cod']) }}</span>
                         </div>
                     @endif
 
                     @if($wsBreakdown['other'] > 0)
                         <div class="d-flex justify-content-between py-2 border-top">
-                            <span>Egyéb díjak</span>
-                            <span class="font-weight-bold">{{ hufFormat($wsBreakdown['other']) }}</span>
+                            <span>{{ __('webshop::checkout.order.other_fees') }}</span>
+                            <span class="font-weight-bold">{{ WsFormat::money($wsBreakdown['other']) }}</span>
                         </div>
                     @endif
 
                     <div class="d-flex justify-content-between py-3 border-top h4 mb-0">
-                        <span class="font-weight-bold">Összesen</span>
-                        <span class="text-primary font-weight-bold">{{ hufFormat($order->total_price) }}</span>
+                        <span class="font-weight-bold">{{ __('webshop::common.total') }}</span>
+                        <span class="text-primary font-weight-bold">{{ WsFormat::money($order->total_price) }}</span>
                     </div>
                 </div>
             </div>

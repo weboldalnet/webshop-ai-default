@@ -11,7 +11,7 @@
 
 @if($products->count())
     @foreach($products as $wsProduct)
-        <a href="{{ route('site.webshop.products.show', $wsProduct) }}" class="ws-search-item">
+        <a href="{{ WsUrl::product($wsProduct) }}" class="ws-search-item">
             <div class="ws-search-item-img">
                 @if($wsProduct->primary_image_thumb ?? $wsProduct->primary_image)
                     <img src="{{ $wsProduct->primary_image_thumb ?? $wsProduct->primary_image }}"
@@ -36,9 +36,9 @@
                     @if($wsPricesVisible)
                         <span class="ws-search-item-price">
                             @if($wsProduct->hasActiveSale())
-                                <s class="text-muted mr-1" title="Az akciót megelőző 30 nap legalacsonyabb ára">{{ hufFormat($wsProduct->referencePrice()) }}</s>{{ hufFormat($wsProduct->sale_price) }}
+                                <s class="text-muted mr-1" title="{{ __('webshop::product.price.reference_title') }}">{{ WsFormat::money($wsProduct->referencePrice()) }}</s>{{ WsFormat::money($wsProduct->sale_price) }}
                             @else
-                                {{ hufFormat($wsProduct->sellingPrice()) }}
+                                {{ WsFormat::money($wsProduct->sellingPrice()) }}
                             @endif
                             @include('site.webshop.partials.unit-price', ['product' => $wsProduct, 'unitPriceClass' => 'ml-1 text-muted'])
                         </span>
@@ -52,11 +52,11 @@
          ezért itt csak a darabszámot jelezzük, nem linkelünk sehová. --}}
     @if($resultCount > $products->count())
         <div class="ws-search-more">
-            További {{ $resultCount - $products->count() }} találat — pontosítsd a keresést.
+            {{ trans_choice('webshop::catalog.search.more', $resultCount - $products->count(), ['count' => $resultCount - $products->count()]) }}
         </div>
     @endif
 @else
     <div class="ws-search-empty">
-        Nincs találat a keresésre.
+        {{ __('webshop::catalog.search.empty') }}
     </div>
 @endif

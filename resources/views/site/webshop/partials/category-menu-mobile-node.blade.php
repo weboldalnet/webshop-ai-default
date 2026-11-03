@@ -15,7 +15,7 @@
 
 <div class="ws-cat-drawer-item ws-cat-drawer-level-{{ min($wsLevel, 2) }}">
     <div class="d-flex align-items-stretch">
-        <a href="{{ route('site.webshop.categories.show', $wsNode) }}" class="ws-cat-drawer-link">
+        <a href="{{ WsUrl::category($wsNode) }}" class="ws-cat-drawer-link">
             {{ $wsNode->name_singular }}
         </a>
 
@@ -23,7 +23,7 @@
             <button type="button" class="ws-cat-drawer-toggle collapsed"
                     data-toggle="collapse" data-target="#{{ $wsCollapseId }}"
                     aria-expanded="false" aria-controls="{{ $wsCollapseId }}"
-                    aria-label="{{ $wsNode->name_singular }} alkategóriái">
+                    aria-label="{{ __('webshop::catalog.menu.subcategories', ['name' => $wsNode->name_singular]) }}">
                 <i class="fa fa-angle-down"></i>
             </button>
         @endif

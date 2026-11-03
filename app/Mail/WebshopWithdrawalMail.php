@@ -33,8 +33,8 @@ class WebshopWithdrawalMail extends Mailable
     public function build()
     {
         $subject = $this->isShopCopy
-            ? 'Új elállási nyilatkozat – ' . $this->withdrawal->order_number
-            : 'Elállási nyilatkozat visszaigazolása – ' . $this->withdrawal->order_number;
+            ? __('webshop::mail.withdrawal.subject_shop', ['number' => $this->withdrawal->order_number])
+            : __('webshop::mail.withdrawal.subject', ['number' => $this->withdrawal->order_number]);
 
         $contactData = [];
         try {

@@ -13,44 +13,42 @@
     <div class="modal-dialog modal-dialog-centered" role="document">
         <div class="modal-content border-0 shadow-lg">
             <div class="modal-header bg-dark text-white">
-                <h5 class="modal-title font-weight-bold">Elállás a vásárlástól</h5>
+                <h5 class="modal-title font-weight-bold">{{ __('webshop::withdrawal.title') }}</h5>
                 <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
                     <span aria-hidden="true">&times;</span>
                 </button>
             </div>
-            <form id="ws-withdrawal-lookup-form" action="{{ route('site.webshop.withdrawals.lookup') }}" method="POST">
+            <form id="ws-withdrawal-lookup-form" action="{{ WsUrl::route('site.webshop.withdrawals.lookup') }}" method="POST">
                 @csrf
                 <div class="modal-body p-4">
                     <p class="text-muted">
-                        Add meg a rendelésszámodat és a rendeléskor használt e-mail-címedet, és a
-                        következő lépésben kiválaszthatod, mely termékektől szeretnél elállni.
-                        A rendelésszámot a visszaigazoló e-mailben találod.
+                        {{ __('webshop::withdrawal.lookup.intro') }}
                     </p>
 
                     <div class="form-group mb-2">
                         <label for="ws-withdrawal-order-number" class="font-weight-bold text-dark">
-                            Rendelésszám <span class="text-danger">*</span>
+                            {{ __('webshop::common.order_number') }} <span class="text-danger">*</span>
                         </label>
                         <input type="text" name="order_number" id="ws-withdrawal-order-number"
-                               class="form-control" placeholder="pl. 20260901-H8B0"
+                               class="form-control" placeholder="{{ __('webshop::withdrawal.lookup.order_number_placeholder') }}"
                                autocomplete="off" required>
                     </div>
 
                     <div class="form-group mb-2">
                         <label for="ws-withdrawal-email" class="font-weight-bold text-dark">
-                            E-mail-cím <span class="text-danger">*</span>
+                            {{ __('webshop::withdrawal.lookup.email') }} <span class="text-danger">*</span>
                         </label>
                         <input type="email" name="email" id="ws-withdrawal-email"
-                               class="form-control" placeholder="a rendeléskor megadott cím"
+                               class="form-control" placeholder="{{ __('webshop::withdrawal.lookup.email_placeholder') }}"
                                autocomplete="email" required>
                     </div>
 
                     <div id="ws-withdrawal-lookup-error" class="alert alert-danger py-2 px-3 small mb-0 d-none"></div>
                 </div>
                 <div class="modal-footer bg-light">
-                    <button type="button" class="btn btn-outline-secondary font-weight-bold" data-dismiss="modal">Mégse</button>
+                    <button type="button" class="btn btn-outline-secondary font-weight-bold" data-dismiss="modal">{{ __('webshop::common.cancel') }}</button>
                     <button type="submit" class="btn btn-primary font-weight-bold px-4" id="ws-withdrawal-lookup-btn">
-                        Tovább <i class="fa fa-arrow-right ml-2"></i>
+                        {{ __('webshop::withdrawal.lookup.next') }} <i class="fa fa-arrow-right ml-2"></i>
                     </button>
                 </div>
             </form>
@@ -93,7 +91,7 @@
             .then(function (response) {
                 // A túl sok próbálkozást a szerver 429-cel utasítja el
                 if (response.status === 429) {
-                    showError('Túl sok próbálkozás. Kérjük, várj egy percet.');
+                    showError(@json(__('webshop::withdrawal.lookup.too_many_attempts')));
                     return null;
                 }
                 return response.json();
@@ -109,10 +107,10 @@
                 // Validációs hiba (pl. hiányzó vagy hibás e-mail) Laravel-formátumban érkezik
                 var firstError = data.errors ? Object.values(data.errors)[0] : null;
                 showError(data.message && !data.errors ? data.message
-                    : (firstError && firstError[0]) || 'Nem sikerült ellenőrizni az adatokat.');
+                    : (firstError && firstError[0]) || @json(__('webshop::withdrawal.lookup.check_failed')));
             })
             .catch(function () {
-                showError('Váratlan hiba történt. Kérjük, próbáld újra.');
+                showError(@json(__('webshop::withdrawal.lookup.unexpected_error')));
             })
             .finally(function () {
                 submitBtn.disabled = false;

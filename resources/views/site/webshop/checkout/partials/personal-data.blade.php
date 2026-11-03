@@ -12,20 +12,20 @@
     $wsLoggedIn = !empty($commerceUser);
 @endphp
 <div class="card shadow-sm border-0 mb-4">
-    <div class="card-header bg-primary text-white font-weight-bold h5">Személyes adatok</div>
+    <div class="card-header bg-primary text-white font-weight-bold h5">{{ __('webshop::checkout.personal.title') }}</div>
     {{-- pb-1: az utolsó mezőcsoport saját 16 px-ével együtt alul is 20 px, mint felül --}}
     <div class="card-body pb-1">
         <div class="row">
             <div class="col-md-6 form-group">
-                <label for="name">Név <span class="text-danger">*</span></label>
+                <label for="name">{{ __('webshop::checkout.personal.name') }} <span class="text-danger">*</span></label>
                 <input type="text" name="name" id="name" class="form-control @error('name') is-invalid @enderror" value="{{ old('name', $wsPrefill['name'] ?? '') }}" required>
                 @error('name') <div class="invalid-feedback">{{ $message }}</div> @enderror
             </div>
             <div class="col-md-6 form-group">
-                <label for="email">E-mail cím <span class="text-danger">*</span></label>
+                <label for="email">{{ __('webshop::checkout.personal.email') }} <span class="text-danger">*</span></label>
                 @if($wsLoggedIn)
                     <input type="email" name="email" id="email" class="form-control" value="{{ $commerceUser->email }}" readonly>
-                    <small class="form-text text-muted">A fiókod e-mail-címe; a rendelés ide kötődik.</small>
+                    <small class="form-text text-muted">{{ __('webshop::checkout.personal.email_locked') }}</small>
                 @else
                     <input type="email" name="email" id="email" class="form-control @error('email') is-invalid @enderror" value="{{ old('email') }}" required>
                     @error('email') <div class="invalid-feedback">{{ $message }}</div> @enderror
@@ -35,7 +35,7 @@
 
         @if(($ws['site_checkout_phone_enabled'] ?? 'false') === 'true')
             <div class="form-group">
-                <label for="phone">Telefonszám <span class="text-danger">*</span></label>
+                <label for="phone">{{ __('webshop::checkout.personal.phone') }} <span class="text-danger">*</span></label>
                 <input type="text" name="phone" id="phone" class="form-control @error('phone') is-invalid @enderror" value="{{ old('phone', $wsPrefill['phone'] ?? '') }}" required>
                 @error('phone') <div class="invalid-feedback">{{ $message }}</div> @enderror
             </div>
@@ -44,13 +44,13 @@
         @if(($ws['site_checkout_company_enabled'] ?? 'false') === 'true')
             <div class="row">
                 <div class="col-md-6 form-group">
-                    <label for="company">Cégnév <span class="text-danger">*</span></label>
+                    <label for="company">{{ __('webshop::checkout.personal.company') }} <span class="text-danger">*</span></label>
                     <input type="text" name="company" id="company" class="form-control @error('company') is-invalid @enderror" value="{{ old('company', $wsPrefill['company'] ?? '') }}" required>
                     @error('company') <div class="invalid-feedback">{{ $message }}</div> @enderror
                 </div>
                 @if(($ws['site_checkout_tax_number_enabled'] ?? 'false') === 'true')
                     <div class="col-md-6 form-group">
-                        <label for="tax_number">Adószám <span class="text-danger">*</span></label>
+                        <label for="tax_number">{{ __('webshop::checkout.personal.tax_number') }} <span class="text-danger">*</span></label>
                         <input type="text" name="tax_number" id="tax_number" class="form-control @error('tax_number') is-invalid @enderror" value="{{ old('tax_number', $wsPrefill['tax_number'] ?? '') }}" required>
                         @error('tax_number') <div class="invalid-feedback">{{ $message }}</div> @enderror
                     </div>

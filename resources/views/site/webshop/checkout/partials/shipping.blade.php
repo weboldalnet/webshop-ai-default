@@ -7,7 +7,7 @@
     wsUpdateShippingAddress() intézi (partials/scripts.blade.php).
 --}}
 <div class="card shadow-sm border-0 mb-4">
-    <div class="card-header bg-primary text-white font-weight-bold h5">Szállítási mód</div>
+    <div class="card-header bg-primary text-white font-weight-bold h5">{{ __('webshop::checkout.shipping.title') }}</div>
     <div class="card-body">
         @if($wsShippingEnabled)
             @error('shipping_method') <div class="alert alert-danger py-1 mb-2">{{ $message }}</div> @enderror
@@ -56,7 +56,7 @@
                                 <label class="custom-control-label" for="sm_{{ $code }}">
                                     {{ $label }}
                                     @if($wsPricesVisible && isset($shippingRates[$code]))
-                                        <span class="text-muted small ml-1">({{ $shippingRates[$code] > 0 ? hufFormat($shippingRates[$code]) : 'ingyenes' }})</span>
+                                        <span class="text-muted small ml-1">({{ $shippingRates[$code] > 0 ? WsFormat::money($shippingRates[$code]) : __('webshop::checkout.shipping.free') }})</span>
                                     @endif
                                 </label>
                             </div>

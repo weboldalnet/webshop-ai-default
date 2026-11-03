@@ -118,6 +118,89 @@ class WebshopProductLegalInfoService
         'salt' => 'Só',
     ];
 
+    /*
+     * A fenti konstansok a mezőkészletet és a magyar feliratokat tartják (mentés, admin-szerkesztő). A megjelenített
+     * felirat a webshop::legal_info nyelvi fájlból jön, az aktuális nyelven: profiles(), pictogramLabels(),
+     * nutritionLabels(), és a sectionsFor() sorai.
+     */
+
+    /**
+     * A választható értékek közül a magyar szóként TÁROLTAK nyelvi kulcsa. A legal_info oszlopban a magyar érték
+     * marad (pl. „Figyelem”), csak a kiírt felirat fordított.
+     */
+    protected const OPTION_KEYS = [
+        'signal_word' => ['Figyelem' => 'warning', 'Veszély' => 'danger'],
+    ];
+
+    /**
+     * A PROFILES az aktuális nyelven (profil label / description, mezők label / hint / options).
+     */
+    public static function profiles(): array
+    {
+        $profiles = [];
+
+        foreach (self::PROFILES as $profile => $definition) {
+            $definition['label'] = __('webshop::legal_info.profile.' . $profile);
+            $definition['description'] = __('webshop::legal_info.profile_description.' . $profile);
+
+            foreach ($definition['fields'] as $field => $config) {
+                $config['label'] = self::fieldLabel($field);
+                if (isset($config['hint'])) {
+                    $config['hint'] = __('webshop::legal_info.hint.' . $field);
+                }
+                if (isset($config['options'])) {
+                    $config['options'] = self::optionLabels($field, $config['options']);
+                }
+                $definition['fields'][$field] = $config;
+            }
+
+            $profiles[$profile] = $definition;
+        }
+
+        return $profiles;
+    }
+
+    public static function fieldLabel(string $field): string
+    {
+        return __('webshop::legal_info.field.' . $field);
+    }
+
+    /** A PICTOGRAMS az aktuális nyelven (GHS-kód => megnevezés). */
+    public static function pictogramLabels(): array
+    {
+        $labels = [];
+
+        foreach (array_keys(self::PICTOGRAMS) as $code) {
+            $labels[$code] = __('webshop::legal_info.pictogram.' . strtolower($code));
+        }
+
+        return $labels;
+    }
+
+    /** A NUTRITION az aktuális nyelven (tápanyag-kulcs => megnevezés). */
+    public static function nutritionLabels(): array
+    {
+        $labels = [];
+
+        foreach (array_keys(self::NUTRITION) as $key) {
+            $labels[$key] = __('webshop::legal_info.nutrition.' . $key);
+        }
+
+        return $labels;
+    }
+
+    /** Egy select-mező választható értékei (tárolt érték => felirat) az aktuális nyelven. */
+    protected static function optionLabels(string $field, array $options): array
+    {
+        foreach ($options as $value => $label) {
+            if (isset(self::OPTION_KEYS[$field][$value])) {
+                $options[$value] = __('webshop::legal_info.' . $field . '.' . self::OPTION_KEYS[$field][$value]);
+            }
+        }
+
+        return $options;
+    }
+
     /**
      * A boltban bekapcsolt profilok (alapértelmezés: csak az általános).
      */
@@ -230,19 +313,24 @@ class WebshopProductLegalInfoService
                     continue;
                 }
 
-                $rows[] = ['label' => $config['label'], 'type' => $config['type'], 'value' => $value];
+                // választható értéknél a tárolt érték (pl. „Figyelem”) helyett a felirata
+                if ($config['type'] === 'select' && is_string($value)) {
+                    $value = self::optionLabels($field, $config['options'] ?? [])[$value] ?? $value;
+                }
+
+                $rows[] = ['label' => self::fieldLabel($field), 'type' => $config['type'], 'value' => $value];
             }
 
             // Élelmiszernél a nettó mennyiség is kötelező – a kiszerelésből (egységár-mezők) jön
             if ($profile === 'food') {
                 $quantity = WebshopUnitPriceService::quantityLabel($product->unit_quantity ?? null, $product->unit_measure ?? null);
                 if ($quantity && ($product->unit_measure ?? null) !== 'pcs') {
-                    array_unshift($rows, ['label' => 'Nettó mennyiség', 'type' => 'text', 'value' => $quantity]);
+                    array_unshift($rows, ['label' => __('webshop::legal_info.net_quantity'), 'type' => 'text', 'value' => $quantity]);
                 }
             }
 
             if ($rows) {
-                $sections[$profile] = ['label' => self::PROFILES[$profile]['label'], 'rows' => $rows];
+                $sections[$profile] = ['label' => __('webshop::legal_info.profile.' . $profile), 'rows' => $rows];
             }
         }
 

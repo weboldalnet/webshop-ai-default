@@ -96,6 +96,8 @@
             </div>
         </div>
 
+        @include('admin.webshop.translations.partials.record-bar', ['type' => 'product', 'record' => $product])
+
         <form method="POST" action="{{ route('admin.webshop.products.update', $product) }}" enctype="multipart/form-data">
             @csrf @method('PUT')
 

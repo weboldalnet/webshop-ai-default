@@ -2,6 +2,7 @@
 
 namespace Weboldalnet\WebshopAiDefault\Http\Controllers\Site\Webshop;
 
+use Weboldalnet\WebshopAiDefault\Helpers\WebshopUrl;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
@@ -25,10 +26,12 @@ use Weboldalnet\WebshopAiDefault\Services\Webshop\WebshopWithdrawalService;
 class WebshopWithdrawalController extends Controller
 {
     /**
-     * Közös üzenet érvénytelen vagy lejárt elállási linkre.
+     * Közös üzenet érvénytelen vagy lejárt elállási linkre (metódus, mert a fordítás konstansban nem hívható).
      */
-    private const INVALID_LINK_MESSAGE = 'Az elállási link lejárt vagy érvénytelen. Kérjük, a lábléc „Elállás a vásárlástól” '
-        . 'linkjén add meg újra a rendelésszámodat és az e-mail-címedet.';
+    private static function invalidLinkMessage(): string
+    {
+        return __('webshop::withdrawal.messages.invalid_link', ['link' => __('webshop::withdrawal.title')]);
+    }
 
     /**
      * Rendelés azonosítása a láblécben lévő modalból (AJAX): rendelésszám + e-mail-cím.
@@ -42,22 +45,21 @@ class WebshopWithdrawalController extends Controller
         $request->validate([
             'order_number' => 'required|string|max:64',
             'email' => 'required|email|max:255',
-        ], [], ['order_number' => 'rendelésszám', 'email' => 'e-mail-cím']);
+        ], [], ['order_number' => __('webshop::withdrawal.attributes.order_number'), 'email' => __('webshop::withdrawal.attributes.email')]);
 
         $order = WebshopWithdrawalService::findOrderByNumber($request->input('order_number'));
 
         if (!$order || !WebshopWithdrawalService::emailMatches($order, $request->input('email'))) {
             return response()->json([
                 'success' => false,
-                'message' => 'Ehhez a rendelésszámhoz és e-mail-címhez nem találtunk rendelést. '
-                    . 'Kérjük, ellenőrizd az adatokat a visszaigazoló e-mailben.',
+                'message' => __('webshop::withdrawal.messages.not_found'),
             ]);
         }
 
         if (!WebshopWithdrawalService::hasRemainingItems($order)) {
             return response()->json([
                 'success' => false,
-                'message' => 'Ehhez a rendeléshez már minden tételre beérkezett elállási nyilatkozat.',
+                'message' => __('webshop::withdrawal.messages.nothing_left'),
             ]);
         }
 
@@ -73,13 +75,13 @@ class WebshopWithdrawalController extends Controller
     public function create(Request $request, $orderNumber)
     {
         if (!$request->hasValidSignature()) {
-            return redirect()->route('site.webshop.categories.index')->with('error', self::INVALID_LINK_MESSAGE);
+            return redirect()->to(WebshopUrl::route('site.webshop.categories.index'))->with('error', self::invalidLinkMessage());
         }
 
         $order = WebshopWithdrawalService::findOrderByNumber($orderNumber);
 
         if (!$order) {
-            return redirect()->route('site.webshop.categories.index')->with('error', self::INVALID_LINK_MESSAGE);
+            return redirect()->to(WebshopUrl::route('site.webshop.categories.index'))->with('error', self::invalidLinkMessage());
         }
 
         $remaining = WebshopWithdrawalService::remainingQuantities($order);
@@ -88,8 +90,8 @@ class WebshopWithdrawalController extends Controller
         // semmi nem maradt: különben a második átirányítás elnyelné a sikerüzenetet,
         // és a vásárló a teljes elállás után hibaüzenetet látna.
         if (array_sum($remaining) < 1 && !session()->has('withdrawal_success')) {
-            return redirect()->route('site.webshop.categories.index')
-                ->with('error', 'Ehhez a rendeléshez már minden tételre beérkezett elállási nyilatkozat.');
+            return redirect()->to(WebshopUrl::route('site.webshop.categories.index'))
+                ->with('error', __('webshop::withdrawal.messages.nothing_left'));
         }
 
         return view('site.webshop.withdrawals.create', [
@@ -109,13 +111,13 @@ class WebshopWithdrawalController extends Controller
     public function store(Request $request, $orderNumber)
     {
         if (!$request->hasValidSignature()) {
-            return redirect()->route('site.webshop.categories.index')->with('error', self::INVALID_LINK_MESSAGE);
+            return redirect()->to(WebshopUrl::route('site.webshop.categories.index'))->with('error', self::invalidLinkMessage());
         }
 
         $order = WebshopWithdrawalService::findOrderByNumber($orderNumber);
 
         if (!$order) {
-            return redirect()->route('site.webshop.categories.index')->with('error', self::INVALID_LINK_MESSAGE);
+            return redirect()->to(WebshopUrl::route('site.webshop.categories.index'))->with('error', self::invalidLinkMessage());
         }
 
         $remaining = WebshopWithdrawalService::remainingQuantities($order);
@@ -131,8 +133,8 @@ class WebshopWithdrawalController extends Controller
         }
 
         $validated = $request->validate($rules, [
-            'quantities.*.max' => 'A megadott mennyiség több, mint amennyitől még el lehet állni.',
-        ], ['reason' => 'megjegyzés']);
+            'quantities.*.max' => __('webshop::withdrawal.messages.quantity_max'),
+        ], ['reason' => __('webshop::withdrawal.attributes.reason')]);
 
         $quantities = array_filter(
             array_map('intval', $validated['quantities']),
@@ -144,7 +146,7 @@ class WebshopWithdrawalController extends Controller
         if (empty($quantities)) {
             return redirect()->back()
                 ->withInput()
-                ->with('error', 'Legalább egy terméket ki kell választani.');
+                ->with('error', __('webshop::withdrawal.messages.select_one'));
         }
 
         $withdrawal = WebshopWithdrawalService::create($order, $quantities, $validated['reason'] ?? null);
@@ -152,7 +154,7 @@ class WebshopWithdrawalController extends Controller
         $this->sendNotifications($withdrawal);
 
         return redirect()->to(WebshopWithdrawalService::formUrl($order))
-            ->with('withdrawal_success', 'Elállási nyilatkozatodat megkaptuk. A visszaigazolást elküldtük e-mailben.');
+            ->with('withdrawal_success', __('webshop::withdrawal.messages.success'));
     }
 
     /**
@@ -170,7 +172,11 @@ class WebshopWithdrawalController extends Controller
             }
 
             try {
-                Mail::to($recipient)->send(new WebshopWithdrawalMail($withdrawal, $isShopCopy));
+                // a vásárlónak a rendelés nyelvén, a boltnak az alapnyelven
+                $locale = $isShopCopy
+                    ? \Weboldalnet\WebshopAiDefault\Helpers\WebshopUrl::defaultLocale()
+                    : \Weboldalnet\WebshopAiDefault\Support\WebshopOrderLocale::of(\Weboldalnet\WebshopAiDefault\Models\WebshopOrder::query()->find($withdrawal->order_id));
+                \Weboldalnet\WebshopAiDefault\Support\WebshopOrderLocale::mail($recipient, new WebshopWithdrawalMail($withdrawal, $isShopCopy), $locale);
             } catch (\Throwable $e) {
                 Log::error('Elállási nyilatkozat visszaigazoló e-mailjének küldése sikertelen.', [
                     'withdrawal_id' => $withdrawal->id,

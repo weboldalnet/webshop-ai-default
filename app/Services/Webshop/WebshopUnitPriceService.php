@@ -2,6 +2,8 @@
 
 namespace Weboldalnet\WebshopAiDefault\Services\Webshop;
 
+use Illuminate\Support\Facades\Lang;
+use Weboldalnet\WebshopAiDefault\Helpers\WebshopHelper;
 use Weboldalnet\WebshopAiDefault\Models\WebshopProduct;
 
 /**
@@ -64,7 +66,11 @@ class WebshopUnitPriceService
         return [
             'amount' => $amount,
             'base' => $base,
-            'formatted' => self::formatAmount($amount) . ' Ft/' . $base,
+            // Magyarul változatlanul „1 290 Ft/kg”, „3,45 Ft/db” (webshop::common.unit_price)
+            'formatted' => __('webshop::common.unit_price', [
+                'amount' => self::formatAmount($amount),
+                'unit' => self::unitLabel($base),
+            ]),
         ];
     }
 
@@ -75,7 +81,25 @@ class WebshopUnitPriceService
     {
         $decimals = $amount < 100 && abs($amount - round($amount)) >= 0.005 ? 2 : 0;
 
-        return number_format($amount, $decimals, ',', ' ');
+        return WebshopHelper::number($amount, $decimals);
+    }
+
+    /**
+     * Egy MEASURES-felirat (pl. „db”) az oldal nyelvén. A nyelvfüggő egységeket a webshop::common.units
+     * fordítja (mértékegység-kulccsal: pcs → db / pcs); amelyikhez nincs kulcs (kg, l, m …), az változatlan.
+     * A 'base' tömbelem szándékosan a magyar felirat marad: a termékfeed (GenerateMerchantFeeds) arra képez.
+     */
+    public static function unitLabel(string $label): string
+    {
+        foreach (self::MEASURES as $key => $measure) {
+            if ($measure['label'] === $label) {
+                $translationKey = 'webshop::common.units.' . $key;
+
+                return Lang::has($translationKey) ? __($translationKey) : $label;
+            }
+        }
+
+        return $label;
     }
 
     /**

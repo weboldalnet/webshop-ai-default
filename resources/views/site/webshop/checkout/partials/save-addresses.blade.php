@@ -13,11 +13,11 @@
     @if(!empty($wsPrefill['has_addresses']))
         <div class="custom-control custom-checkbox mt-4 {{ $wsSaveMb }}">
             <input type="checkbox" name="save_addresses" value="1" class="custom-control-input" id="saveAddresses" {{ old('save_addresses') ? 'checked' : '' }}>
-            <label class="custom-control-label" for="saveAddresses">Az új címeimet is mentsd el a fiókomba</label>
+            <label class="custom-control-label" for="saveAddresses">{{ __('webshop::checkout.account.save_new_addresses') }}</label>
         </div>
     @else
         <p class="small text-muted mt-4 {{ $wsSaveMb }}">
-            <i class="fa-solid fa-circle-info mr-1"></i> A rendelés címeit elmentjük a fiókodba, a következő vásárlásnál már kitöltve várnak.
+            <i class="fa-solid fa-circle-info mr-1"></i> {{ __('webshop::checkout.account.addresses_autosave') }}
         </p>
     @endif
 @endif

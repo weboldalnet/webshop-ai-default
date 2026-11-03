@@ -110,7 +110,12 @@ class WebshopUserService
             return self::documentUrl($name);
         });
 
-        $module::addAccountMenuItem('orders', 'Rendeléseim', 'fa-box', 'site.webshop.account.orders', 20,
+        // A felirat nyelvi kulcs: a modul megjelenítéskor, a kérés nyelvén fordítja (ez a boot még a nyelv beállítása
+        // előtt fut). A nyelvi fájlok nélküli, régebbi modul nem fordít — annál a magyar felirat marad.
+        $ordersLabel = is_dir(dirname((new \ReflectionClass($module))->getFileName()) . '/../resources/lang')
+            ? 'webshop::account.orders.title'
+            : 'Rendeléseim';
+        $module::addAccountMenuItem('orders', $ordersLabel, 'fa-box', 'site.webshop.account.orders', 20,
             fn () => self::ordersEnabled(), ['site.webshop.account.orders*']);
 
         // Törölt fiók rendelései a megrendelő adataival megmaradnak, csak a fiók-kapcsolat szűnik meg.
@@ -278,7 +283,11 @@ class WebshopUserService
             if ($added <= 0) {
                 $result['unavailable'][] = $item->product_name;
             } elseif ($added < $quantity) {
-                $result['partial'][] = $item->product_name . ' (' . $added . ' / ' . $quantity . ' db)';
+                $result['partial'][] = __('webshop::cart.reorder.partial', [
+                    'name' => $item->product_name,
+                    'added' => $added,
+                    'quantity' => $quantity,
+                ]);
             } else {
                 $result['added'][] = $item->product_name;
             }

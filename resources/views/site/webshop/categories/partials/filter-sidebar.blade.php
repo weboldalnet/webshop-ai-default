@@ -1,6 +1,6 @@
 <div class="ws-filter-box card mb-lg-4 mb-0">
     <div class="card-header bg-dark text-white font-weight-bold">
-        <i class="fa fa-filter"></i> Szűrők
+        <i class="fa fa-filter"></i> {{ __('webshop::catalog.filter.title') }}
     </div>
     <div class="card-body">
         @php
@@ -25,10 +25,10 @@
                     @if($pc->filter_type === 'number')
                         <div class="row no-gutters">
                             <div class="col-6 pr-1">
-                                <input type="number" name="n[{{ $pc->id }}][min]" class="form-control form-control-sm js-filter-input" placeholder="Min" value="{{ request("n.{$pc->id}.min") }}">
+                                <input type="number" name="n[{{ $pc->id }}][min]" class="form-control form-control-sm js-filter-input" placeholder="{{ __('webshop::catalog.filter.min') }}" value="{{ request("n.{$pc->id}.min") }}">
                             </div>
                             <div class="col-6 pl-1">
-                                <input type="number" name="n[{{ $pc->id }}][max]" class="form-control form-control-sm js-filter-input" placeholder="Max" value="{{ request("n.{$pc->id}.max") }}">
+                                <input type="number" name="n[{{ $pc->id }}][max]" class="form-control form-control-sm js-filter-input" placeholder="{{ __('webshop::catalog.filter.max') }}" value="{{ request("n.{$pc->id}.max") }}">
                             </div>
                         </div>
                     @else
@@ -50,7 +50,7 @@
             @endforeach
 
             <button type="button" class="btn btn-outline-danger btn-sm btn-block mt-3 js-filter-clear">
-                <i class="fa fa-times"></i> Szűrők törlése
+                <i class="fa fa-times"></i> {{ __('webshop::catalog.filter.clear') }}
             </button>
         </form>
     </div>

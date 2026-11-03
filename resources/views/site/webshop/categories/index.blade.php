@@ -22,7 +22,7 @@
             @endisset
             <div class="row mt-4">
                 <div class="col-lg-12">
-                    <h1 class="h2 mb-4 font-weight-bold">{{ isset($parentCategory) ? $parentCategory->name_plural : 'Válasszon kategóriát' }}</h1>
+                    <h1 class="h2 mb-4 font-weight-bold">{{ isset($parentCategory) ? $parentCategory->name_plural : __('webshop::catalog.index.title') }}</h1>
                 </div>
             </div>
 
@@ -52,6 +52,7 @@
     </div>
 
     @push('scripts')
+        @include('site.webshop.partials.js-i18n')
         <script src="/packages/webshop/site/js/webshop-site.js"></script>
         @include('site.webshop.partials.tracking-scripts', ['pageType' => 'product_list'])
     @endpush

@@ -9,6 +9,9 @@ class WebshopCartService
 {
     private const SESSION_KEY = 'webshop_cart';
 
+    /** Kérésen belüli gyorsítótár a tételnevekhez a kérés nyelvén: [kulcs => [termék-id => [name, sec_name]]] */
+    private static array $localizedNames = [];
+
     /**
      * @return int a ténylegesen kosárba tett mennyiség (készlethiánynál kevesebb lehet)
      */
@@ -38,7 +41,8 @@ class WebshopCartService
                 'product_id' => $product->id,
                 'name' => $product->name,
                 'sec_name' => $product->secondary_name,
-                'slug' => $product->slug,
+                // az eredeti slug: a cím nyelvét a megjelenítés dönti el (WsUrl::productById)
+                'slug' => $product->untranslated('slug'),
                 'quantity' => $quantity,
                 'price' => ($product->sellingPrice() ?? 0),
                 'image' => $product->primary_image,
@@ -97,7 +101,36 @@ class WebshopCartService
 
     public static function getContent(): array
     {
-        return Session::get(self::SESSION_KEY, []);
+        return self::localized(Session::get(self::SESSION_KEY, []));
+    }
+
+    /**
+     * A tételek neve a kérés nyelvén. A munkamenetben a hozzáadáskori név van, többnyelvű site-on viszont a vásárló
+     * közben nyelvet válthat — a pénztár és a rendelés tételnevei a rendelés nyelvén legyenek. Egynyelvű projektben
+     * nem kérdez le semmit (a tárolt név marad); egyébként kérésenként egyszer.
+     */
+    private static function localized(array $cart): array
+    {
+        if (!$cart || !WebshopTranslationService::isMultiLanguage() || app()->runningInConsole()) {
+            return $cart;
+        }
+
+        $key = app()->getLocale() . '|' . implode(',', array_keys($cart));
+        if (!isset(self::$localizedNames[$key])) {
+            self::$localizedNames[$key] = WebshopProduct::query()
+                ->whereIn('id', array_map('intval', array_keys($cart)))
+                ->get()
+                ->mapWithKeys(fn ($product) => [$product->id => ['name' => $product->name, 'sec_name' => $product->secondary_name]])
+                ->all();
+        }
+
+        foreach ($cart as $productId => $item) {
+            if (isset(self::$localizedNames[$key][$productId])) {
+                $cart[$productId] = array_merge($item, self::$localizedNames[$key][$productId]);
+            }
+        }
+
+        return $cart;
     }
 
     public static function getCount(): int

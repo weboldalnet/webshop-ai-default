@@ -2,9 +2,11 @@
 
 namespace Weboldalnet\WebshopAiDefault\Http\Controllers\Site\Webshop;
 
+use Weboldalnet\WebshopAiDefault\Helpers\WebshopUrl;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
+use Weboldalnet\WebshopAiDefault\Helpers\WebshopHelper;
 use Weboldalnet\WebshopAiDefault\Models\WebshopOrder;
 use Weboldalnet\WebshopAiDefault\Services\Webshop\WebshopCartService;
 use Weboldalnet\WebshopAiDefault\Services\Webshop\WebshopCheckoutQaService;
@@ -22,7 +24,7 @@ class WebshopCheckoutController extends Controller
     {
         $items = WebshopCartService::getContent();
         if (empty($items)) {
-            return redirect()->route('site.webshop.categories.index')->with('error', 'A kosár üres.');
+            return redirect()->to(WebshopUrl::route('site.webshop.categories.index'))->with('error', __('webshop::checkout.messages.cart_empty'));
         }
 
         // Vásárlás csak bejelentkezve (Webshop beállítások › Vásárlói fiókok): belépés után ide tér vissza
@@ -97,17 +99,17 @@ class WebshopCheckoutController extends Controller
     /** Belépés a pénztár előtt; a belépő oldal a sikeres belépés után a pénztárba hoz vissza. */
     protected function redirectToLogin()
     {
-        session()->put('url.intended', route('site.webshop.checkout.index'));
+        session()->put('url.intended', WebshopUrl::route('site.webshop.checkout.index'));
 
         return redirect()->route('commerce-users.login')
-            ->with('info', 'A vásárláshoz jelentkezz be a fiókodba, vagy regisztrálj. A kosarad tartalma megmarad.');
+            ->with('info', __('webshop::checkout.messages.login_required'));
     }
 
     public function store(Request $request)
     {
         $items = WebshopCartService::getContent();
         if (empty($items)) {
-            return redirect()->route('site.webshop.categories.index')->with('error', 'A kosár üres.');
+            return redirect()->to(WebshopUrl::route('site.webshop.categories.index'))->with('error', __('webshop::checkout.messages.cart_empty'));
         }
 
         // Vásárlói fiók: kötelező belépésnél vendég nem rendelhet; bejelentkezve a rendelés a fiók
@@ -189,10 +191,10 @@ class WebshopCheckoutController extends Controller
         }
 
         if (($wsTos = WebshopSettingsService::getBool('site_checkout_tos_enabled')) && !$request->boolean('accept_tos')) {
-            return back()->withInput()->withErrors(['accept_tos' => 'Kérjük, fogadja el az Általános Szerződési Feltételeket.']);
+            return back()->withInput()->withErrors(['accept_tos' => __('webshop::checkout.messages.accept_tos')]);
         }
         if (($wsPrivacy = WebshopSettingsService::getBool('site_checkout_privacy_enabled')) && !$request->boolean('accept_privacy')) {
-            return back()->withInput()->withErrors(['accept_privacy' => 'Kérjük, fogadja el az Adatvédelmi tájékoztatót.']);
+            return back()->withInput()->withErrors(['accept_privacy' => __('webshop::checkout.messages.accept_privacy')]);
         }
 
         $request->validate($rules);
@@ -213,8 +215,7 @@ class WebshopCheckoutController extends Controller
 
             return back()->withInput()->with(
                 'error',
-                'A kupon időközben érvénytelenné vált: ' . $couponResult['message']
-                . ' Kérjük, ellenőrizd a rendelést és próbáld újra.'
+                __('webshop::checkout.messages.coupon_invalidated', ['message' => $couponResult['message']])
             );
         }
 
@@ -231,14 +232,13 @@ class WebshopCheckoutController extends Controller
             $details = [];
             foreach ($stockErrors as $productName => $available) {
                 $details[] = $available > 0
-                    ? $productName . ' (már csak ' . $available . ' db)'
-                    : $productName . ' (elfogyott)';
+                    ? __('webshop::checkout.messages.stock_left', ['name' => $productName, 'count' => $available])
+                    : __('webshop::checkout.messages.stock_sold_out', ['name' => $productName]);
             }
 
             return back()->withInput()->with(
                 'error',
-                'A kosaradban lévő termékek közül időközben elfogyott: '
-                . implode(', ', $details) . '. Kérjük, módosítsd a mennyiséget.'
+                __('webshop::checkout.messages.stock_changed', ['items' => implode(', ', $details)])
             );
         }
 
@@ -275,17 +275,17 @@ class WebshopCheckoutController extends Controller
                     'order_id' => $order->id,
                     'message' => $commerceResult['message'] ?? '',
                 ]);
-                return redirect()->route('site.webshop.payment.result', $order)
-                    ->with('warning', 'A rendelés létrejött, de a fizetés indítása sikertelen volt. Kérjük, próbálja újra.');
+                return redirect()->to(WebshopUrl::route('site.webshop.payment.result', $order))
+                    ->with('warning', __('webshop::checkout.messages.payment_start_failed'));
             }
 
             // Visszaigazoló levél (utánvét, átutalás, személyes fizetés)
             WebshopCheckoutService::sendConfirmationMail($order);
 
-            return redirect()->route('site.webshop.checkout.success', $order)->with('success', 'Rendelés sikeresen leadva.');
+            return redirect()->to(WebshopUrl::route('site.webshop.checkout.success', $order))->with('success', __('webshop::checkout.messages.order_placed'));
         } catch (\Throwable $e) {
             Log::error('Checkout hiba: ' . $e->getMessage());
-            return back()->withInput()->with('error', 'Hiba történt a rendelés feldolgozása során. Kérjük, próbálja újra.');
+            return back()->withInput()->with('error', __('webshop::checkout.messages.order_failed'));
         }
     }
 
@@ -410,7 +410,7 @@ class WebshopCheckoutController extends Controller
             'pending' => $order->isPaymentPending(),
             'status' => $order->payment_status,
             'status_label' => $order->payment_status_label,
-            'paid_at' => $order->paid_at ? $order->paid_at->format('Y.m.d H:i') : null,
+            'paid_at' => $order->paid_at ? WebshopHelper::datetime($order->paid_at) : null,
             'order_status_label' => $order->status_label,
         ]);
     }
@@ -482,8 +482,8 @@ class WebshopCheckoutController extends Controller
         $this->authorizeOrderView($order);
 
         if (!$order->isPaymentRetryable()) {
-            return redirect()->route('site.webshop.checkout.success', $order)
-                ->with('error', 'Ez a rendelés nem próbálható újra.');
+            return redirect()->to(WebshopUrl::route('site.webshop.checkout.success', $order))
+                ->with('error', __('webshop::checkout.messages.retry_not_allowed'));
         }
 
         try {
@@ -506,13 +506,13 @@ class WebshopCheckoutController extends Controller
                     : $order->status,
             ]);
 
-            return redirect()->route('site.webshop.payment.result', $order)
+            return redirect()->to(WebshopUrl::route('site.webshop.payment.result', $order))
                 ->with($commerceResult['success'] ? 'success' : 'error',
-                    $commerceResult['message'] ?? ($commerceResult['success'] ? 'Fizetés elindítva.' : 'Fizetés újraindítása sikertelen.'));
+                    $commerceResult['message'] ?? ($commerceResult['success'] ? __('webshop::checkout.messages.retry_started') : __('webshop::checkout.messages.retry_failed')));
         } catch (\Throwable $e) {
             Log::error('Retry payment hiba: ' . $e->getMessage(), ['order_id' => $order->id]);
-            return redirect()->route('site.webshop.payment.result', $order)
-                ->with('error', 'Hiba történt a fizetés újraindításakor.');
+            return redirect()->to(WebshopUrl::route('site.webshop.payment.result', $order))
+                ->with('error', __('webshop::checkout.messages.retry_error'));
         }
     }
 }

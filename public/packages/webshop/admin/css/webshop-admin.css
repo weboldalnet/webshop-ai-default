@@ -833,3 +833,134 @@ button.ws-prop-tile-head:hover {
 .ws-doc-table td {
     text-align: left;
 }
+
+/* ============================================================================================
+   Fordítások (Webshop › Fordítások, fordítás-szerkesztő, szerkesztők fordítási sávja) — 2026-11-03
+   ============================================================================================ */
+.ws-tr-kpis {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 16px;
+    margin-bottom: 16px;
+}
+.ws-tr-kpi { margin-bottom: 0; }
+.ws-tr-kpi-percent {
+    font-family: var(--ws-font-display);
+    font-size: 28px;
+    font-weight: 700;
+    color: var(--ws-navy);
+    line-height: 1;
+}
+.ws-tr-progress {
+    height: 8px;
+    border-radius: 999px;
+    background-color: var(--ws-surface-2);
+}
+.ws-tr-progress .progress-bar { background-color: var(--ws-accent); border-radius: 999px; }
+.ws-tr-kpi-counts {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px 14px;
+    font-size: 14px;
+}
+.ws-tr-kpi-counts a { color: var(--ws-text); }
+.ws-tr-kpi-counts a:hover { color: var(--ws-accent-700); text-decoration: underline; }
+
+.ws-tr-filters {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+    gap: 0 12px;
+    align-items: end;
+}
+.ws-tr-filters .ws-tr-filter-search { grid-column: span 2; }
+.ws-tr-bulk { border-top: 1px solid var(--ws-border); padding-top: 12px; }
+
+.ws-tr-table td { vertical-align: middle; }
+.ws-tr-thumb {
+    width: 44px;
+    height: 44px;
+    object-fit: cover;
+    border-radius: 8px;
+    border: 1px solid var(--ws-border);
+    flex-shrink: 0;
+}
+
+/* nyelvenkénti állapot-jelző: EN 7/9 */
+.ws-tr-state {
+    display: inline-block;
+    padding: 3px 10px;
+    border-radius: 999px;
+    font-size: 13px;
+    font-weight: 600;
+    white-space: nowrap;
+    border: 1px solid var(--ws-border);
+    background-color: var(--ws-surface);
+    color: var(--ws-text);
+}
+.ws-tr-state:hover { text-decoration: none; border-color: var(--ws-border-strong); color: var(--ws-navy); }
+.ws-tr-state.is-done { background-color: var(--ws-good-soft); border-color: transparent; color: var(--ws-good); }
+.ws-tr-state.is-partial { background-color: var(--ws-accent-soft); border-color: transparent; color: var(--ws-accent-700); }
+.ws-tr-state.is-outdated { background-color: var(--ws-warn-soft); border-color: transparent; color: var(--ws-warn); }
+.ws-tr-state.is-missing { color: var(--ws-muted); }
+.ws-tr-state.is-done:hover, .ws-tr-state.is-partial:hover, .ws-tr-state.is-outdated:hover { filter: brightness(.95); }
+
+/* fordítás-szerkesztő: mezőnként az eredeti és a fordítás */
+.ws-tr-field {
+    padding: 16px 0;
+    border-bottom: 1px solid var(--ws-border);
+}
+.ws-tr-field:first-child { padding-top: 0; }
+.ws-tr-field:last-child { border-bottom: 0; padding-bottom: 0; }
+.ws-tr-field-head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px 8px;
+    margin-bottom: 8px;
+}
+.ws-tr-field-head label { font-weight: 700; }
+.ws-tr-source {
+    padding: 8px 12px;
+    border-radius: 8px;
+    background-color: var(--ws-surface-2);
+    color: var(--ws-text);
+    font-size: 15px;
+    max-height: 260px;
+    overflow-y: auto;
+    white-space: normal;
+}
+.ws-tr-source.is-html p:last-child { margin-bottom: 0; }
+
+/* a szerkesztők tetején: Fordítások: EN 7/9 · DE 0/9 [Fordítás AI-val] */
+.ws-tr-record-bar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px 10px;
+    padding: 10px 14px;
+    border: 1px solid var(--ws-border);
+    border-radius: var(--ws-radius);
+    background-color: var(--ws-surface);
+}
+
+/* AI-futás: becslés, napló */
+.ws-tr-estimate {
+    padding: 10px 14px;
+    border-radius: 8px;
+    background-color: var(--ws-surface-2);
+    font-size: 14px;
+}
+.ws-tr-run-log {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    max-height: 300px;
+    overflow-y: auto;
+    font-size: 14px;
+}
+.ws-tr-run-log li { padding: 6px 0; border-bottom: 1px solid var(--ws-border); }
+.ws-tr-run-log li:last-child { border-bottom: 0; }
+
+@media (max-width: 575.98px) {
+    .ws-tr-filters .ws-tr-filter-search { grid-column: auto; }
+}

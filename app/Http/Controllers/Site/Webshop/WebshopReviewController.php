@@ -23,7 +23,7 @@ class WebshopReviewController extends Controller
     public function store(Request $request)
     {
         if (!WebshopSettingsService::getBool('site_product_reviews_enabled')) {
-            return response()->json(['success' => false, 'message' => 'A véleményezés nem engedélyezett.'], 403);
+            return response()->json(['success' => false, 'message' => __('webshop::product.reviews.not_allowed')], 403);
         }
 
         $verifiedOnly = WebshopReviewService::verifiedOnly();
@@ -40,12 +40,15 @@ class WebshopReviewController extends Controller
             'order_email' => ($verifiedOnly ? 'required' : 'nullable|required_with:order_number') . '|email|max:255',
         ], [
             // A projekt validációs nyelve nem mindig magyar – ezeket a vásárló látja
-            'order_number.required' => 'Véleményt csak vásárlás után írhatsz: add meg a rendelésszámodat.',
-            'order_email.required' => 'Add meg a rendeléskor használt e-mail-címedet.',
-            'order_number.required_with' => 'Az e-mail-cím mellé add meg a rendelésszámot is.',
-            'order_email.required_with' => 'A rendelésszám mellé add meg a rendeléskor használt e-mail-címet is.',
-            'order_email.email' => 'Érvényes e-mail-címet adj meg.',
-        ], ['order_number' => 'rendelésszám', 'order_email' => 'e-mail-cím']);
+            'order_number.required' => __('webshop::product.review_validation.order_number_required'),
+            'order_email.required' => __('webshop::product.review_validation.order_email_required'),
+            'order_number.required_with' => __('webshop::product.review_validation.order_number_required_with'),
+            'order_email.required_with' => __('webshop::product.review_validation.order_email_required_with'),
+            'order_email.email' => __('webshop::product.review_validation.order_email_email'),
+        ], [
+            'order_number' => __('webshop::product.review_validation.attribute_order_number'),
+            'order_email' => __('webshop::product.review_validation.attribute_order_email'),
+        ]);
 
         $order = null;
 
@@ -58,7 +61,7 @@ class WebshopReviewController extends Controller
 
             if (!$order) {
                 throw ValidationException::withMessages([
-                    'order_number' => 'Ehhez a rendelésszámhoz és e-mail-címhez nem találtunk olyan rendelést, amelyben ez a termék szerepel.',
+                    'order_number' => __('webshop::product.review_validation.order_not_found'),
                 ]);
             }
         }
@@ -78,8 +81,8 @@ class WebshopReviewController extends Controller
         return response()->json([
             'success' => true,
             'message' => $moderated
-                ? 'Köszönjük a véleményét! Közzététel előtt átnézzük.'
-                : 'Köszönjük a véleményét.',
+                ? __('webshop::product.reviews.thanks_moderated')
+                : __('webshop::product.reviews.thanks'),
         ]);
     }
 }

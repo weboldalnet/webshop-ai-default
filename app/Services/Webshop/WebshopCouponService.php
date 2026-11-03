@@ -94,7 +94,7 @@ class WebshopCouponService
             return [
                 'success' => false,
                 'error_code' => 'disabled',
-                'message' => 'A kuponbeváltás jelenleg nem elérhető.',
+                'message' => __('webshop::checkout.coupon.disabled'),
                 'discount' => 0,
             ];
         }

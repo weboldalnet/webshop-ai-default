@@ -8,6 +8,8 @@
     <div class="container-fluid ws-editor mt-3 mb-150">
         @include('admin.webshop.partials.alerts')
         @include('admin.webshop.partials.form-errors')
+        @include('admin.webshop.translations.partials.record-bar', ['type' => 'category', 'record' => $category])
+
         <form method="POST" action="{{ route('admin.webshop.categories.update', $category) }}" enctype="multipart/form-data">
             @csrf @method('PUT')
             @include('admin.webshop.categories.form')

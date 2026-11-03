@@ -2,6 +2,7 @@
 
 namespace Weboldalnet\WebshopAiDefault\Services\Webshop;
 
+use Weboldalnet\WebshopAiDefault\Helpers\WebshopUrl;
 use Illuminate\Support\Facades\URL;
 use Weboldalnet\WebshopAiDefault\Models\WebshopOrder;
 use Weboldalnet\WebshopAiDefault\Models\WebshopWithdrawal;
@@ -59,8 +60,8 @@ class WebshopWithdrawalService
         $parameters = ['orderNumber' => $order->order_number];
 
         return $hours === null
-            ? URL::signedRoute('site.webshop.withdrawals.create', $parameters)
-            : URL::temporarySignedRoute('site.webshop.withdrawals.create', now()->addHours($hours), $parameters);
+            ? URL::signedRoute(WebshopUrl::existingName('site.webshop.withdrawals.create'), $parameters)
+            : URL::temporarySignedRoute(WebshopUrl::existingName('site.webshop.withdrawals.create'), now()->addHours($hours), $parameters);
     }
 
     /**
@@ -68,7 +69,7 @@ class WebshopWithdrawalService
      */
     public static function storeUrl(WebshopOrder $order, int $hours = 24): string
     {
-        return URL::temporarySignedRoute('site.webshop.withdrawals.store', now()->addHours($hours), [
+        return URL::temporarySignedRoute(WebshopUrl::existingName('site.webshop.withdrawals.store'), now()->addHours($hours), [
             'orderNumber' => $order->order_number,
         ]);
     }

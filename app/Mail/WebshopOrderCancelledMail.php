@@ -2,6 +2,7 @@
 
 namespace Weboldalnet\WebshopAiDefault\Mail;
 
+use Weboldalnet\WebshopAiDefault\Helpers\WebshopUrl;
 use App\Models\ContactSettings;
 use Illuminate\Bus\Queueable;
 use Illuminate\Mail\Mailable;
@@ -31,7 +32,7 @@ class WebshopOrderCancelledMail extends Mailable
         $contactData = optional(ContactSettings::find(1))->contact_data ?? [];
 
         return $this->from(config('app.shop_email'), config('app.shop_name'))
-            ->subject('Rendelését lemondtuk – ' . $this->order->order_number)
+            ->subject(__('webshop::mail.cancelled.subject', ['number' => $this->order->order_number]))
             ->view('mail.order-cancelled-mail')
             ->with([
                 'order' => $this->order,
@@ -39,7 +40,7 @@ class WebshopOrderCancelledMail extends Mailable
                 'showPrices' => WebshopSettingsService::getBool('site_product_prices_visible', true),
                 'contactData' => $contactData,
                 'shopUrl' => \Illuminate\Support\Facades\Route::has('site.webshop.categories.index')
-                    ? route('site.webshop.categories.index')
+                    ? WebshopUrl::route('site.webshop.categories.index')
                     : url('/'),
                 'buttonColor' => $this->brandColor(),
             ]);

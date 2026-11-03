@@ -10,14 +10,14 @@
 <div class="row">
     <div class="col-12 mb-4">
         <div class="card shadow-sm border-0">
-            <div class="card-header bg-dark text-white font-weight-bold h5">A kosár tartalma</div>
+            <div class="card-header bg-dark text-white font-weight-bold h5">{{ __('webshop::checkout.cart.title') }}</div>
             <div class="card-body">
                 @foreach($items as $productId => $item)
                     <div class="mb-3 pb-3 border-bottom ws-checkout-item-box">
                         <div class="d-flex align-items-center ws-checkout-item" data-id="{{ $productId }}">
                             {{-- A kép és a név a termékoldalra visz, ÚJ lapon: a vásárló ne veszítse el a
                                  félig kitöltött pénztár-űrlapot. A `rel="noopener"` kötelező kísérő. --}}
-                            @php($wsItemUrl = !empty($item['slug']) ? route('site.webshop.products.show', $item['slug']) : null)
+                            @php($wsItemUrl = WsUrl::productById((int) $productId))
                             <div class="mr-3" style="width: 80px; height: 80px;">
                                 <a @if($wsItemUrl) href="{{ $wsItemUrl }}" target="_blank" rel="noopener" @endif
                                    class="d-block ws-checkout-item-link" aria-label="{{ $item['name'] }}">
@@ -40,9 +40,9 @@
                                 </h5>
 
                                 @if($wsPricesVisible)
-                                    <div class="text-muted small lh-12">Egységár: {{ hufFormat($item['price']) }}</div>
+                                    <div class="text-muted small lh-12">{{ __('webshop::checkout.cart.unit_price', ['price' => WsFormat::money($item['price'])]) }}</div>
                                     <div class="d-md-none d-block font-weight-bold fs-16 mt-1 js-item-total" data-id="{{ $productId }}" style="min-width: 100px;">
-                                        {{ hufFormat($item['quantity'] * $item['price']) }}
+                                        {{ WsFormat::money($item['quantity'] * $item['price']) }}
                                     </div>
                                 @endif
 
@@ -57,14 +57,14 @@
                                         </div>
                                     </div>
                                     <button type="button" class="btn btn-sm btn-link text-danger ml-3 js-remove-cart-item ws-nowrap" data-id="{{ $productId }}" data-reload="true">
-                                        <i class="fa fa-trash-alt mr-1"></i> Törlés
+                                        <i class="fa fa-trash-alt mr-1"></i> {{ __('webshop::checkout.cart.remove') }}
                                     </button>
                                 </div>
                             </div>
 
                             @if($wsPricesVisible)
                                 <div class="d-md-block d-none text-right font-weight-bold ml-2 fs-16 js-item-total" data-id="{{ $productId }}" style="min-width: 100px;">
-                                    {{ hufFormat($item['quantity'] * $item['price']) }}
+                                    {{ WsFormat::money($item['quantity'] * $item['price']) }}
                                 </div>
                             @endif
                         </div>
@@ -80,7 +80,7 @@
                                 </div>
                             </div>
                             <button type="button" class="btn btn-sm btn-link text-danger ml-3 js-remove-cart-item ws-nowrap" data-id="{{ $productId }}" data-reload="true">
-                                <i class="fa fa-trash-alt mr-1"></i> Törlés
+                                <i class="fa fa-trash-alt mr-1"></i> {{ __('webshop::checkout.cart.remove') }}
                             </button>
                         </div>
                     </div>
@@ -88,8 +88,8 @@
 
                 @if($wsPricesVisible)
                     <div class="d-flex flex-sm-row flex-column justify-content-between align-items-center mt-4 pt-3 border-top h4 mb-0">
-                        <span class="font-weight-bold">Kosár összeg:</span>
-                        <span class="text-primary font-weight-bold js-cart-total">{{ hufFormat($total) }}</span>
+                        <span class="font-weight-bold">{{ __('webshop::checkout.cart.total') }}</span>
+                        <span class="text-primary font-weight-bold js-cart-total">{{ WsFormat::money($total) }}</span>
                     </div>
                 @endif
             </div>

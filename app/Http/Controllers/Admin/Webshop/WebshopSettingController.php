@@ -83,6 +83,8 @@ class WebshopSettingController extends AdminExtendedController
             WebshopUserService::SETTING_ORDERS,
             WebshopUserService::SETTING_REORDER,
             WebshopUserService::SETTING_ADDRESSES,
+            // Többnyelvű webshop: a fordítatlan nevű termék a nyelvi oldalon rejtve (WebshopTranslationService)
+            \Weboldalnet\WebshopAiDefault\Services\Webshop\WebshopTranslationService::SETTING_HIDE_UNTRANSLATED,
         ];
 
         // Dinamikusan hozzáadjuk az online fizetési módok checkbox kulcsait.

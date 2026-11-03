@@ -47,6 +47,24 @@ class WebshopProduct extends Model
 
     protected $table = 'public.webshop_products';
 
+    /**
+     * Az alapnyelvi termékcím ({product:slug}) nyelvi slugot is felold: ha egy projekt-sablon sima route()-tal kéri a
+     * címet egy idegen nyelvű oldalon, a $product->slug ott a fordítás — a link így sem törik.
+     */
+    public function resolveRouteBinding($value, $field = null)
+    {
+        $product = parent::resolveRouteBinding($value, $field);
+        if ($product || ($field ?? $this->getRouteKeyName()) !== 'slug') {
+            return $product;
+        }
+
+        $id = WebshopTranslation::query()
+            ->where(['type' => self::TRANSLATION_TYPE, 'field' => 'slug', 'value' => (string) $value])
+            ->value('record_id');
+
+        return $id ? static::query()->find($id) : null;
+    }
+
     protected $fillable = [
         'category_id', 'label_id', 'name', 'slug', 'description', 'short_desc', 'secondary_name', 'crm_identifier',
         'og_title', 'og_description', 'og_img',
@@ -97,7 +115,16 @@ class WebshopProduct extends Model
         return $this->belongsToMany(self::class, 'public.webshop_product_variations', 'product_id', 'variation_product_id')->withTimestamps();
     }
 
-    public function scopeActive($query) { return $query->where('is_active', true); }
+    /**
+     * Aktív termékek. Vásárlói oldalon, nem alapnyelven a „fordítatlan termék rejtve” beállítás is szűr (a
+     * lefordítatlan nevű termék nem jelenik meg a listában, keresőben, feedben); adminban és alapnyelven nem.
+     */
+    public function scopeActive($query)
+    {
+        $query->where('is_active', true);
+
+        return \Weboldalnet\WebshopAiDefault\Services\Webshop\WebshopTranslationService::restrictToVisibleProducts($query);
+    }
 
     /**
      * Egy variációcsoportból CSAK a képviselőt hagyja meg a listában.

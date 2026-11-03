@@ -36,6 +36,7 @@
     </div>
 
     @push('scripts')
+        @include('site.webshop.partials.js-i18n')
         <script src="/packages/webshop/site/js/webshop-site.js"></script>
         @include('site.webshop.partials.tracking-scripts', ['pageType' => 'homepage'])
     @endpush

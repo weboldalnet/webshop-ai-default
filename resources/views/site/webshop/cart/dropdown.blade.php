@@ -17,7 +17,7 @@
                     @endif
                 </div>
                 <div class="small text-muted">
-                    {{ $item['quantity'] }} db @if(($ws['site_product_prices_visible'] ?? 'true') === 'true')× {{ hufFormat($item['price']) }} @endif
+                    {{ $item['quantity'] }} {{ __('webshop::common.pcs') }} @if(($ws['site_product_prices_visible'] ?? 'true') === 'true')× {{ WsFormat::money($item['price']) }} @endif
                 </div>
             </div>
             <button type="button" class="btn btn-sm btn-link text-danger js-remove-cart-item" data-id="{{ $productId }}">
@@ -25,7 +25,7 @@
             </button>
         </div>
     @empty
-        <div class="text-center p-3 text-muted">A kosár jelenleg üres.</div>
+        <div class="text-center p-3 text-muted">{{ __('webshop::cart.dropdown.empty') }}</div>
     @endforelse
 </div>
 
@@ -33,13 +33,13 @@
     <div class="ws-cart-summary mt-3">
         @if(($ws['site_product_prices_visible'] ?? 'true') === 'true')
             <div class="d-flex justify-content-between font-weight-bold h5 mb-2">
-                <span>Összesen:</span>
-                <span>{{ hufFormat($total) }}</span>
+                <span>{{ __('webshop::cart.dropdown.total') }}</span>
+                <span>{{ WsFormat::money($total) }}</span>
             </div>
         @endif
-        <a href="{{ route('site.webshop.checkout.index') }}" class="btn btn-primary btn-block fw-600 fs-16">
+        <a href="{{ WsUrl::route('site.webshop.checkout.index') }}" class="btn btn-primary btn-block fw-600 fs-16">
             <i class="fa {{ ($ws['site_checkout_mode'] ?? 'order') == 'quote' ? 'fa-file-invoice' : 'fa-cart-check' }} mr-2"></i>
-            {{ ($ws['site_checkout_mode'] ?? 'order') == 'quote' ? 'Ajánlatkérés' : 'Pénztár' }} <i class="fa fa-arrow-right ml-2"></i>
+            {{ ($ws['site_checkout_mode'] ?? 'order') == 'quote' ? __('webshop::cart.dropdown.quote') : __('webshop::cart.dropdown.checkout') }} <i class="fa fa-arrow-right ml-2"></i>
         </a>
     </div>
 @endif

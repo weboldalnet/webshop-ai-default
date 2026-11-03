@@ -28,7 +28,7 @@
         <div class="ws-cat-menu-bar d-none d-lg-flex align-items-center">
             @foreach($wsMenuRoots as $wsCat)
                 @php($wsHasChildren = $wsCat->children->isNotEmpty())
-                <a href="{{ route('site.webshop.categories.show', $wsCat) }}"
+                <a href="{{ WsUrl::category($wsCat) }}"
                    class="ws-cat-menu-btn @if(isset($category) && ($category->id === $wsCat->id || $category->parent_id === $wsCat->id)) active @endif"
                    @if($wsHasChildren) data-ws-panel="#wsCatPanel{{ $wsCat->id }}" @endif>
                     @if($wsCat->icon)
@@ -56,11 +56,11 @@
                         @foreach($wsCat->children as $wsChild)
                             <div class="col-lg-4 col-xl-3">
                                 <div class="ws-cat-panel-col">
-                                    <a href="{{ route('site.webshop.categories.show', $wsChild) }}"
+                                    <a href="{{ WsUrl::category($wsChild) }}"
                                        class="ws-cat-panel-child">{{ $wsChild->name_singular }}</a>
 
                                     @foreach($wsChild->children as $wsGrandChild)
-                                        <a href="{{ route('site.webshop.categories.show', $wsGrandChild) }}"
+                                        <a href="{{ WsUrl::category($wsGrandChild) }}"
                                            class="ws-cat-panel-sub">{{ $wsGrandChild->name_singular }}</a>
                                     @endforeach
                                 </div>
@@ -77,12 +77,12 @@
                  szűrő – az @isset azt is igaznak vette volna, és a gomb üres panelt nyitna. --}}
             @if($visibleFilterBtn ?? false)
                 <button type="button" class="ws-cat-menu-mobile-btn js-show-filter-btn">
-                    <i class="fa fa-filter mr-1"></i> Szűrés
+                    <i class="fa fa-filter mr-1"></i> {{ __('webshop::catalog.filter.mobile_button') }}
                 </button>
             @endif
 
             <button type="button" class="ws-cat-menu-mobile-btn js-ws-cat-drawer-open">
-                <i class="fa fa-bars mr-1"></i> Kategóriák
+                <i class="fa fa-bars mr-1"></i> {{ __('webshop::catalog.menu.categories') }}
             </button>
         </div>
     </div>
@@ -94,8 +94,8 @@
 <div class="ws-cat-drawer d-lg-none">
     <div class="ws-cat-drawer-box">
         <div class="ws-cat-drawer-header">
-            <span class="font-weight-bold">Kategóriák</span>
-            <button type="button" class="ws-cat-drawer-close js-ws-cat-drawer-close" aria-label="Bezárás">
+            <span class="font-weight-bold">{{ __('webshop::catalog.menu.categories') }}</span>
+            <button type="button" class="ws-cat-drawer-close js-ws-cat-drawer-close" aria-label="{{ __('webshop::common.close') }}">
                 <i class="fa fa-times"></i>
             </button>
         </div>

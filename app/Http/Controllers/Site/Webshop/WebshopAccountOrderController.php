@@ -2,6 +2,7 @@
 
 namespace Weboldalnet\WebshopAiDefault\Http\Controllers\Site\Webshop;
 
+use Weboldalnet\WebshopAiDefault\Helpers\WebshopUrl;
 use App\Http\Controllers\Controller;
 use Weboldalnet\WebshopAiDefault\Models\WebshopOrder;
 use Weboldalnet\WebshopAiDefault\Services\Webshop\WebshopUserService;
@@ -50,18 +51,18 @@ class WebshopAccountOrderController extends Controller
         $result = WebshopUserService::reorder($order);
 
         if (empty($result['added']) && empty($result['partial'])) {
-            return back()->with('error', 'A rendelés termékei közül jelenleg egyik sem rendelhető, ezért nem került semmi a kosárba.');
+            return back()->with('error', __('webshop::account.reorder.none_available'));
         }
 
-        $redirect = redirect()->route('site.webshop.checkout.index')
-            ->with('success', 'A #' . $order->order_number . ' rendelés termékei a kosárba kerültek, a mai áron.');
+        $redirect = redirect()->to(WebshopUrl::route('site.webshop.checkout.index'))
+            ->with('success', __('webshop::account.reorder.added', ['number' => $order->order_number]));
 
         $notes = [];
         if ($result['partial']) {
-            $notes[] = 'Készlethiány miatt kevesebb került a kosárba: ' . implode(', ', $result['partial']) . '.';
+            $notes[] = __('webshop::account.reorder.partial', ['items' => implode(', ', $result['partial'])]);
         }
         if ($result['unavailable']) {
-            $notes[] = 'Már nem rendelhető: ' . implode(', ', $result['unavailable']) . '.';
+            $notes[] = __('webshop::account.reorder.unavailable', ['items' => implode(', ', $result['unavailable'])]);
         }
 
         return $notes ? $redirect->with('warning', implode(' ', $notes)) : $redirect;

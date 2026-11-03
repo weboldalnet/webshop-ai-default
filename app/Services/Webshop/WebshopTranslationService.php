@@ -122,6 +122,10 @@ class WebshopTranslationService
     /** Kérésen belüli gyorsítótár: [type][locale][record_id][field] => value */
     private static array $cache = [];
 
+    /** A vásárlói nyelv kézi beállítása (levélkészítés, próbák); null = automatikus (siteLocale()) */
+    private static bool $siteLocaleForced = false;
+    private static ?string $forcedSiteLocale = null;
+
     /** Az alapnyelv (a core `Lang::DEFAULT_LANG`-ja, core nélkül az app nyelve). */
     public static function defaultLocale(): string
     {
@@ -132,9 +136,13 @@ class WebshopTranslationService
         return (string) config('app.locale', 'hu');
     }
 
-    /** Többnyelvű-e a projekt (a core főkapcsolója szerint). */
+    /** Többnyelvű-e a projekt (a core főkapcsolója szerint; próbához a webshop.locales felülírhatja). */
     public static function isMultiLanguage(): bool
     {
+        if (is_array($override = config('webshop.locales')) && $override) {
+            return count($override) > 1;
+        }
+
         return class_exists(\App\Helpers\Lang::class)
             && method_exists(\App\Helpers\Lang::class, 'isMultiLanguage')
             && \App\Helpers\Lang::isMultiLanguage();
@@ -145,6 +153,10 @@ class WebshopTranslationService
     {
         if (!self::isMultiLanguage()) {
             return [self::defaultLocale()];
+        }
+
+        if (is_array($override = config('webshop.locales')) && $override) {
+            return array_values(array_unique(array_merge([self::defaultLocale()], $override)));
         }
 
         return method_exists(\App\Helpers\Lang::class, 'siteLocales')
@@ -241,6 +253,101 @@ class WebshopTranslationService
             ['type' => $type, 'record_id' => $recordId, 'locale' => $locale, 'field' => $field],
             ['value' => $value, 'source_hash' => self::hash($sourceText), 'origin' => $origin, 'admin_id' => $adminId]
         );
+    }
+
+    /**
+     * A vásárlói oldal nyelve, ha a fordításokat kell mutatni: többnyelvű projektben, a site domainjén, nem
+     * alapnyelven. Adminban, parancssorban és alapnyelven null — ott a modellek az eredeti mezőt adják
+     * (HasWebshopTranslations::getAttribute).
+     */
+    public static function siteLocale(): ?string
+    {
+        if (self::$siteLocaleForced) {
+            return self::$forcedSiteLocale;
+        }
+
+        if (!self::isMultiLanguage() || app()->runningInConsole()) {
+            return null;
+        }
+
+        if (function_exists('getSiteDomain') && request()->getHost() !== getSiteDomain()) {
+            return null;
+        }
+
+        $locale = app()->getLocale();
+
+        return ($locale !== self::defaultLocale() && in_array($locale, self::locales(), true)) ? $locale : null;
+    }
+
+    /**
+     * A vásárlói nyelv kézi beállítása (pl. levél a rendelés nyelvén parancssorból); `reset: true` visszaállítja az
+     * automatikus működést.
+     */
+    public static function useSiteLocale(?string $locale, bool $reset = false): void
+    {
+        self::$siteLocaleForced = !$reset;
+        self::$forcedSiteLocale = ($locale === self::defaultLocale()) ? null : $locale;
+    }
+
+    /** Webshop beállítás: nem alapnyelven a fordítatlan nevű termék rejtve marad (lista, kereső, feed, termékoldal) */
+    public const SETTING_HIDE_UNTRANSLATED = 'site_hide_untranslated_products';
+
+    /** Látszik-e a termék az adott nyelven (a „fordítatlan termék rejtve” beállítás szerint) */
+    public static function isVisibleInLocale($product, string $locale): bool
+    {
+        if ($locale === self::defaultLocale() || !self::hidesUntranslated()) {
+            return true;
+        }
+
+        return self::get(WebshopProduct::TRANSLATION_TYPE, (int) $product->getKey(), $locale, 'name') !== null;
+    }
+
+    public static function hidesUntranslated(): bool
+    {
+        return WebshopSettingsService::getBool(self::SETTING_HIDE_UNTRANSLATED, false);
+    }
+
+    /**
+     * Lekérdezés szűkítése az adott nyelven látható termékekre (a „fordítatlan termék rejtve” beállítás szerint).
+     * Alapnyelven és kikapcsolt beállításnál nem szűr.
+     */
+    public static function restrictToVisibleProducts($query, ?string $locale = null)
+    {
+        $locale = $locale ?: self::siteLocale();
+        if ($locale === null || $locale === self::defaultLocale() || !self::hidesUntranslated()) {
+            return $query;
+        }
+
+        $table = $query->getModel()->getTable();
+
+        return $query->whereIn($table . '.id', WebshopTranslation::query()
+            ->select('record_id')
+            ->where('type', WebshopProduct::TRANSLATION_TYPE)
+            ->where('locale', $locale)
+            ->where('field', 'name')
+            ->where('value', '<>', ''));
+    }
+
+    /** Egy rekord összes fordított mezője az adott nyelven: [mező => érték] (JSON-mezők pont-útvonallal). */
+    public static function recordFields(string $type, int $recordId, string $locale): array
+    {
+        if (!isset(self::$cache[$type][$locale][$recordId])) {
+            self::preload($type, [$recordId], $locale);
+        }
+
+        return self::$cache[$type][$locale][$recordId] ?? [];
+    }
+
+    /**
+     * Nyelvi slug → rekord-azonosító (a nyelvi címek feloldásához). A slug nyelvenként egyedi (részleges egyedi index).
+     */
+    public static function recordIdBySlug(string $type, string $locale, string $slug): ?int
+    {
+        $id = WebshopTranslation::query()
+            ->where(['type' => $type, 'locale' => $locale, 'field' => 'slug', 'value' => $slug])
+            ->value('record_id');
+
+        return $id === null ? null : (int) $id;
     }
 
     /** Egy rekord összes fordításának törlése (a rekord végleges törlésekor). */

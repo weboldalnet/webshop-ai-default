@@ -2,7 +2,9 @@
 
 namespace Weboldalnet\WebshopAiDefault\Services\Webshop\Commerce;
 
+use Weboldalnet\WebshopAiDefault\Helpers\WebshopUrl;
 use Weboldalnet\WebshopAiDefault\Models\WebshopOrder;
+use Weboldalnet\WebshopAiDefault\Support\WebshopOrderLocale;
 
 class WebshopPaymentRequestFactory
 {
@@ -46,9 +48,10 @@ class WebshopPaymentRequestFactory
                     'total_price' => $item->total_price,
                 ];
             })->toArray(),
-            'return_url' => $options['return_url'] ?? route('site.webshop.payment.result', ['order' => $order->id]),
+            'return_url' => $options['return_url'] ?? WebshopUrl::route('site.webshop.payment.result', ['order' => $order->id]),
             'callback_url' => $options['callback_url'] ?? url('/commerce/payment/' . $order->payment_method . '/callback'),
-            'language' => $options['language'] ?? 'HU',
+            // a fizetési oldal a rendelés nyelvén (magyar rendelésnél továbbra is HU)
+            'language' => $options['language'] ?? WebshopOrderLocale::paymentLanguage(WebshopOrderLocale::of($order)),
             'timeout' => $options['timeout'] ?? 1800,
         ];
     }

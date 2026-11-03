@@ -1,5 +1,5 @@
 @extends('site.layouts.layout')
-@section('title', 'Rendelés részletei')
+@section('title', __('webshop::checkout.success.title'))
 
 @section('content')
     <div class="ws-page-container ws-checkout-success bg-light py-5">
@@ -17,7 +17,7 @@
                             @if($customContent && $customContent->title)
                                 <h1 class="font-weight-bold mb-3">{{ $customContent->title }}</h1>
                             @else
-                                <h1 class="font-weight-bold mb-3">Köszönjük a rendelését!</h1>
+                                <h1 class="font-weight-bold mb-3">{{ __('webshop::checkout.success.heading') }}</h1>
                             @endif
 
                             @if($customContent && $customContent->content)
@@ -27,12 +27,12 @@
                             @endif
 
                             <p class="lead mb-0">
-                                A rendelés azonosítója:
+                                {{ __('webshop::checkout.success.order_id') }}
                                 <span class="font-weight-bold text-primary">{{ $order->order_number }}</span>
                             </p>
 
                             @if(!$customContent || !$customContent->content)
-                                <p class="text-muted mb-0 mt-3">Hamarosan felvesszük Önnel a kapcsolatot a megadott elérhetőségeken.</p>
+                                <p class="text-muted mb-0 mt-3">{{ __('webshop::checkout.success.contact_soon') }}</p>
                             @endif
                         </div>
                     </div>
@@ -48,8 +48,8 @@
                     @include('site.webshop.checkout.partials.order-extras')
 
                     <div class="text-center">
-                        <a href="{{ route('site.webshop.categories.index') }}" class="btn btn-primary btn-lg px-5 font-weight-bold">
-                            Vissza a webshophoz
+                        <a href="{{ WsUrl::route('site.webshop.categories.index') }}" class="btn btn-primary btn-lg px-5 font-weight-bold">
+                            {{ __('webshop::checkout.back_to_shop') }}
                         </a>
                     </div>
                 </div>

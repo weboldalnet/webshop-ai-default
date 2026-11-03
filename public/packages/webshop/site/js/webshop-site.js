@@ -27,7 +27,7 @@ const WebshopSite = {
 
             btn.prop('disabled', true);
 
-            $.post('/webshop/cart/add', {
+            $.post(WebshopSite.url('/cart/add'), {
                 product_id: id,
                 quantity: qty,
                 show_related_modal: showRelatedModal ? 1 : 0
@@ -76,12 +76,12 @@ const WebshopSite = {
 
         // Törlés a kosárból
         $(document).on('click', '.js-remove-cart-item', function() {
-            if (!confirm('Biztosan törli a terméket a kosárból?')) return;
+            if (!confirm(self.t('confirm_remove_cart_item', 'Biztosan törli a terméket a kosárból?'))) return;
             const id = $(this).data('id');
             const reload = $(this).data('reload');
 
             $.ajax({
-                url: '/webshop/cart/remove',
+                url: WebshopSite.url('/cart/remove'),
                 type: 'DELETE',
                 data: { product_id: id },
                 success: function(res) {
@@ -99,7 +99,7 @@ const WebshopSite = {
     },
 
     updateCartDropdown: function() {
-        $.get('/webshop/cart/dropdown', function(res) {
+        $.get(WebshopSite.url('/cart/dropdown'), function(res) {
             if (res.success) {
                 $('.js-cart-dropdown').html(res.html);
                 $('.js-cart-count').text(res.count);
@@ -111,7 +111,7 @@ const WebshopSite = {
         const self = this;
         $(document).on('click', '.js-add-to-compare', function() {
             const id = $(this).data('id');
-            $.post('/webshop/compare/add', { product_id: id }, function(res) {
+            $.post(WebshopSite.url('/compare/add'), { product_id: id }, function(res) {
                 if (res.success) {
                     $('.js-compare-count').text(res.count);
                     self.updateCompareDropdown();
@@ -131,7 +131,7 @@ const WebshopSite = {
             const id = $(this).data('id');
             const reload = $(this).data('reload');
             $.ajax({
-                url: '/webshop/compare/remove',
+                url: WebshopSite.url('/compare/remove'),
                 type: 'DELETE',
                 data: { product_id: id },
                 success: function(res) {
@@ -149,7 +149,7 @@ const WebshopSite = {
     },
 
     updateCompareDropdown: function() {
-        $.get('/webshop/compare/dropdown', function(res) {
+        $.get(WebshopSite.url('/compare/dropdown'), function(res) {
             if (res.success) {
                 $('.js-compare-dropdown').html(res.html);
                 $('.js-compare-count').text(res.count);
@@ -362,13 +362,13 @@ const WebshopSite = {
     initReviewSubmit: function() {
         $('#ws-review-form').on('submit', function(e) {
             e.preventDefault();
-            if (!$('#ws-rating-value').val()) { alert('Kérjük, válasszon értékelést!'); return; }
+            if (!$('#ws-rating-value').val()) { alert(WebshopSite.t('review_rating_required', 'Kérjük, válasszon értékelést!')); return; }
 
             const form = $(this);
             const btn = form.find('button[type="submit"]');
             btn.prop('disabled', true).prepend('<i class="fa fa-spinner fa-spin mr-2"></i>');
 
-            $.post('/webshop/reviews', form.serialize(), function(res) {
+            $.post(WebshopSite.url('/reviews'), form.serialize(), function(res) {
                 if (res.success) {
                     alert(res.message);
                     $('#reviewModal').modal('hide');
@@ -379,14 +379,38 @@ const WebshopSite = {
                 // Validációs hiba (pl. a vásárlás nem igazolható): a szerver üzenetét mutatjuk
                 var errors = err.responseJSON && err.responseJSON.errors;
                 var firstError = errors ? errors[Object.keys(errors)[0]] : null;
-                alert(firstError ? [].concat(firstError)[0] : 'Hiba történt a mentés során. Kérjük, ellenőrizze az adatokat!');
+                alert(firstError ? [].concat(firstError)[0] : WebshopSite.t('review_save_error', 'Hiba történt a mentés során. Kérjük, ellenőrizze az adatokat!'));
             });
         });
     },
 
-    /* A PHP hufFormat() parja: ezres tagolas szokozzel */
+    /*
+        A PHP WsFormat::money() párja. A formátum és az ezres elválasztó az oldal nyelvén
+        a window.wsI18n-ből jön (site.webshop.partials.js-i18n); ha az nincs az oldalon, magyarul.
+    */
     huf: function(amount) {
-        return Math.round(amount).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ' ') + ' Ft';
+        const i18n = window.wsI18n || {};
+        const separator = typeof i18n.thousands_separator === 'string' ? i18n.thousands_separator : ' ';
+        const number = Math.round(amount).toString().replace(/\B(?=(\d{3})+(?!\d))/g, separator);
+
+        return (i18n.money || ':amount Ft').replace(':amount', number);
+    },
+
+    /* Felületi szöveg az oldal nyelvén (window.wsI18n), tartalékként a magyar szöveg */
+    t: function(key, fallback) {
+        const i18n = window.wsI18n || {};
+
+        return typeof i18n[key] === 'string' ? i18n[key] : fallback;
+    },
+
+    /*
+        Webshop-végpont az oldal nyelvén: url('/cart/add') → /webshop/cart/add, angolul /en/webshop/cart/add.
+        A nyelvi végpont a kosár-lenyílót, a kapcsolódó termékek modalját és az üzeneteket is az oldal nyelvén adja.
+    */
+    url: function(path) {
+        const i18n = window.wsI18n || {};
+
+        return (typeof i18n.base_url === 'string' ? i18n.base_url : '/webshop') + path;
     },
 
     initCheckout: function() {
@@ -402,7 +426,7 @@ const WebshopSite = {
             if (val < 1) return;
 
             input.val(val);
-            $.post('/webshop/cart/update', { product_id: id, quantity: val }, function(res) {
+            $.post(WebshopSite.url('/cart/update'), { product_id: id, quantity: val }, function(res) {
                 if (!res.success) {
                     return;
                 }

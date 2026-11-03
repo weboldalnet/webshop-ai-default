@@ -23,6 +23,8 @@
             </div>
         </div>
 
+        @include('admin.webshop.translations.partials.record-bar', ['type' => 'property_category', 'record' => $propertyCategory])
+
         <form method="POST" action="{{ route('admin.webshop.property-categories.update', $propertyCategory) }}">
             @csrf @method('PUT')
             @include('admin.webshop.property-categories.form')

@@ -206,7 +206,8 @@ class CancelUnpaidOrders extends Command
             return;
         }
         try {
-            Mail::to($order->customer_email)->send(new WebshopOrderCancelledMail($order->load('items')));
+            // a rendelés nyelvén
+            \Weboldalnet\WebshopAiDefault\Support\WebshopOrderLocale::mail($order->customer_email, new WebshopOrderCancelledMail($order->load('items')), \Weboldalnet\WebshopAiDefault\Support\WebshopOrderLocale::of($order));
         } catch (\Throwable $e) {
             Log::error('Félbehagyott rendelés: a lemondó levél nem ment ki.', ['order' => $order->order_number, 'message' => $e->getMessage()]);
         }

@@ -77,7 +77,7 @@ class WebshopSeoService
         }
 
         return [
-            'title' => self::branded(WebshopSettingsService::get('site_home_page_meta_title') ?: 'Webshop'),
+            'title' => self::branded(WebshopSettingsService::get('site_home_page_meta_title') ?: __('webshop::common.webshop')),
             'description' => self::text(
                 WebshopSettingsService::get('site_home_page_meta_description'),
                 self::categoryListDescription()
@@ -191,9 +191,11 @@ class WebshopSeoService
         $brand = trim((string) config('app.shop_name'));
 
         if ($names === '') {
-            return $brand !== '' ? $brand . ' webáruház.' : '';
+            return $brand !== '' ? __('webshop::catalog.seo.home_brand', ['brand' => $brand]) : '';
         }
 
-        return ($brand !== '' ? $brand . ' webáruház: ' : 'Webáruházunk kínálata: ') . $names . '.';
+        return $brand !== ''
+            ? __('webshop::catalog.seo.home_brand_categories', ['brand' => $brand, 'categories' => $names])
+            : __('webshop::catalog.seo.home_categories', ['categories' => $names]);
     }
 }

@@ -20,71 +20,91 @@ use Weboldalnet\WebshopAiDefault\Http\Controllers\Site\Webshop\WebshopReviewCont
 use Weboldalnet\WebshopAiDefault\Http\Controllers\Site\Webshop\WebshopAccountOrderController;
 use Weboldalnet\WebshopAiDefault\Http\Controllers\Site\Webshop\WebshopWithdrawalController as SiteWithdrawalController;
 use Weboldalnet\WebshopAiDefault\Http\Controllers\Admin\Webshop\WebshopWithdrawalController as AdminWithdrawalController;
+use Weboldalnet\WebshopAiDefault\Http\Controllers\Admin\Webshop\WebshopTranslationController as AdminTranslationController;
+use Weboldalnet\WebshopAiDefault\Helpers\WebshopUrl;
+use Weboldalnet\WebshopAiDefault\Http\Middleware\SetWebshopLocaleAlternates;
 
 Route::middleware('web')->group(function () {
-    // Site oldali route-ok
-    Route::domain(getSiteDomain())
-        ->middleware('site_share')
-        ->prefix('webshop')
-        ->name('site.webshop.')
-        ->group(function () {
-            Route::get('/', [SiteCategoryController::class, 'index'])->name('categories.index');
-            Route::get('/kategoria/{categorySlug}/products', [SiteCategoryController::class, 'products'])->name('categories.products')->where('categorySlug', '.*');
-            Route::get('/kategoria/{categorySlug}', [SiteCategoryController::class, 'show'])->name('categories.show')->where('categorySlug', '.*');
-            Route::get('/termek/{product:slug}', [SiteProductController::class, 'show'])->name('products.show');
+    /*
+     * Site oldali route-ok, nyelvenként (WebshopUrl). Az alapnyelv a megszokott /webshop/… címeken és site.webshop.*
+     * neveken él; többnyelvű site-on a többi nyelv /{nyelv}/webshop/… címen, lefordított útszavakkal
+     * (config webshop.url_words), site.webshop.{nyelv}.* néven. A nyelvet és a nyelvi adatbázist a core Localization
+     * middleware-je az URL első szakaszából állítja; a webshop adatai minden nyelven az alap DB-ből jönnek.
+     * A sablonok a WsUrl::route() / ::product() / ::category() segéddel kérik a címeket a kérés nyelvén.
+     */
+    foreach (WebshopUrl::locales() as $wsLocale) {
+        $wsIsDefault = $wsLocale === WebshopUrl::defaultLocale();
+        $wsWord = fn (string $key) => WebshopUrl::word($key, $wsLocale);
 
-            // Kuponbeváltás a pénztáron (AJAX, JSON)
-            Route::post('/kupon/aktivalas', [WebshopCheckoutController::class, 'activateCoupon'])->name('coupon.activate');
+        Route::domain(getSiteDomain())
+            // a nyelvválasztó és a hreflang a webshop-oldal nyelvi párjára mutasson (csak többnyelvű site-on dolgozik)
+            ->middleware(['site_share', SetWebshopLocaleAlternates::class])
+            ->prefix(($wsIsDefault ? '' : $wsLocale . '/') . $wsWord('webshop'))
+            ->name('site.webshop.' . ($wsIsDefault ? '' : $wsLocale . '.'))
+            ->group(function () use ($wsWord, $wsIsDefault) {
+                Route::get('/', [SiteCategoryController::class, 'index'])->name('categories.index');
+                Route::get('/' . $wsWord('category') . '/{categorySlug}/products', [SiteCategoryController::class, 'products'])->name('categories.products')->where('categorySlug', '.*');
+                Route::get('/' . $wsWord('category') . '/{categorySlug}', [SiteCategoryController::class, 'show'])->name('categories.show')->where('categorySlug', '.*');
+                if ($wsIsDefault) {
+                    Route::get('/' . $wsWord('product') . '/{product:slug}', [SiteProductController::class, 'show'])->name('products.show');
+                } else {
+                    // nem alapnyelven a slug a fordítástáblából (vagy az eredeti); a régi/eredeti slugról 301 a nyelvire
+                    Route::get('/' . $wsWord('product') . '/{productSlug}', [SiteProductController::class, 'showLocalized'])->name('products.show');
+                }
 
-            // Szabadszavas kereső a fejlécben – rendereltt HTML-t ad vissza (AJAX)
-            Route::get('/kereses', [SiteProductController::class, 'search'])->name('products.search');
+                // Kuponbeváltás a pénztáron (AJAX, JSON)
+                Route::post('/' . $wsWord('coupon_activate'), [WebshopCheckoutController::class, 'activateCoupon'])->name('coupon.activate');
 
-            // Kosár
-            Route::post('/cart/add', [WebshopCartController::class, 'add'])->name('cart.add');
-            Route::get('/cart/dropdown', [WebshopCartController::class, 'dropdown'])->name('cart.dropdown');
-            Route::post('/cart/update', [WebshopCartController::class, 'update'])->name('cart.update');
-            Route::delete('/cart/remove', [WebshopCartController::class, 'remove'])->name('cart.remove');
+                // Szabadszavas kereső a fejlécben – rendereltt HTML-t ad vissza (AJAX)
+                Route::get('/' . $wsWord('search'), [SiteProductController::class, 'search'])->name('products.search');
 
-            // Összehasonlítás
-            Route::post('/compare/add', [WebshopCompareController::class, 'add'])->name('compare.add');
-            Route::get('/compare/dropdown', [WebshopCompareController::class, 'dropdown'])->name('compare.dropdown');
-            Route::delete('/compare/remove', [WebshopCompareController::class, 'remove'])->name('compare.remove');
-            Route::get('/compare', [WebshopCompareController::class, 'index'])->name('compare.index');
+                // Kosár
+                Route::post('/cart/add', [WebshopCartController::class, 'add'])->name('cart.add');
+                Route::get('/cart/dropdown', [WebshopCartController::class, 'dropdown'])->name('cart.dropdown');
+                Route::post('/cart/update', [WebshopCartController::class, 'update'])->name('cart.update');
+                Route::delete('/cart/remove', [WebshopCartController::class, 'remove'])->name('cart.remove');
 
-            // Checkout
-            Route::get('/checkout', [WebshopCheckoutController::class, 'index'])->name('checkout.index');
-            Route::post('/checkout', [WebshopCheckoutController::class, 'store'])->name('checkout.store');
-            Route::get('/checkout/success/{order}', [WebshopCheckoutController::class, 'success'])->name('checkout.success');
+                // Összehasonlítás
+                Route::post('/compare/add', [WebshopCompareController::class, 'add'])->name('compare.add');
+                Route::get('/compare/dropdown', [WebshopCompareController::class, 'dropdown'])->name('compare.dropdown');
+                Route::delete('/compare/remove', [WebshopCompareController::class, 'remove'])->name('compare.remove');
+                Route::get('/compare', [WebshopCompareController::class, 'index'])->name('compare.index');
 
-            // Payment result és retry
-            Route::get('/payment/{order}/result', [WebshopCheckoutController::class, 'paymentResult'])->name('payment.result');
-            Route::post('/payment/{order}/retry', [WebshopCheckoutController::class, 'retryPayment'])->name('payment.retry');
-            // A fizetési eredmény oldal ezt kérdezgeti, amíg a fizetés függőben van
-            Route::get('/payment/{order}/status', [WebshopCheckoutController::class, 'paymentStatus'])->name('payment.status');
+                // Checkout
+                Route::get('/checkout', [WebshopCheckoutController::class, 'index'])->name('checkout.index');
+                Route::post('/checkout', [WebshopCheckoutController::class, 'store'])->name('checkout.store');
+                Route::get('/checkout/success/{order}', [WebshopCheckoutController::class, 'success'])->name('checkout.success');
 
-            // Vélemények
-            // Korlátozott hívásszám: spam ellen, és hogy a rendelésszám-igazolást ne lehessen próbálgatni.
-            Route::post('/reviews', [WebshopReviewController::class, 'store'])
-                ->middleware('throttle:5,1')
-                ->name('reviews.store');
+                // Payment result és retry
+                Route::get('/payment/{order}/result', [WebshopCheckoutController::class, 'paymentResult'])->name('payment.result');
+                Route::post('/payment/{order}/retry', [WebshopCheckoutController::class, 'retryPayment'])->name('payment.retry');
+                // A fizetési eredmény oldal ezt kérdezgeti, amíg a fizetés függőben van
+                Route::get('/payment/{order}/status', [WebshopCheckoutController::class, 'paymentStatus'])->name('payment.status');
 
-            // Elállás
-            // A keresés rendelésszámot ÉS e-mail-címet kér (korlátozott hívásszámmal); az
-            // elállási oldal és a beküldés csak ALÁÍRT URL-lel érhető el, amit a sikeres
-            // keresés vagy a rendelés-visszaigazoló levél ad. Így a rendelésszám puszta
-            // ismerete (vagy kitalálása) már nem mutatja meg más vásárló adatait.
-            // Az aláírást a controller ellenőrzi (nem a 'signed' middleware), hogy lejárt
-            // linknél nyers 403 helyett érthető üzenettel kerüljön vissza a vásárló.
-            Route::post('/elallas/kereses', [SiteWithdrawalController::class, 'lookup'])
-                ->middleware('throttle:10,1')
-                ->name('withdrawals.lookup');
-            Route::get('/elallas/{orderNumber}', [SiteWithdrawalController::class, 'create'])
-                ->middleware('throttle:30,1')
-                ->name('withdrawals.create');
-            Route::post('/elallas/{orderNumber}', [SiteWithdrawalController::class, 'store'])
-                ->middleware('throttle:10,1')
-                ->name('withdrawals.store');
-        });
+                // Vélemények
+                // Korlátozott hívásszám: spam ellen, és hogy a rendelésszám-igazolást ne lehessen próbálgatni.
+                Route::post('/reviews', [WebshopReviewController::class, 'store'])
+                    ->middleware('throttle:5,1')
+                    ->name('reviews.store');
+
+                // Elállás
+                // A keresés rendelésszámot ÉS e-mail-címet kér (korlátozott hívásszámmal); az
+                // elállási oldal és a beküldés csak ALÁÍRT URL-lel érhető el, amit a sikeres
+                // keresés vagy a rendelés-visszaigazoló levél ad. Így a rendelésszám puszta
+                // ismerete (vagy kitalálása) már nem mutatja meg más vásárló adatait.
+                // Az aláírást a controller ellenőrzi (nem a 'signed' middleware), hogy lejárt
+                // linknél nyers 403 helyett érthető üzenettel kerüljön vissza a vásárló.
+                Route::post('/' . $wsWord('withdrawal_lookup'), [SiteWithdrawalController::class, 'lookup'])
+                    ->middleware('throttle:10,1')
+                    ->name('withdrawals.lookup');
+                Route::get('/' . $wsWord('withdrawal') . '/{orderNumber}', [SiteWithdrawalController::class, 'create'])
+                    ->middleware('throttle:30,1')
+                    ->name('withdrawals.create');
+                Route::post('/' . $wsWord('withdrawal') . '/{orderNumber}', [SiteWithdrawalController::class, 'store'])
+                    ->middleware('throttle:10,1')
+                    ->name('withdrawals.store');
+            });
+    }
 
     // Vásárlói fiók: Rendeléseim és újrarendelés — a felhasználó modul (weboldalnet/commerce-users)
     // fiókoldalán, annak előtagjával (/fiok/rendeleseim). Csak telepített modul mellett, mert a
@@ -194,6 +214,21 @@ Route::middleware('web')->group(function () {
             // Elállási kérelmek
             Route::get('/withdrawals', [AdminWithdrawalController::class, 'index'])->name('withdrawals.index');
             Route::get('/withdrawals/{withdrawal}', [AdminWithdrawalController::class, 'show'])->name('withdrawals.show');
+
+            // Fordítások (többnyelvű projektben): összesítő, fordítás-szerkesztő, AI-futás (tömeges és rekordonkénti)
+            Route::prefix('translations')->name('translations.')->group(function () {
+                Route::get('/', [AdminTranslationController::class, 'index'])->name('index');
+                Route::get('/edit/{type}/{recordId}/{locale}', [AdminTranslationController::class, 'edit'])->whereNumber('recordId')->name('edit');
+                Route::post('/edit/{type}/{recordId}/{locale}', [AdminTranslationController::class, 'update'])->whereNumber('recordId')->name('update');
+                Route::get('/dialog', [AdminTranslationController::class, 'dialog'])->name('dialog');
+                Route::post('/estimate', [AdminTranslationController::class, 'estimate'])->name('estimate');
+                Route::post('/runs', [AdminTranslationController::class, 'storeRun'])->name('runs.store');
+                Route::get('/runs/{run}', [AdminTranslationController::class, 'showRun'])->whereNumber('run')->name('runs.show');
+                Route::post('/runs/{run}/step', [AdminTranslationController::class, 'step'])->whereNumber('run')->name('runs.step');
+                Route::post('/runs/{run}/cancel', [AdminTranslationController::class, 'cancelRun'])->whereNumber('run')->name('runs.cancel');
+                Route::post('/runs/{run}/restore', [AdminTranslationController::class, 'restoreRun'])->whereNumber('run')->name('runs.restore');
+                Route::post('/run-items/{item}/restore', [AdminTranslationController::class, 'restoreItem'])->whereNumber('item')->name('run-items.restore');
+            });
             Route::put('/withdrawals/{withdrawal}', [AdminWithdrawalController::class, 'update'])->name('withdrawals.update');
             Route::delete('/withdrawals/{withdrawal}', [AdminWithdrawalController::class, 'destroy'])->name('withdrawals.destroy');
 

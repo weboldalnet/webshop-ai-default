@@ -1,8 +1,8 @@
 <div class="ws-reviews-box">
     <div class="d-flex justify-content-between align-items-center mb-3">
-        <h5 class="font-weight-bold mb-0">Vásárlói vélemények</h5>
+        <h5 class="font-weight-bold mb-0">{{ __('webshop::product.reviews.title') }}</h5>
         <button type="button" class="btn btn-dark" data-toggle="modal" data-target="#reviewModal">
-            <i class="fa fa-pen-to-square mr-2"></i> Vélemény írása
+            <i class="fa fa-pen-to-square mr-2"></i> {{ __('webshop::product.reviews.write') }}
         </button>
     </div>
 
@@ -23,10 +23,10 @@
                             {{-- A szín a csomag CSS-ében (`.ws-verified-badge`), nem inline: így a projektek
                                  arculatra tudják húzni `!important` nélkül. A Bootstrap `badge-success` azért
                                  nem jó, mert kis betűnél csak ~3,1:1 kontrasztot ad. --}}
-                            <span class="badge ws-verified-badge ml-2 align-middle"><i class="fa fa-check mr-1"></i>Ellenőrzött vásárló</span>
+                            <span class="badge ws-verified-badge ml-2 align-middle"><i class="fa fa-check mr-1"></i>{{ __('webshop::product.reviews.verified_badge') }}</span>
                         @endif
                     </div>
-                    <div class="text-muted small">{{ $review->created_at->format('Y.m.d.') }}</div>
+                    <div class="text-muted small">{{ WsFormat::date($review->created_at) }}</div>
                 </div>
                 <div class="ws-rating my-2 text-warning">
                     @for($i=1; $i<=5; $i++)
@@ -37,7 +37,7 @@
             </div>
         @empty
             <div class="text-center p-4 text-muted border rounded bg-light">
-                Még nem érkezett vélemény ehhez a termékhez. Legyen Ön az első!
+                {{ __('webshop::product.reviews.empty') }}
             </div>
         @endforelse
     </div>

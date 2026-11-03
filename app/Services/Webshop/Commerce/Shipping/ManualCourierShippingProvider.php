@@ -32,7 +32,7 @@ class ManualCourierShippingProvider implements ShippingProviderInterface
     /** @var string */
     protected $code;
 
-    /** @var string */
+    /** @var string  Megjelenített név, vagy nyelvi kulcs (webshop::…) — lásd getName() */
     protected $name;
 
     /** @var string|null  Nyomkövetési URL-sablon, a {code} helyére kerül a csomagszám */
@@ -50,9 +50,13 @@ class ManualCourierShippingProvider implements ShippingProviderInterface
         return $this->code;
     }
 
+    /**
+     * A név fordítása itt, lekérdezéskor történik: a provider a service provider boot()-jában jön létre, amikor a
+     * kérés nyelve még nincs beállítva. Nem kulcs jellegű névnél a __() változatlanul adja vissza.
+     */
     public function getName()
     {
-        return $this->name;
+        return __($this->name);
     }
 
     /**
@@ -98,7 +102,7 @@ class ManualCourierShippingProvider implements ShippingProviderInterface
             'rate' => $rate,
             'currency' => 'HUF',
             'is_free' => $isFree,
-            'message' => $isFree ? 'Ingyenes szállítás.' : $this->name . ': ' . $rate . ' HUF',
+            'message' => $isFree ? 'Ingyenes szállítás.' : $this->getName() . ': ' . $rate . ' HUF',
         ]);
     }
 
@@ -112,7 +116,7 @@ class ManualCourierShippingProvider implements ShippingProviderInterface
         return ShipmentCreateResult::success([
             'status' => ShippingStatus::PENDING,
             'provider' => $this->code,
-            'message' => 'A szállítmányt kézzel kell rögzíteni a(z) ' . $this->name . ' rendszerében.',
+            'message' => 'A szállítmányt kézzel kell rögzíteni a(z) ' . $this->getName() . ' rendszerében.',
         ]);
     }
 

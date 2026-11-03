@@ -7,21 +7,22 @@
                 <div style="text-align: center; margin-bottom: 20px;">
                     <span style="font-size: 20px; color: #000; font-weight: bold; display: inline-block">
                         @if($isShopCopy)
-                            Új elállási nyilatkozat érkezett
+                            {{ __('webshop::mail.withdrawal.shop_title') }}
                         @else
-                            Kedves {{ $withdrawal->customer_name }}!
+                            {{ __('webshop::mail.greeting', ['name' => $withdrawal->customer_name]) }}
                         @endif
                     </span>
                 </div>
 
                 <div style="font-size: 15px; color: #333; margin-bottom: 25px;">
                     @if($isShopCopy)
-                        A(z) <strong>{{ $withdrawal->order_number }}</strong> számú rendeléshez elállási nyilatkozat
-                        érkezett {{ $withdrawal->customer_name }} ({{ $withdrawal->customer_email }}) részéről.
+                        {!! __('webshop::mail.withdrawal.shop_intro', [
+                            'number' => '<strong>' . e($withdrawal->order_number) . '</strong>',
+                            'name' => e($withdrawal->customer_name),
+                            'email' => e($withdrawal->customer_email),
+                        ]) !!}
                     @else
-                        Visszaigazoljuk, hogy elállási nyilatkozatát megkaptuk a(z)
-                        <strong>{{ $withdrawal->order_number }}</strong> számú rendeléséhez. Hamarosan felvesszük
-                        Önnel a kapcsolatot a termék visszajuttatásával és a visszatérítéssel kapcsolatban.
+                        {!! __('webshop::mail.withdrawal.customer_intro', ['number' => '<strong>' . e($withdrawal->order_number) . '</strong>']) !!}
                     @endif
                 </div>
 
@@ -29,33 +30,33 @@
                      valamint beérkezésének dátumát és időpontját (uniós „elállási funkció”, 2026. június 19-től). --}}
                 <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px; font-size: 14px;">
                     <tr>
-                        <td style="border: 1px solid #ddd; padding: 8px; background-color: #f9f9f9; width: 45%;">A nyilatkozat beérkezése</td>
+                        <td style="border: 1px solid #ddd; padding: 8px; background-color: #f9f9f9; width: 45%;">{{ __('webshop::mail.withdrawal.received_at') }}</td>
                         <td style="border: 1px solid #ddd; padding: 8px; font-weight: bold;">
-                            {{ optional($withdrawal->created_at)->timezone(config('app.timezone'))->format('Y. m. d. H:i') }}
+                            {{ WsFormat::datetime(optional($withdrawal->created_at)->timezone(config('app.timezone'))) }}
                         </td>
                     </tr>
                     <tr>
-                        <td style="border: 1px solid #ddd; padding: 8px; background-color: #f9f9f9;">Rendelésszám</td>
+                        <td style="border: 1px solid #ddd; padding: 8px; background-color: #f9f9f9;">{{ __('webshop::common.order_number') }}</td>
                         <td style="border: 1px solid #ddd; padding: 8px;">{{ $withdrawal->order_number }}</td>
                     </tr>
                     <tr>
-                        <td style="border: 1px solid #ddd; padding: 8px; background-color: #f9f9f9;">A nyilatkozatot tette</td>
+                        <td style="border: 1px solid #ddd; padding: 8px; background-color: #f9f9f9;">{{ __('webshop::mail.withdrawal.submitted_by') }}</td>
                         <td style="border: 1px solid #ddd; padding: 8px;">{{ $withdrawal->customer_name }} ({{ $withdrawal->customer_email }})</td>
                     </tr>
                 </table>
 
                 <p style="font-size: 17px; color: #000; margin-bottom: 10px; font-weight: bold; border-bottom: 1px solid #ddd; padding-bottom: 5px;">
-                    Az elállással érintett termékek
+                    {{ __('webshop::mail.withdrawal.items_title') }}
                 </p>
 
                 <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px; font-size: 14px;">
                     <thead>
                         <tr style="background-color: #f9f9f9;">
-                            <th style="border: 1px solid #ddd; padding: 8px; text-align: left;">Termék</th>
-                            <th style="border: 1px solid #ddd; padding: 8px; text-align: center; width: 60px;">Menny.</th>
+                            <th style="border: 1px solid #ddd; padding: 8px; text-align: left;">{{ __('webshop::common.product') }}</th>
+                            <th style="border: 1px solid #ddd; padding: 8px; text-align: center; width: 60px;">{{ __('webshop::mail.qty_short') }}</th>
                             @if($showPrices)
-                                <th style="border: 1px solid #ddd; padding: 8px; text-align: right; width: 100px;">Egységár</th>
-                                <th style="border: 1px solid #ddd; padding: 8px; text-align: right; width: 100px;">Összesen</th>
+                                <th style="border: 1px solid #ddd; padding: 8px; text-align: right; width: 100px;">{{ __('webshop::common.unit_price_label') }}</th>
+                                <th style="border: 1px solid #ddd; padding: 8px; text-align: right; width: 100px;">{{ __('webshop::common.total') }}</th>
                             @endif
                         </tr>
                     </thead>
@@ -63,10 +64,10 @@
                         @foreach($withdrawal->items as $item)
                             <tr>
                                 <td style="border: 1px solid #ddd; padding: 8px;">{{ $item->product_name }}</td>
-                                <td style="border: 1px solid #ddd; padding: 8px; text-align: center;">{{ $item->quantity }} db</td>
+                                <td style="border: 1px solid #ddd; padding: 8px; text-align: center;">{{ $item->quantity }} {{ __('webshop::common.pcs') }}</td>
                                 @if($showPrices)
-                                    <td style="border: 1px solid #ddd; padding: 8px; text-align: right;">{{ number_format($item->unit_price, 0, ',', ' ') }} Ft</td>
-                                    <td style="border: 1px solid #ddd; padding: 8px; text-align: right;">{{ number_format($item->total_price, 0, ',', ' ') }} Ft</td>
+                                    <td style="border: 1px solid #ddd; padding: 8px; text-align: right;">{{ WsFormat::money($item->unit_price) }}</td>
+                                    <td style="border: 1px solid #ddd; padding: 8px; text-align: right;">{{ WsFormat::money($item->total_price) }}</td>
                                 @endif
                             </tr>
                         @endforeach
@@ -75,10 +76,10 @@
                         <tfoot>
                             <tr>
                                 <td colspan="3" style="border: 1px solid #ddd; padding: 8px; text-align: right; font-weight: bold;">
-                                    Érintett érték összesen:
+                                    {{ __('webshop::mail.withdrawal.total') }}
                                 </td>
                                 <td style="border: 1px solid #ddd; padding: 8px; text-align: right; font-weight: bold;">
-                                    {{ number_format($withdrawal->total_amount, 0, ',', ' ') }} Ft
+                                    {{ WsFormat::money($withdrawal->total_amount) }}
                                 </td>
                             </tr>
                         </tfoot>
@@ -87,20 +88,20 @@
 
                 @if($withdrawal->is_full)
                     <p style="font-size: 14px; color: #333; margin-bottom: 20px;">
-                        A nyilatkozat a <strong>teljes rendelésre</strong> vonatkozik.
+                        {!! __('webshop::mail.withdrawal.is_full', ['scope' => '<strong>' . e(__('webshop::mail.withdrawal.full_order')) . '</strong>']) !!}
                     </p>
                 @endif
 
                 @if(filled($withdrawal->reason))
                     <div style="margin-top: 10px; padding: 10px; background-color: #fefefe; border: 1px dashed #ccc; font-size: 14px;">
-                        <strong>Megjegyzés:</strong><br>
+                        <strong>{{ __('webshop::mail.withdrawal.note') }}</strong><br>
                         {{ $withdrawal->reason }}
                     </div>
                 @endif
 
                 @if(!$isShopCopy && !empty($contactData['email']))
                     <p style="font-size: 14px; color: #555; margin-top: 20px;">
-                        Kérdés esetén írjon nekünk a(z) {{ $contactData['email'] }} címre.
+                        {{ __('webshop::mail.withdrawal.contact', ['email' => $contactData['email']]) }}
                     </p>
                 @endif
             </div>
@@ -110,7 +111,7 @@
     <tr>
         <td colspan="100%">
             <div style="text-align: center; padding-bottom: 20px;">
-                <p style="margin: 0 0 5px; font-weight: 600; font-size: 15px">Üdvözlettel,</p>
+                <p style="margin: 0 0 5px; font-weight: 600; font-size: 15px">{{ __('webshop::mail.regards') }}</p>
                 <p style="margin: 0; line-height: 1.2; font-size: 14px; font-style: italic;">
                     {{ config('app.shop_name') }}
                 </p>

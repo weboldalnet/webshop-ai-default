@@ -36,14 +36,14 @@ class WebshopCartController extends Controller
             ])->render();
         }
 
-        $message = 'A termék sikeresen kosárba került.';
+        $message = __('webshop::cart.messages.added');
         $level = 'success';
 
         if ($addedQuantity <= 0) {
-            $message = 'Ebből a termékből jelenleg nincs több a raktáron.';
+            $message = __('webshop::cart.messages.out_of_stock');
             $level = 'error';
         } elseif ($addedQuantity < $quantity) {
-            $message = 'Készlethiány miatt csak ' . $addedQuantity . ' db került a kosárba.';
+            $message = trans_choice('webshop::cart.messages.added_partial', $addedQuantity);
             $level = 'warning';
         }
 
@@ -110,7 +110,7 @@ class WebshopCartController extends Controller
             'quantity' => $appliedQuantity,
             'level' => $appliedQuantity < $quantity ? 'warning' : 'success',
             'message' => $appliedQuantity < $quantity
-                ? 'Készlethiány miatt csak ' . $appliedQuantity . ' db állítható be.'
+                ? __('webshop::cart.messages.update_partial', ['count' => $appliedQuantity])
                 : null,
             'count' => WebshopCartService::getCount(),
             'total' => WebshopCartService::getTotal(),

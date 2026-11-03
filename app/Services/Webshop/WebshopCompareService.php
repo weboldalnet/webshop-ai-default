@@ -14,19 +14,19 @@ class WebshopCompareService
         $compare = self::getContent();
         
         if (isset($compare[$productId])) {
-            return ['success' => true, 'message' => 'A termék már szerepel az összehasonlításban.'];
+            return ['success' => true, 'message' => __('webshop::catalog.compare.already_added')];
         }
 
         $product = WebshopProduct::active()->find($productId);
         if (!$product) {
-            return ['success' => false, 'message' => 'A termék nem található.'];
+            return ['success' => false, 'message' => __('webshop::catalog.compare.not_found')];
         }
 
         // Kategória ellenőrzés
         if (!empty($compare)) {
             $firstProduct = reset($compare);
             if ($firstProduct['category_id'] !== $product->category_id) {
-                return ['success' => false, 'message' => 'Csak azonos kategóriában lévő termékeket lehet összehasonlítani.'];
+                return ['success' => false, 'message' => __('webshop::catalog.compare.same_category_only')];
             }
         }
 
@@ -39,7 +39,7 @@ class WebshopCompareService
         ];
 
         self::save($compare);
-        return ['success' => true, 'message' => 'Termék hozzáadva az összehasonlításhoz.'];
+        return ['success' => true, 'message' => __('webshop::catalog.compare.added')];
     }
 
     public static function remove(int $productId): void

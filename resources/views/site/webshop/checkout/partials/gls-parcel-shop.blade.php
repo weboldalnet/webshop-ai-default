@@ -7,7 +7,7 @@
     alapján tudja, melyik pontra megy a csomag.
 --}}
 <div id="gls-parcel-shop-wrapper" class="ws-gls-parcel-shop mt-3" style="display: none;">
-    <h5 class="mb-2">GLS csomagpont választása <span class="text-danger">*</span></h5>
+    <h5 class="mb-2">{{ __('webshop::checkout.gls.title') }} <span class="text-danger">*</span></h5>
 
     <style>
         /*
@@ -38,7 +38,7 @@
 
     <div class="mt-2">
         <input type="text" id="glsSelectedShop" class="form-control"
-               placeholder="Válassz GLS csomagpontot a térképen!"
+               placeholder="{{ __('webshop::checkout.gls.selected_placeholder') }}"
                readonly tabindex="-1" value="">
 
         {{-- Ezek mennek a rendeléssel. A parcel_shop_id a címkéhez kell. --}}
@@ -50,7 +50,7 @@
         <input type="hidden" name="shipping[parcel_shop_address]" id="glsShopAddress" value="">
 
         <div id="glsShopError" class="text-danger small mt-1 d-none">
-            A csomagpontos szállításhoz ki kell választani egy átvevőpontot.
+            {{ __('webshop::checkout.gls.required') }}
         </div>
     </div>
 </div>

@@ -8,7 +8,7 @@
             @if(session($wsFlashKey))
                 <div class="alert alert-{{ $wsFlashType }} alert-dismissible fade show mb-0" role="alert">
                     {{ session($wsFlashKey) }}
-                    <button type="button" class="close" data-dismiss="alert" aria-label="Bezárás">
+                    <button type="button" class="close" data-dismiss="alert" aria-label="{{ __('webshop::common.close') }}">
                         <span aria-hidden="true">&times;</span>
                     </button>
                 </div>

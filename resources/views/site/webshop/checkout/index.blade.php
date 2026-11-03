@@ -1,5 +1,5 @@
 @extends('site.layouts.layout')
-@section('title', ($ws['site_checkout_mode'] ?? 'order') == 'quote' ? 'Ajánlatkérés' : 'Rendelés leadása')
+@section('title', ($ws['site_checkout_mode'] ?? 'order') == 'quote' ? __('webshop::checkout.page.quote_title') : __('webshop::checkout.page.title'))
 
 @section('content')
     @include('site.webshop.partials.sticky-categories')
@@ -22,7 +22,7 @@
                 <div class="col-lg-12">
                     <h1 class="mb-4 font-weight-bold border-bottom pb-2">
                         <i class="fa {{ ($ws['site_checkout_mode'] ?? 'order') == 'quote' ? 'fa-file-invoice' : 'fa-cart-check' }} mr-2"></i>
-                        {{ ($ws['site_checkout_mode'] ?? 'order') == 'quote' ? 'Ajánlatkérés' : 'Pénztár' }}
+                        {{ ($ws['site_checkout_mode'] ?? 'order') == 'quote' ? __('webshop::checkout.page.quote_title') : __('webshop::checkout.page.heading') }}
                     </h1>
                 </div>
             </div>
@@ -40,7 +40,7 @@
             {{-- 1. Kosár tartalma – teljes szélességben, a formon kívül --}}
             @include('site.webshop.checkout.partials.cart-items')
 
-            <form method="POST" action="{{ route('site.webshop.checkout.store') }}" class="row">
+            <form method="POST" action="{{ WsUrl::route('site.webshop.checkout.store') }}" class="row">
                 @csrf
 
                 {{-- Dobozok: balra a személyes adatok és a szállítási mód, jobbra a szállítási cím, alatta a

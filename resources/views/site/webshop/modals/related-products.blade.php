@@ -2,20 +2,20 @@
     <div class="modal-dialog modal-lg" role="document">
         <div class="modal-content border-0 shadow-lg">
             <div class="modal-header bg-primary text-white py-2">
-                <h5 class="modal-title fw-600"><i class="fa fa-check-circle mr-2"></i> Termék a kosárba került!</h5>
+                <h5 class="modal-title fw-600"><i class="fa fa-check-circle mr-2"></i> {{ __('webshop::product.added_modal.title') }}</h5>
                 <button type="button" class="btn btn-sm btn-light shadow-none lh-1" data-dismiss="modal" aria-label="Close">
                     <i class="fa fa-times fs-20"></i>
                 </button>
             </div>
             <div class="modal-body p-0">
                 <div class="py-2 px-3 bg-light border-bottom">
-                    <p class="fw-600 fs-18 lh-12 mb-0">Ezeket a termékeket is ajánljuk Önnek:</p>
+                    <p class="fw-600 fs-18 lh-12 mb-0">{{ __('webshop::product.added_modal.recommend') }}</p>
                 </div>
                 <div class="ws-related-products-scroll p-3" style="max-height: 500px; overflow-y: auto;">
                     @foreach($relatedProductsGrouped as $catId => $relProducts)
                         <div class="ws-related-category-group mb-2">
                             <h6 class="ws-related-category-title font-weight-bold text-muted text-uppercase mb-2 border-bottom pb-1">
-                                {{ $relProducts->first()->category->name_plural ?? 'Egyéb termékek' }}
+                                {{ $relProducts->first()->category->name_plural ?? __('webshop::product.added_modal.other_products') }}
                             </h6>
                             <div class="row">
                                 @foreach($relProducts as $rel)
@@ -47,7 +47,7 @@
                                                     ])
                                                 @endif
                                                 <button type="button" class="btn btn-sm btn-primary ws-related-product-cart js-add-to-cart" data-id="{{ $rel->id }}">
-                                                    <i class="fa fa-shopping-cart mr-1"></i> Kosárba
+                                                    <i class="fa fa-shopping-cart mr-1"></i> {{ __('webshop::product.actions.add_to_cart') }}
                                                 </button>
                                             </div>
                                         </div>
@@ -59,12 +59,12 @@
                 </div>
             </div>
             <div class="modal-footer bg-light">
-                <button type="button" class="btn btn-outline-secondary fw-600" data-dismiss="modal">Tovább vásárolok</button>
-                <a href="{{ route('site.webshop.checkout.index') }}" class="btn btn-success fw-600 px-4">
+                <button type="button" class="btn btn-outline-secondary fw-600" data-dismiss="modal">{{ __('webshop::product.added_modal.continue') }}</button>
+                <a href="{{ WsUrl::route('site.webshop.checkout.index') }}" class="btn btn-success fw-600 px-4">
                     @if(($ws['site_checkout_mode'] ?? 'order') === 'quote')
-                        Ajánlatkérés küldése
+                        {{ __('webshop::product.added_modal.send_quote') }}
                     @else
-                        Rendelés leadása
+                        {{ __('webshop::product.added_modal.place_order') }}
                     @endif
                     <i class="fa fa-chevron-right ml-2"></i>
                 </a>

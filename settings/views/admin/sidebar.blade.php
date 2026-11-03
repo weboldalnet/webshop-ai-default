@@ -56,6 +56,13 @@
                 <a href="{{ route('admin.webshop.users.index') }}">Vásárlók</a>
             @endif
 
+            {{-- Fordítások: csak többnyelvű projektben (a webshop szövegei a többi nyelven) --}}
+            @if(\Weboldalnet\WebshopAiDefault\Services\Webshop\WebshopTranslationService::isMultiLanguage()
+                && \Weboldalnet\WebshopAiDefault\Services\Webshop\WebshopTranslationService::targetLocales()
+                && \Illuminate\Support\Facades\Route::has('admin.webshop.translations.index'))
+                <a href="{{ route('admin.webshop.translations.index') }}">Fordítások</a>
+            @endif
+
             <a href="{{ route('admin.webshop.extra-settings.index') }}" class="fw-800">Webshop beállítások</a>
 
             @if($user->is_super)

@@ -1,5 +1,5 @@
 @extends('site.layouts.layout')
-@section('title', 'Termék összehasonlítás')
+@section('title', __('webshop::catalog.compare.page_title'))
 
 @section('content')
     @include('site.webshop.partials.sticky-categories')
@@ -8,7 +8,7 @@
         <div class="container-xl container-fluid pb-5">
             <div class="row mt-4">
                 <div class="col-lg-12">
-                    <h1 class="mb-4 font-weight-bold"><i class="fa fa-scale-balanced mr-2"></i> Termékek összehasonlítása</h1>
+                    <h1 class="mb-4 font-weight-bold"><i class="fa fa-scale-balanced mr-2"></i> {{ __('webshop::catalog.compare.title') }}</h1>
                 </div>
             </div>
 
@@ -28,7 +28,7 @@
                                 </div>
                                 <h5 class="fs-18 font-weight-bold">{{ $product->name }}</h5>
                                 <button type="button" class="btn btn-sm btn-link text-danger js-remove-compare-item" data-id="{{ $product->id }}" data-reload="true">
-                                    <i class="fa fa-trash-can mr-1"></i> Törlés
+                                    <i class="fa fa-trash-can mr-1"></i> {{ __('webshop::catalog.compare.remove') }}
                                 </button>
                             </th>
                         @endforeach
@@ -59,15 +59,15 @@
 
                     @if(($ws['site_product_prices_visible'] ?? 'true') === 'true')
                         <tr>
-                            <th class="bg-light">Ár</th>
+                            <th class="bg-light">{{ __('webshop::catalog.compare.price') }}</th>
                             @foreach($products as $product)
                                 <td class="font-weight-bold">
                                     {{-- Áthúzott ár: az akciót megelőző 30 nap legalacsonyabb ára (Omnibusz) --}}
                                     @if($product->hasActiveSale())
-                                        <div class="text-muted small" style="text-decoration: line-through;" title="Az akciót megelőző 30 nap legalacsonyabb ára">{{ hufFormat($product->referencePrice()) }}</div>
-                                        <div class="text-danger h5">{{ hufFormat($product->sale_price) }}</div>
+                                        <div class="text-muted small" style="text-decoration: line-through;" title="{{ __('webshop::product.price.reference_title') }}">{{ WsFormat::money($product->referencePrice()) }}</div>
+                                        <div class="text-danger h5">{{ WsFormat::money($product->sale_price) }}</div>
                                     @else
-                                        <div class="h5">{{ hufFormat($product->sellingPrice()) }}</div>
+                                        <div class="h5">{{ WsFormat::money($product->sellingPrice()) }}</div>
                                     @endif
                                     @include('site.webshop.partials.unit-price', ['product' => $product])
                                 </td>
@@ -76,11 +76,11 @@
                     @endif
 
                     <tr>
-                        <th class="bg-light">Művelet</th>
+                        <th class="bg-light">{{ __('webshop::catalog.compare.action') }}</th>
                         @foreach($products as $product)
                             <td class="text-center">
                                 <button type="button" class="btn btn-primary btn-block js-add-to-cart ws-nowrap fs-16" data-id="{{ $product->id }}">
-                                    <i class="fa fa-shopping-cart mr-2"></i> Kosárba
+                                    <i class="fa fa-shopping-cart mr-2"></i> {{ __('webshop::product.actions.add_to_cart') }}
                                 </button>
                             </td>
                         @endforeach
@@ -92,6 +92,7 @@
     </div>
 
     @push('scripts')
+        @include('site.webshop.partials.js-i18n')
         <script src="/packages/webshop/site/js/webshop-site.js"></script>
     @endpush
 @endsection

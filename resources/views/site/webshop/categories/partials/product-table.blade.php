@@ -5,8 +5,8 @@
     <table class="table ws-product-table align-middle">
         <thead class="thead-light lh-1">
         <tr>
-            <th>Kép</th>
-            <th>Terméknév</th>
+            <th>{{ __('webshop::catalog.list.image') }}</th>
+            <th>{{ __('webshop::catalog.list.name') }}</th>
             @php
                 $cardProps = $products->first() ? $products->first()->category->propertyCategories()
                     ->wherePivot('show_on_product_card', true)
@@ -17,7 +17,7 @@
                 <th>{{ $pc->name }}</th>
             @endforeach
             @if(($ws['site_product_prices_visible'] ?? 'true') === 'true')
-                <th>Ár</th>
+                <th>{{ __('webshop::catalog.list.price') }}</th>
             @endif
             <th class="text-right"></th>
         </tr>
@@ -26,7 +26,7 @@
         @foreach($products as $product)
             <tr>
                 <td style="width: 90px;" class="p-1">
-                    <a href="{{ route('site.webshop.products.show', $product) }}">
+                    <a href="{{ WsUrl::product($product) }}">
                         @if($product->primary_image)
                             <img src="{{ $product->primary_image_thumb ?? $product->primary_image }}" alt="{{ $product->name }}" class="" style="max-height: 82px;">
                         @else
@@ -36,12 +36,12 @@
                 </td>
                 <td class="ws-product-table-name py-1 align-middle">
                     @if(($ws['product_secondary_name_enabled'] ?? 'false') === 'true' && $product->secondary_name)
-                        <a href="{{ route('site.webshop.products.show', $product) }}" class="sec-title text-dark font-weight-bold">
+                        <a href="{{ WsUrl::product($product) }}" class="sec-title text-dark font-weight-bold">
                             {{ $product->name }}
                         </a>
                         <div class="ws-product-card-sec-title fs-14 text-muted lh-12 mb-1">{{ $product->secondary_name }}</div>
                     @else
-                        <a href="{{ route('site.webshop.products.show', $product) }}" class="text-dark font-weight-bold">
+                        <a href="{{ WsUrl::product($product) }}" class="text-dark font-weight-bold">
                             {{ $product->name }}
                         </a>
                     @endif
@@ -76,10 +76,10 @@
                     <td class="ws-nowrap">
                         {{-- Áthúzott ár: az akciót megelőző 30 nap legalacsonyabb ára (Omnibusz) --}}
                         @if($product->hasActiveSale())
-                            <div class="text-muted small" style="text-decoration: line-through;" title="Az akciót megelőző 30 nap legalacsonyabb ára">{{ hufFormat($product->referencePrice()) }}</div>
-                            <div class="text-danger font-weight-bold">{{ hufFormat($product->sale_price) }}</div>
+                            <div class="text-muted small" style="text-decoration: line-through;" title="{{ __('webshop::product.price.reference_title') }}">{{ WsFormat::money($product->referencePrice()) }}</div>
+                            <div class="text-danger font-weight-bold">{{ WsFormat::money($product->sale_price) }}</div>
                         @else
-                            <div class="font-weight-bold">{{ hufFormat($product->sellingPrice()) }}</div>
+                            <div class="font-weight-bold">{{ WsFormat::money($product->sellingPrice()) }}</div>
                         @endif
                         @include('site.webshop.partials.unit-price', ['product' => $product])
                     </td>
@@ -87,10 +87,10 @@
                 <td class="text-right ws-nowrap">
                     <div class="d-flex flex-column align-items-end">
                         <button type="button" class="btn btn-sm btn-primary js-add-to-cart" data-id="{{ $product->id }}">
-                            <i class="fa fa-shopping-cart"></i> Kosárba
+                            <i class="fa fa-shopping-cart"></i> {{ __('webshop::product.actions.add_to_cart') }}
                         </button>
                         @if(($ws['site_product_compare_enabled'] ?? 'false') === 'true')
-                            <button type="button" class="btn mt-1 btn-sm btn-outline-info js-add-to-compare" data-id="{{ $product->id }}" title="Összehasonlítás">
+                            <button type="button" class="btn mt-1 btn-sm btn-outline-info js-add-to-compare" data-id="{{ $product->id }}" title="{{ __('webshop::product.actions.compare') }}">
                                 <i class="fa fa-scale-balanced"></i>
                             </button>
                         @endif

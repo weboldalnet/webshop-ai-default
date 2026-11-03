@@ -27,6 +27,39 @@ return [
      | visszakerül, a vásárló levelet kap). 0 = kikapcsolva.
      */
     'unpaid_order_cancel_hours' => (int) env('WEBSHOP_UNPAID_ORDER_CANCEL_HOURS', 24),
+
+    /*
+     | Próbához: a webshop nyelvei a core nyelvkészlete (Lang::siteLocales) helyett, pl. ['hu', 'en']. Élesben üresen
+     | hagyandó — a nyelvet és az URL-előtagot a core adja; felülírva csak a webshop útvonalai és fordításai többnyelvűek.
+     */
+    'locales' => null,
+
+    /*
+     | Többnyelvű site: a webshop címeinek útszavai nyelvenként (/webshop/kategoria/… → /en/webshop/category/…).
+     | Az alapnyelv (Lang::DEFAULT_LANG) címei előtag nélkül élnek, a többi nyelvé /{nyelv}/ előtaggal. Hiányzó nyelvnél
+     | vagy kulcsnál az angol, végül a magyar szó. A fordítatlan technikai végpontok (cart, compare, checkout, payment,
+     | reviews) minden nyelven ugyanazok.
+     */
+    'url_words' => [
+        'hu' => [
+            'webshop' => 'webshop',
+            'category' => 'kategoria',
+            'product' => 'termek',
+            'search' => 'kereses',
+            'coupon_activate' => 'kupon/aktivalas',
+            'withdrawal' => 'elallas',
+            'withdrawal_lookup' => 'elallas/kereses',
+        ],
+        'en' => [
+            'webshop' => 'webshop',
+            'category' => 'category',
+            'product' => 'product',
+            'search' => 'search',
+            'coupon_activate' => 'coupon/activate',
+            'withdrawal' => 'withdrawal',
+            'withdrawal_lookup' => 'withdrawal/lookup',
+        ],
+    ],
     // ennél régebbi rendelésről nem megy levél (pl. az első futáskor egy régóta működő boltban) — csendben lemondja
     'unpaid_order_mail_max_age_hours' => (int) env('WEBSHOP_UNPAID_ORDER_MAIL_MAX_AGE', 72),
 

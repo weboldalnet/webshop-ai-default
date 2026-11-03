@@ -1,4 +1,5 @@
 {{-- Pénztár: a lap összes dinamikus viselkedése egy helyen --}}
+@include('site.webshop.partials.js-i18n')
 <script src="/packages/webshop/site/js/webshop-site.js"></script>
 
 @include('site.webshop.partials.tracking-scripts', ['pageType' => 'checkout'])
@@ -90,10 +91,23 @@
         var wsCodFee = {{ (float) ($codFee ?? 0) }};
         var wsCartTotal = {{ (float) $total }};
 
-        // A hufFormat() PHP-helper párja: ezres tagolás szóközzel
+        // A WsFormat::money() PHP-helper párja (webshop::common.money és thousands_separator):
+        // magyarul ezres tagolás szóközzel, „12 990 Ft”
+        var wsMoneyFormat = @json(__('webshop::common.money'));
+        var wsThousandsSeparator = @json(__('webshop::common.thousands_separator'));
         function wsHuf(amount) {
-            return Math.round(amount).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ' ') + ' Ft';
+            var number = Math.round(amount).toString().replace(/\B(?=(\d{3})+(?!\d))/g, wsThousandsSeparator);
+            return wsMoneyFormat.replace(':amount', function () { return number; });
         }
+
+        // Az összesítő és a kuponbeváltás szövegei (webshop::checkout)
+        var wsText = {
+            free: @json(__('webshop::checkout.summary.free')),
+            couponCodeRequired: @json(__('webshop::checkout.coupon.code_required')),
+            couponActivated: @json(__('webshop::checkout.coupon.activated')),
+            couponNotApplicable: @json(__('webshop::checkout.coupon.not_applicable')),
+            couponCheckFailed: @json(__('webshop::checkout.coupon.check_failed'))
+        };
 
         // Az aktivált kupon kedvezménye. A böngésző SOSEM számolja:
         // a szerver adja meg aktiváláskor, itt csak megjelenítjük és levonjuk.
@@ -108,7 +122,7 @@
                 : 0;
             var cod = (paymentCode === 'cod') ? wsCodFee : 0;
 
-            $('#ws-sum-shipping').text(shipping > 0 ? wsHuf(shipping) : 'Ingyenes');
+            $('#ws-sum-shipping').text(shipping > 0 ? wsHuf(shipping) : wsText.free);
 
             $('#ws-sum-cod').text(wsHuf(cod));
             // Osztálycsere, nem hidden/display:none – a Bootstrap .d-flex
@@ -184,7 +198,7 @@
                 wsHideCouponMessages();
 
                 if (!code) {
-                    $wsCouponError.removeClass('d-none').text('Add meg a kuponkódot.');
+                    $wsCouponError.removeClass('d-none').text(wsText.couponCodeRequired);
                     return;
                 }
 
@@ -198,7 +212,9 @@
                             wsUpdateSummary();
 
                             $wsCouponSuccess.removeClass('d-none').text(
-                                'Aktiválva: ' + response.coupon_name + ' — ' + wsHuf(wsCouponDiscount) + ' kedvezmény.'
+                                wsText.couponActivated.replace(/:(name|amount)/g, function (match, key) {
+                                    return key === 'name' ? response.coupon_name : wsHuf(wsCouponDiscount);
+                                })
                             );
 
                             $('#ws-coupon-modal-name').text(response.coupon_name || '');
@@ -209,12 +225,12 @@
                             // ezért a korábbi kedvezményt itt is elvesszük.
                             wsCouponDiscount = 0;
                             wsUpdateSummary();
-                            $wsCouponError.removeClass('d-none').text(response.message || 'A kupon nem aktiválható.');
+                            $wsCouponError.removeClass('d-none').text(response.message || wsText.couponNotApplicable);
                         }
                     })
                     .fail(function () {
                         $wsCouponError.removeClass('d-none')
-                            .text('A kupon ellenőrzése nem sikerült. Kérjük, próbáld újra.');
+                            .text(wsText.couponCheckFailed);
                     })
                     .always(function () {
                         $wsCouponButton.prop('disabled', false);

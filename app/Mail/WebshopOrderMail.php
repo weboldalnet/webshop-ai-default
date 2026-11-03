@@ -38,7 +38,8 @@ class WebshopOrderMail extends Mailable
      */
     public function build()
     {
-        $subject = $this->customContent && $this->customContent->title ? $this->customContent->title : ($this->order->type === WebshopOrder::TYPE_QUOTE ? 'Árajánlatkérés visszaigazolása' : 'Rendelés visszaigazolása');
+        // A tárgy itt, a build()-ben dől el: a Mailable::locale() csak a build/render köré állítja a nyelvet.
+        $subject = $this->customContent && $this->customContent->title ? $this->customContent->title : ($this->order->type === WebshopOrder::TYPE_QUOTE ? __('webshop::mail.order.subject_quote') : __('webshop::mail.order.subject'));
 
         $settings = ContactSettings::find(1);
         $contactData = $settings->contact_data;
@@ -73,7 +74,7 @@ class WebshopOrderMail extends Mailable
             : null;
 
         if ($termsPdf) {
-            $mail->attach($termsPdf, ['as' => 'Altalanos-Szerzodesi-Feltetelek.pdf', 'mime' => 'application/pdf'])
+            $mail->attach($termsPdf, ['as' => __('webshop::mail.order.terms_attachment'), 'mime' => 'application/pdf'])
                 ->with('termsAttached', true);
         }
 

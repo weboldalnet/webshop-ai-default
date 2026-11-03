@@ -26,4 +26,29 @@ class WebshopSlugService
 
         return $newSlug;
     }
+
+    /**
+     * Nyelvi slug a lefordított névből, nyelvenként egyedi (webshop_translations részleges egyedi indexe). Az alapnyelvi
+     * slugokkal nem kell egyeznie: a nyelvi cím előbb a fordítástáblában keres (WebshopTranslationService::recordIdBySlug).
+     */
+    public static function generateUniqueTranslatedSlug(string $name, string $type, string $locale, int $recordId): string
+    {
+        $slug = getTransformedString($name);
+        if (empty($slug)) $slug = 'item';
+
+        $taken = function (string $candidate) use ($type, $locale, $recordId) {
+            return \Weboldalnet\WebshopAiDefault\Models\WebshopTranslation::query()
+                ->where(['type' => $type, 'locale' => $locale, 'field' => 'slug', 'value' => $candidate])
+                ->where('record_id', '!=', $recordId)
+                ->exists();
+        };
+
+        $candidate = $slug;
+        $counter = 1;
+        while ($taken($candidate)) {
+            $candidate = $slug . '-' . $counter++;
+        }
+
+        return $candidate;
+    }
 }

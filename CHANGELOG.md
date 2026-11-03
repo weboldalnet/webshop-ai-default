@@ -1,4 +1,42 @@
 ## [Unreleased]
+### Többnyelvű webshop: felületi szövegek, nyelvi címek, Fordítások összesítő, AI-fordítás, rendelés nyelve
+**1 új migráció** (`webshop_translation_runs`, `webshop_translation_run_items`, `webshop_translation_backups`) —
+frissítés után `php artisan migrate`, és `vendor:publish --tag=webshop-assets --force` (új admin JS, CSS,
+a webshop-site.js változott). **Egynyelvű projektben a működés és a magyar szöveg változatlan** (egyetlen elfogadott
+eltérés: a dátumok egységesen `Y. m. d.` / `Y. m. d. H:i` formátumúak). Igényli: weboldalnet/commerce-users ≥ a
+nyelvi fájlos változat a fiókmenü fordításához (régebbivel a „Rendeléseim” magyar marad).
+
+- **Felületi szövegek nyelvi fájlokban** (`resources/lang/{hu,en}/*.php`, `__('webshop::…')`, ~530 kulcs): vásárlói
+  oldal, pénztár, levelek, elállás, Rendeléseim, rendelés-/fizetési állapotok, szolgáltató- és szállítási módok,
+  jogi információk feliratai. A jogi szövegek angol változata jelölve (`// JOGI SZÖVEG`) — jogásznak érdemes átnéznie.
+  Felülírás a projektben: `lang/vendor/webshop/{nyelv}/…` (publish: `webshop-lang`).
+- **Formázás nyelvenként:** `WsFormat::money()` (hu: „12 990 Ft”, en: „HUF 12,990”), `::number()`, `::date()`,
+  `::datetime()`; a JS (webshop-site.js) a `window.wsI18n`-ből (`site.webshop.partials.js-i18n`) kapja a szövegeit,
+  a pénzformátumot és a végpontok nyelvi alapcímét.
+- **Nyelvi címek:** többnyelvű site-on a webshop minden nyelven él: `/en/webshop/category/…-c12`,
+  `/en/webshop/product/{nyelvi slug}` (útszavak: `config webshop.url_words`), útvonalnevek `site.webshop.{nyelv}.*`
+  (a `routeIs('site.webshop.*')` minden nyelven igaz). `WsUrl::route()/product()/category()` a kérés nyelvén ad címet;
+  a termék eredeti slugjáról 301 a nyelvire. A core nyelvválasztója és hreflang-sorai a webshop-oldal nyelvi párjára
+  mutatnak (`SetWebshopLocaleAlternates` — áthidalás, amíg a core-ban nincs erre bővítési pont).
+- **Fordított tartalom a site-on:** a fordítható mezők (név, leírás, slug, SEO, jogi infó, galéria-alt, dokumentumnév,
+  levél/köszönőoldal, nyitóoldal-blokk, tulajdonság, címke) nem alapnyelven a fordítást adják (hiányában az eredetit),
+  listákban egy lekérdezéssel előtöltve; adminban és mentéskor mindig az eredeti. A kereső a fordított nevekben is keres;
+  a kosár tételnevei a kérés nyelvén. **Beállítás:** „Fordítatlan termék rejtve” (Beállítások › Többnyelvű webshop).
+- **Merchant feed nyelvenként** a saját szövegeivel, címeivel és láthatóságával.
+- **Webshop › Fordítások** (csak többnyelvű projektben): nyelvenkénti állapotkártyák, szűrhető lista (típus, nyelv,
+  állapot: hiányzik / részben / elavult / kész / kézzel javított, kategória, aktív, keresés), mezőnkénti
+  fordítás-szerkesztő (eredeti | fordítás), a szerkesztők tetején fordítási sáv és figyelmeztetés, ha az admin
+  nyelvválasztója nem az alapnyelven áll.
+- **AI-fordítás** (bekötött core AI mellett, a core `AiTranslator`-ával): tömegesen (kijelöltek / a szűrésnek megfelelő
+  összes) vagy rekordonként; nyelvek, mód (fordítatlan / elavult is / minden), tartalmak (szöveg, SEO, URL-szó),
+  „kézzel javítottat ne írja felül”; becslés (tétel, mező, karakter, AI-hívás, idő); böngészőből lépésenként,
+  szüneteltethető, az állapot DB-ben (folytatható, elfogyott kreditnél szünetel); azonnal élesedik, a futás vagy egy
+  tétele visszavonható (az azóta átírt mezőt nem bántja).
+- **A rendelés nyelve** (`webshop_orders.locale`) végig: rendelési, lemondó és elállási levél (a bolt példánya
+  alapnyelven), a számla nyelve és tételnevei (Számlázz.hu), a fizetési oldal nyelve (Barion, SimplePay); magyar
+  rendelésnél minden változatlan.
+- Próbához: `config webshop.locales` (pl. `['hu', 'en']`) a core nyelvkészlete helyett — élesben üresen hagyandó.
+
 ### Ütemezett feladatok: merchant feed, félbehagyott online rendelések lemondása
 Migrációt NEM igényel. A Laravel ütemezője futtatja (a szerveren a szokásos `* * * * * php artisan schedule:run` cron
 kell, külön sor nem). A fizetés-egyeztetést a commerce-core (`commerce:reconcile-payments`) végzi.

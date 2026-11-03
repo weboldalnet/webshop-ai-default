@@ -2,6 +2,7 @@
 
 namespace Weboldalnet\WebshopAiDefault\Services\Webshop;
 
+use Weboldalnet\WebshopAiDefault\Helpers\WebshopUrl;
 use Weboldalnet\WebshopAiDefault\Models\WebshopProduct;
 
 class ProductSchemaService
@@ -14,7 +15,7 @@ class ProductSchemaService
             'name' => $product->name,
             'description' => strip_tags($product->short_desc ?? $product->description ?? $product->name),
             'image' => $product->primary_image ? url($product->primary_image) : null,
-            'url' => route('site.webshop.products.show', $product),
+            'url' => WebshopUrl::product($product),
         ];
 
         if ($product->sku) {
@@ -27,7 +28,7 @@ class ProductSchemaService
                 'price' => number_format($product->sellingPrice(), 2, '.', ''),
                 'priceCurrency' => 'HUF',
                 'availability' => $product->stock_enabled && $product->stock_quantity <= 0 ? 'https://schema.org/OutOfStock' : 'https://schema.org/InStock',
-                'url' => route('site.webshop.products.show', $product),
+                'url' => WebshopUrl::product($product),
             ];
             $schema['offers'] = $offers;
         }

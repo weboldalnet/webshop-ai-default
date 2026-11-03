@@ -5,6 +5,9 @@
 @php
     $wsLegalService = \Weboldalnet\WebshopAiDefault\Services\Webshop\WebshopProductLegalInfoService::class;
     $wsLegalSections = $wsLegalService::sectionsFor($product);
+    // Piktogram- és tápérték-feliratok az oldal nyelvén (a konstansok a magyar forrásszöveget tartják)
+    $wsPictogramLabels = $wsLegalService::pictogramLabels();
+    $wsNutritionLabels = $wsLegalService::nutritionLabels();
 @endphp
 
 <div class="ws-product-legal-info">
@@ -28,7 +31,7 @@
                                                     <rect x="6" y="6" width="22" height="22" transform="rotate(45 17 17)" fill="#fff" stroke="#d00000" stroke-width="3"/>
                                                     <text x="17" y="20.5" text-anchor="middle" font-size="9" font-weight="700" fill="#000">{{ substr($wsPictogram, 3) }}</text>
                                                 </svg>
-                                                <span>{{ $wsPictogram }} – {{ $wsLegalService::PICTOGRAMS[$wsPictogram] ?? '' }}</span>
+                                                <span>{{ $wsPictogram }} – {{ $wsPictogramLabels[$wsPictogram] ?? '' }}</span>
                                             </span>
                                         @endforeach
                                     </div>
@@ -36,7 +39,7 @@
                                 @case('nutrition')
                                     <table class="table table-sm table-bordered mb-0 ws-nutrition-table" style="max-width: 420px;">
                                         <tbody>
-                                            @foreach($wsLegalService::NUTRITION as $wsNutritionKey => $wsNutritionLabel)
+                                            @foreach($wsNutritionLabels as $wsNutritionKey => $wsNutritionLabel)
                                                 @if(isset($wsLegalRow['value'][$wsNutritionKey]))
                                                     <tr>
                                                         <td>{{ $wsNutritionLabel }}</td>
@@ -48,7 +51,7 @@
                                     </table>
                                     @break
                                 @case('url')
-                                    <a href="{{ $wsLegalRow['value'] }}" target="_blank" rel="noopener">Megnyitás <i class="fa fa-external-link-alt ml-1"></i></a>
+                                    <a href="{{ $wsLegalRow['value'] }}" target="_blank" rel="noopener">{{ __('webshop::common.open') }} <i class="fa fa-external-link-alt ml-1"></i></a>
                                     @break
                                 @default
                                     {{ $wsLegalService::formatText((string) $wsLegalRow['value']) }}

@@ -59,7 +59,7 @@ class WebshopCommerceService
 
         // Fizetés a helyszínen (csak ha kérjük és be van kapcsolva)
         if ($includeOnSite && WebshopSettingsService::getBool('site_checkout_payment_on_site_enabled')) {
-            $filtered['on_site'] = 'Fizetés a helyszínen';
+            $filtered['on_site'] = __('webshop::order.payment_method.on_site');
         }
 
         return $filtered;
@@ -79,7 +79,7 @@ class WebshopCommerceService
             $providers = $manager->getEnabledProviders();
             $methods = [];
             foreach ($providers as $code => $provider) {
-                $methods[$code] = $provider->getName();
+                $methods[$code] = self::translateProviderName($provider->getName());
             }
             return !empty($methods) ? $methods : self::getFallbackPaymentMethods();
         } catch (\Throwable $e) {
@@ -260,6 +260,14 @@ class WebshopCommerceService
     ];
 
     /**
+     * Egy szállítási csoport felirata az aktuális nyelven (a SHIPPING_GROUPS 'label'-je a magyar forrás).
+     */
+    public static function shippingGroupLabel(string $kind): string
+    {
+        return isset(self::SHIPPING_GROUPS[$kind]) ? __('webshop::order.shipping_group.' . $kind) : $kind;
+    }
+
+    /**
      * Saját díjazású szállítási módok: nincs külső díjszámításuk, a díjat és az
      * ingyenes-szállítási értékhatárt az adminban adják meg
      * (site_checkout_shipping_{kód}_fee / _free_above).
@@ -346,7 +354,7 @@ class WebshopCommerceService
         $groups = [];
 
         foreach (self::SHIPPING_GROUPS as $kind => $group) {
-            $groups[$kind] = ['label' => $group['label'], 'methods' => []];
+            $groups[$kind] = ['label' => self::shippingGroupLabel($kind), 'methods' => []];
         }
 
         foreach ($methods as $code => $label) {
@@ -421,6 +429,7 @@ class WebshopCommerceService
             }
 
             $groups[$kind] = array_merge($group, [
+                'label' => self::shippingGroupLabel($kind),
                 'kind' => $kind,
                 'enabled' => WebshopSettingsService::getBool($group['key']),
                 'methods' => $methods,
@@ -495,7 +504,7 @@ class WebshopCommerceService
             $providers = $manager->getEnabledProviders();
             $methods = [];
             foreach ($providers as $code => $provider) {
-                $methods[$code] = $provider->getName();
+                $methods[$code] = self::translateProviderName($provider->getName());
             }
             return !empty($methods) ? $methods : self::getFallbackShippingMethods();
         } catch (\Throwable $e) {
@@ -519,7 +528,7 @@ class WebshopCommerceService
                 'paymentStatus' => WebshopOrder::PAYMENT_STATUS_PENDING,
                 'orderStatusSuggestion' => WebshopOrder::STATUS_PROCESSING,
                 'transactionId' => null,
-                'message' => 'Fizetés a helyszínen – offline mód.',
+                'message' => __('webshop::order.payment_message.on_site_offline'),
                 'rawResult' => null,
             ];
         }
@@ -532,7 +541,7 @@ class WebshopCommerceService
                 'paymentStatus' => WebshopOrder::PAYMENT_STATUS_PENDING,
                 'orderStatusSuggestion' => WebshopOrder::STATUS_PROCESSING,
                 'transactionId' => null,
-                'message' => 'Commerce-core nem elérhető, offline mód.',
+                'message' => __('webshop::order.payment_message.commerce_unavailable'),
                 'rawResult' => null,
             ];
         }
@@ -565,7 +574,7 @@ class WebshopCommerceService
                 'paymentStatus' => WebshopOrder::PAYMENT_STATUS_FAILED,
                 'orderStatusSuggestion' => WebshopOrder::STATUS_FAILED,
                 'transactionId' => null,
-                'message' => 'Fizetési folyamat indítása sikertelen: ' . $e->getMessage(),
+                'message' => __('webshop::order.payment_message.start_failed', ['error' => $e->getMessage()]),
                 'rawResult' => null,
             ];
         }
@@ -864,7 +873,7 @@ class WebshopCommerceService
         }
 
         $allMethods = array_merge(self::getFallbackPaymentMethods(), [
-            'on_site' => 'Fizetés a helyszínen',
+            'on_site' => __('webshop::order.payment_method.on_site'),
         ]);
 
         // Ha elérhető a commerce-core, lekéri a provider nevét
@@ -873,7 +882,7 @@ class WebshopCommerceService
                 $manager = app(\Weboldalnet\CommerceCore\Managers\PaymentManager::class);
                 $providers = $manager->getEnabledProviders();
                 foreach ($providers as $providerCode => $provider) {
-                    $allMethods[$providerCode] = $provider->getName();
+                    $allMethods[$providerCode] = self::translateProviderName($provider->getName());
                 }
             } catch (\Throwable $e) {
                 // fallback
@@ -902,7 +911,7 @@ class WebshopCommerceService
     public static function getAllPaymentMethodLabels(): array
     {
         $allMethods = array_merge(self::getFallbackPaymentMethods(), [
-            'on_site' => 'Fizetés a helyszínen',
+            'on_site' => __('webshop::order.payment_method.on_site'),
         ]);
 
         if (self::isAvailable()) {
@@ -910,7 +919,7 @@ class WebshopCommerceService
                 $manager = app(\Weboldalnet\CommerceCore\Managers\PaymentManager::class);
                 $providers = $manager->getEnabledProviders();
                 foreach ($providers as $code => $provider) {
-                    $allMethods[$code] = $provider->getName();
+                    $allMethods[$code] = self::translateProviderName($provider->getName());
                 }
             } catch (\Throwable $e) {
                 // fallback
@@ -935,7 +944,7 @@ class WebshopCommerceService
             config('commerce-gls.parcel_shop_code') => config('commerce-gls.parcel_shop_label'),
         ] as $code => $label) {
             if ($code && $label && !isset($allMethods[$code])) {
-                $allMethods[$code] = $label;
+                $allMethods[$code] = self::translateProviderName($label);
             }
         }
 
@@ -947,7 +956,7 @@ class WebshopCommerceService
                     // A webshop saját elnevezése az elsődleges (a checkout is ezt kínálja),
                     // a provider neve csak az itt még nem ismert kódokra vonatkozik.
                     if (!isset($allMethods[$code])) {
-                        $allMethods[$code] = $provider->getName();
+                        $allMethods[$code] = self::translateProviderName($provider->getName());
                     }
                 }
             } catch (\Throwable $e) {
@@ -1004,27 +1013,41 @@ class WebshopCommerceService
         ];
     }
 
+    /**
+     * A commerce-core és a fizetési / szállítási csomagok magyarul beégetett alapnevei (Utánvét, Banki átutalás,
+     * GLS csomagpont …) az aktuális nyelven. Csak a nyelvi fájl magyar szövegével betűre egyező nevet fordítjuk: az
+     * adminban átírt elnevezés (beállítás-érték) változatlanul megy ki.
+     */
+    private static function translateProviderName($name): string
+    {
+        $name = (string) $name;
+        $source = trans('webshop::order.provider_name', [], 'hu');
+        $key = is_array($source) ? array_search($name, $source, true) : false;
+
+        return $key !== false ? __('webshop::order.provider_name.' . $key) : $name;
+    }
+
     private static function getFallbackPaymentMethods(): array
     {
         return [
-            'bank_transfer' => 'Előre utalással',
-            'cod' => 'Utánvét',
-            'manual' => 'Manuális fizetés',
+            'bank_transfer' => __('webshop::order.payment_method.bank_transfer'),
+            'cod' => __('webshop::order.payment_method.cod'),
+            'manual' => __('webshop::order.payment_method.manual'),
         ];
     }
 
     private static function getFallbackShippingMethods(): array
     {
         return [
-            'manual' => 'Manuális szállítás',
-            'pickup' => 'Személyes átvétel',
+            'manual' => __('webshop::order.shipping_method.manual'),
+            'pickup' => __('webshop::order.shipping_method.pickup'),
             // NEM „Házhoz szállítás": az a CSOPORT neve, amin belül ez a mód áll –
             // a pénztárban kétszer egymás alatt ugyanaz a felirat jelent meg.
             // A fix díjas mód a bolt saját kiszállítása, ezért ez a beszédes név.
-            'flat_rate' => 'Saját futárszolgálat',
+            'flat_rate' => __('webshop::order.shipping_method.flat_rate'),
             // Kézzel kezelt futárszolgálat, külső API nélkül (lásd ManualCourierShippingProvider)
-            'mpl' => 'MPL futárszolgálat',
-            'parcel_locker' => 'Csomagpont automata',
+            'mpl' => __('webshop::order.shipping_method.mpl'),
+            'parcel_locker' => __('webshop::order.shipping_method.parcel_locker'),
         ];
     }
 }

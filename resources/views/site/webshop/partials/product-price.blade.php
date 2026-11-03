@@ -12,13 +12,13 @@
 @if(($ws['site_product_prices_visible'] ?? 'true') === 'true')
     <div class="ws-product-price-box ws-nowrap {{ $priceWrapClass ?? '' }}">
         @if($product->hasActiveSale())
-            <span class="text-dark" style="text-decoration: line-through;" title="Az akciót megelőző 30 nap legalacsonyabb ára">{{ hufFormat($product->referencePrice()) }}</span>
-            <span class="text-danger font-weight-bold d-block {{$priceSize ?? 'h5'}} mb-0">{{ hufFormat($product->sale_price) }}</span>
+            <span class="text-dark" style="text-decoration: line-through;" title="{{ __('webshop::product.price.reference_title') }}">{{ WsFormat::money($product->referencePrice()) }}</span>
+            <span class="text-danger font-weight-bold d-block {{$priceSize ?? 'h5'}} mb-0">{{ WsFormat::money($product->sale_price) }}</span>
             @if($showPriceNote ?? false)
-                <span class="d-block fs-14 ws-price-note">Áthúzott ár: az akciót megelőző 30 nap legalacsonyabb ára.</span>
+                <span class="d-block fs-14 ws-price-note">{{ __('webshop::product.price.reference_note') }}</span>
             @endif
         @else
-            <span class="font-weight-bold d-block {{$priceSize ?? 'h5'}} mb-0">{{ hufFormat($product->sellingPrice()) }}</span>
+            <span class="font-weight-bold d-block {{$priceSize ?? 'h5'}} mb-0">{{ WsFormat::money($product->sellingPrice()) }}</span>
         @endif
         @if($showUnitPrice ?? true)
             @include('site.webshop.partials.unit-price', ['product' => $product])

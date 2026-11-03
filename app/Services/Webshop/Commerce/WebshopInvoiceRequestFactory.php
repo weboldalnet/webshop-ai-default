@@ -2,8 +2,10 @@
 
 namespace Weboldalnet\WebshopAiDefault\Services\Webshop\Commerce;
 
+use Illuminate\Support\Facades\Lang;
 use Weboldalnet\WebshopAiDefault\Models\WebshopOrder;
 use Weboldalnet\WebshopAiDefault\Services\Webshop\WebshopSettingsService;
+use Weboldalnet\WebshopAiDefault\Support\WebshopOrderLocale;
 
 class WebshopInvoiceRequestFactory
 {
@@ -14,7 +16,8 @@ class WebshopInvoiceRequestFactory
      * olyan bolt, ahol ezeket kézzel viszik fel a számlázó programban – ott a
      * mi tételünk duplikáció lenne. A kulcs adja a beállítás nevét:
      *   invoice_line_<kulcs>_enabled   (checkbox, alap: be)
-     *   invoice_line_<kulcs>_name      (szöveg, alap: a lenti default_name)
+     *   invoice_line_<kulcs>_name      (szöveg, alap: a lenti default_name — a számlára a
+     *                                  webshop::order.invoice_line.<kulcs> fordítása kerül)
      *
      * A 'source' a WebshopOrder::priceBreakdown() kulcsa, az 'sign' pedig azt
      * mondja meg, hozzáad vagy levon. Új tétel felvétele: egy sor ide.
@@ -76,7 +79,16 @@ class WebshopInvoiceRequestFactory
         'TAM' => 'TAM – tárgyi adómentes',
     ];
 
+    /**
+     * A számla a rendelés nyelvén: a számla nyelve, a tételnevek és a fizetési mód felirata (a sorból futó
+     * számlázásnál is, ahol nincs kérés-nyelv).
+     */
     public static function fromOrder(WebshopOrder $order, array $options = []): array
+    {
+        return WebshopOrderLocale::run(WebshopOrderLocale::of($order), fn () => self::build($order, $options));
+    }
+
+    protected static function build(WebshopOrder $order, array $options): array
     {
         $billingData = $order->getBillingDataArray();
         $items = self::items($order);
@@ -102,7 +114,7 @@ class WebshopInvoiceRequestFactory
             // is az kerüljön, amiről a számla ténylegesen szól.
             'gross_total' => round(array_sum(array_column($items, 'gross_total')), 2),
             'currency' => $order->currency ?? 'HUF',
-            'language' => $options['language'] ?? 'hu',
+            'language' => $options['language'] ?? WebshopOrderLocale::invoiceLanguage(WebshopOrderLocale::of($order)),
             'extra' => [
                 'issue_date' => date('Y-m-d'),
                 'fulfillment_date' => date('Y-m-d'),
@@ -132,7 +144,7 @@ class WebshopInvoiceRequestFactory
             return [
                 'name' => $item->product_name,
                 'quantity' => $item->quantity,
-                'unit' => 'db',
+                'unit' => __('webshop::common.pcs'),
                 'gross_unit_price' => (float) $item->unit_price,
                 'gross_total' => (float) $item->total_price,
                 'vat_key' => $vatKey,
@@ -148,13 +160,18 @@ class WebshopInvoiceRequestFactory
                 continue;
             }
 
-            $lines[] = self::extraItem(self::lineName($lineKey, $meta['default_name'], $order), $amount, $vatKey);
+            // nyelvi kulcs nélküli új tételnél a magyar default_name, nem a nyers kulcs kerül a számlára
+            $defaultName = Lang::has('webshop::order.invoice_line.' . $lineKey)
+                ? __('webshop::order.invoice_line.' . $lineKey)
+                : $meta['default_name'];
+
+            $lines[] = self::extraItem(self::lineName($lineKey, $defaultName, $order), $amount, $vatKey);
         }
 
         // Ami az ismert tételek után is marad (régi, cod_fee nélküli rendelés
         // furcsa kerekítése vagy kézi módosítás). Új rendelésnél mindig 0.
         if (round((float) $breakdown['other'], 2) != 0.0) {
-            $lines[] = self::extraItem('Egyéb díj', round((float) $breakdown['other'], 2), $vatKey);
+            $lines[] = self::extraItem(__('webshop::order.invoice_line.other'), round((float) $breakdown['other'], 2), $vatKey);
         }
 
         return $lines;
@@ -166,7 +183,7 @@ class WebshopInvoiceRequestFactory
         return [
             'name' => $name,
             'quantity' => 1,
-            'unit' => 'db',
+            'unit' => __('webshop::common.pcs'),
             'gross_unit_price' => $amount,
             'gross_total' => $amount,
             'vat_key' => $vatKey,

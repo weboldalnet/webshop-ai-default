@@ -268,6 +268,26 @@
                         </div>
                     </div>
 
+                    {{-- Többnyelvű webshop (csak többnyelvű projektben): a fordítások a Webshop › Fordítások oldalon --}}
+                    @if(\Weboldalnet\WebshopAiDefault\Services\Webshop\WebshopTranslationService::isMultiLanguage())
+                        @php
+                            $wsHideKey = \Weboldalnet\WebshopAiDefault\Services\Webshop\WebshopTranslationService::SETTING_HIDE_UNTRANSLATED;
+                        @endphp
+                        <div class="ws-card">
+                            <header class="ws-card-head">
+                                <span class="ws-card-icon"><i class="fa-solid fa-language"></i></span>
+                                <div class="ws-card-heading"><h3 class="ws-card-title">Többnyelvű webshop</h3></div>
+                            </header>
+                            <div class="ws-toggle-grid">
+                                <div class="ws-toggle-tile is-wide @if($wsOn($wsHideKey)) is-on @endif">
+                                    @include($wsToggle, ['name' => $wsHideKey, 'label' => 'Fordítatlan termék rejtve', 'icon' => 'fa-eye-slash',
+                                        'hint' => 'Bekapcsolva a többi nyelven csak a lefordított nevű termékek látszanak (lista, kereső, termékoldal, merchant feed). Kikapcsolva a fordítatlan termék az eredeti szövegével jelenik meg.',
+                                        'checked' => $wsOn($wsHideKey)])
+                                </div>
+                            </div>
+                        </div>
+                    @endif
+
                     {{-- A termékoldal a vélemények mellett ezek alapján tájékoztat arról, hogyan kezeljük és
                          ellenőrizzük őket (Fttv., Omnibusz) – a szöveg a beállításból készül. --}}
                     <div class="ws-card">

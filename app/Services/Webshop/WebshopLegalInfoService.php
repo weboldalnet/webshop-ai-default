@@ -38,6 +38,22 @@ class WebshopLegalInfoService
     }
 
     /**
+     * A SELLER_FIELDS megnevezései az aktuális nyelven (a konstans a magyar forrás).
+     *
+     * @return array<string, string>
+     */
+    public static function sellerFieldLabels(): array
+    {
+        $labels = [];
+
+        foreach (array_keys(self::SELLER_FIELDS) as $field) {
+            $labels[$field] = __('webshop::legal_info.seller.' . $field);
+        }
+
+        return $labels;
+    }
+
+    /**
      * Az eladó adatai, a core kapcsolati adataira visszaeséssel.
      *
      * @return array<string, string|null>
@@ -68,11 +84,12 @@ class WebshopLegalInfoService
     public static function missingSellerFields(): array
     {
         $seller = self::seller();
+        $labels = self::sellerFieldLabels();
         $missing = [];
 
         foreach (self::REQUIRED_SELLER_FIELDS as $field) {
             if (empty($seller[$field])) {
-                $missing[] = self::SELLER_FIELDS[$field];
+                $missing[] = $labels[$field];
             }
         }
 

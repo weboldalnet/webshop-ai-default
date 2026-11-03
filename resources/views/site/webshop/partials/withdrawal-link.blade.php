@@ -12,7 +12,7 @@
 @if(Route::has('site.webshop.withdrawals.lookup'))
     <a class="css-withdrawal {{ $linkClass ?? 'd-block py-1' }}" href="#"
        data-toggle="modal" data-target="#wsWithdrawalModal">
-        <i class="fa-solid fa-rotate-left {{ $iconClass ?? '' }} mr-1"></i> Elállás a vásárlástól
+        <i class="fa-solid fa-rotate-left {{ $iconClass ?? '' }} mr-1"></i> {{ __('webshop::withdrawal.title') }}
     </a>
 
     @include('webshop::site.webshop.modals.withdrawal')

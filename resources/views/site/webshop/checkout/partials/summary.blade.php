@@ -8,7 +8,7 @@
     ténylegesen felszámított összeg nem térhet el.
 --}}
 <div class="card shadow-sm border-0">
-    <div class="card-header bg-dark text-white font-weight-bold h5">Összegzés</div>
+    <div class="card-header bg-dark text-white font-weight-bold h5">{{ __('webshop::checkout.summary.title') }}</div>
     <div class="card-body">
         <div class="row">
             {{-- Bal oldal: a tételes bontás --}}
@@ -16,14 +16,14 @@
                 <div class="col-lg-12 mx-auto">
                     @if($wsPricesVisible)
                     <div class="d-flex flex-wrap justify-content-between py-2">
-                        <span>Kosár érték</span>
+                        <span>{{ __('webshop::checkout.summary.cart_value') }}</span>
                         {{-- id kell hozzá: mennyiség-változtatáskor JS-ből frissül --}}
-                        <span class="font-weight-bold ws-nowrap" id="ws-sum-items">{{ hufFormat($total) }}</span>
+                        <span class="font-weight-bold ws-nowrap" id="ws-sum-items">{{ WsFormat::money($total) }}</span>
                     </div>
 
                     @if($wsShippingEnabled)
                         <div class="d-flex flex-wrap justify-content-between py-2 border-top">
-                            <span>Szállítási díj</span>
+                            <span>{{ __('webshop::checkout.summary.shipping_fee') }}</span>
                             <span class="font-weight-bold ws-nowrap" id="ws-sum-shipping">&mdash;</span>
                         </div>
                     @endif
@@ -36,7 +36,7 @@
                          Bootstrap .d-flex szabálya !important, ezért mindkettőt
                          felülírná, és a sor a rejtés ellenére látszana. --}}
                     <div class="d-none flex-wrap justify-content-between py-2 border-top" id="ws-sum-cod-row">
-                        <span>Utánvét költsége</span>
+                        <span>{{ __('webshop::checkout.summary.cod_fee') }}</span>
                         <span class="font-weight-bold ws-nowrap" id="ws-sum-cod">&mdash;</span>
                     </div>
 
@@ -44,13 +44,13 @@
                          utánvétnél: a Bootstrap .d-flex !important szabálya a
                          hidden attribútumot és az inline display:none-t is felülírná. --}}
                     <div class="d-none flex-wrap justify-content-between py-2 border-top" id="ws-sum-coupon-row">
-                        <span>Kuponkedvezmény<span class="text-muted small ml-1" id="ws-sum-coupon-code"></span></span>
+                        <span>{{ __('webshop::checkout.summary.coupon_discount') }}<span class="text-muted small ml-1" id="ws-sum-coupon-code"></span></span>
                         <span class="font-weight-bold text-success" id="ws-sum-coupon">&mdash;</span>
                     </div>
 
                     <div class="d-flex flex-wrap justify-content-between py-3 border-top h4 mb-0">
-                        <span class="font-weight-bold">Összesen fizetendő</span>
-                        <span class="text-primary font-weight-bold ws-nowrap" id="ws-sum-total">{{ hufFormat($total) }}</span>
+                        <span class="font-weight-bold">{{ __('webshop::checkout.summary.total_due') }}</span>
+                        <span class="text-primary font-weight-bold ws-nowrap" id="ws-sum-total">{{ WsFormat::money($total) }}</span>
                     </div>
                 @endif
 
@@ -64,10 +64,10 @@
                      */
                     $wsSzoveg = static fn ($ertek, $alap) => trim((string) ($ertek ?? '')) !== '' ? trim((string) $ertek) : $alap;
 
-                    $tosLabel = $wsSzoveg($ws['site_checkout_tos_label'] ?? null, 'Elfogadom az Általános Szerződési Feltételeket');
+                    $tosLabel = $wsSzoveg($ws['site_checkout_tos_label'] ?? null, __('webshop::checkout.summary.tos_default'));
                     $tosLink = $wsSzoveg($ws['site_checkout_tos_url'] ?? null, $wsSzoveg($ws['site_checkout_tos_path'] ?? null, ''));
 
-                    $privLabel = $wsSzoveg($ws['site_checkout_privacy_label'] ?? null, 'Elfogadom az Adatvédelmi tájékoztatót');
+                    $privLabel = $wsSzoveg($ws['site_checkout_privacy_label'] ?? null, __('webshop::checkout.summary.privacy_default'));
                     $privLink = $wsSzoveg($ws['site_checkout_privacy_url'] ?? null, $wsSzoveg($ws['site_checkout_privacy_path'] ?? null, ''));
                 @endphp
 
@@ -82,7 +82,7 @@
                                 <label class="custom-control-label" for="accept_tos">
                                     {{ $tosLabel }}
                                     @if($tosLink !== '')
-                                        (<a href="{{ $tosLink }}" target="_blank" rel="noopener">Megnyitás</a>)
+                                        (<a href="{{ $tosLink }}" target="_blank" rel="noopener">{{ __('webshop::common.open') }}</a>)
                                     @endif
                                 </label>
                                 @error('accept_tos') <div class="invalid-feedback d-block">{{ $message }}</div> @enderror
@@ -95,7 +95,7 @@
                                 <label class="custom-control-label" for="accept_privacy">
                                     {{ $privLabel }}
                                     @if($privLink !== '')
-                                        (<a href="{{ $privLink }}" target="_blank" rel="noopener">Megnyitás</a>)
+                                        (<a href="{{ $privLink }}" target="_blank" rel="noopener">{{ __('webshop::common.open') }}</a>)
                                     @endif
                                 </label>
                                 @error('accept_privacy') <div class="invalid-feedback d-block">{{ $message }}</div> @enderror
@@ -106,8 +106,7 @@
                                  elérhetővé kell tenni (GDPR 13. cikk) --}}
                             <p class="small text-muted mt-2 mb-0">
                                 <i class="fa fa-circle-info mr-1"></i>
-                                A rendeléssel kapcsolatos adatkezelésről az
-                                <a href="{{ $privLink }}" target="_blank" rel="noopener">Adatkezelési tájékoztatóban</a> olvashatsz.
+                                {!! __('webshop::checkout.summary.privacy_notice', ['link' => '<a href="' . e($privLink) . '" target="_blank" rel="noopener">' . e(__('webshop::checkout.summary.privacy_notice_link')) . '</a>']) !!}
                             </p>
                         @endif
                     </div>
@@ -119,7 +118,7 @@
                              „Rendelés leadása”-ra vagy hasonlóra. Az ajánlatkérés nem fizetős megrendelés. --}}
                         <button type="submit" class="btn btn-success btn-lg btn-block font-weight-bold py-3 shadow mb-0">
                             <i class="fa {{ ($ws['site_checkout_mode'] ?? 'order') == 'quote' ? 'fa-paper-plane' : 'fa-check-circle' }} mr-2"></i>
-                            {{ ($ws['site_checkout_mode'] ?? 'order') == 'quote' ? 'Ajánlatkérés elküldése' : 'Megrendelés fizetési kötelezettséggel' }}
+                            {{ ($ws['site_checkout_mode'] ?? 'order') == 'quote' ? __('webshop::checkout.summary.submit_quote') : __('webshop::checkout.summary.submit_order') }}
                         </button>
                     </div>
                 </div>

@@ -20,49 +20,49 @@
 @endphp
 
 <div class="card shadow-sm border-0 mb-4">
-    <div class="card-header bg-dark text-white font-weight-bold h5">Rendelés áttekintése</div>
+    <div class="card-header bg-dark text-white font-weight-bold h5">{{ __('webshop::checkout.order.overview_title') }}</div>
     <div class="card-body">
         <dl class="row mb-0">
-            <dt class="col-sm-4 py-1">Rendelésszám</dt>
+            <dt class="col-sm-4 py-1">{{ __('webshop::common.order_number') }}</dt>
             <dd class="col-sm-8 py-1 font-weight-bold">{{ $order->order_number }}</dd>
 
-            <dt class="col-sm-4 py-1">Rendelés dátuma</dt>
-            <dd class="col-sm-8 py-1">{{ $order->created_at ? $order->created_at->format('Y.m.d H:i') : '—' }}</dd>
+            <dt class="col-sm-4 py-1">{{ __('webshop::checkout.order.date') }}</dt>
+            <dd class="col-sm-8 py-1">{{ $order->created_at ? WsFormat::datetime($order->created_at) : '—' }}</dd>
 
-            <dt class="col-sm-4 py-1">Rendelés állapota</dt>
+            <dt class="col-sm-4 py-1">{{ __('webshop::checkout.order.status') }}</dt>
             <dd class="col-sm-8 py-1">
                 <span class="badge badge-{{ $wsBadge($order->status) }}">{{ $order->status_label }}</span>
             </dd>
 
             @if($order->payment_method)
-                <dt class="col-sm-4 py-1">Fizetés állapota</dt>
+                <dt class="col-sm-4 py-1">{{ __('webshop::checkout.order.payment_status') }}</dt>
                 <dd class="col-sm-8 py-1">
                     <span class="badge badge-{{ $wsBadge($order->payment_status) }}">{{ $order->payment_status_label }}</span>
                     @if($order->paid_at)
-                        <span class="text-muted small ml-1">{{ $order->paid_at->format('Y.m.d H:i') }}</span>
+                        <span class="text-muted small ml-1">{{ WsFormat::datetime($order->paid_at) }}</span>
                     @endif
                 </dd>
             @endif
 
             @if($order->shipping_method)
-                <dt class="col-sm-4 py-1">Szállítás állapota</dt>
+                <dt class="col-sm-4 py-1">{{ __('webshop::checkout.order.shipping_status') }}</dt>
                 <dd class="col-sm-8 py-1">
                     <span class="badge badge-{{ $wsBadge($order->shipping_status) }}">{{ $order->shipping_status_label }}</span>
                     @if($order->shipped_at)
-                        <span class="text-muted small ml-1">{{ $order->shipped_at->format('Y.m.d H:i') }}</span>
+                        <span class="text-muted small ml-1">{{ WsFormat::datetime($order->shipped_at) }}</span>
                     @endif
                 </dd>
             @endif
 
             @if($order->payment_method)
-                <dt class="col-sm-4 py-1">Fizetési mód</dt>
+                <dt class="col-sm-4 py-1">{{ __('webshop::checkout.order.payment_method') }}</dt>
                 <dd class="col-sm-8 py-1">
                     {{ \Weboldalnet\WebshopAiDefault\Services\Webshop\Commerce\WebshopCommerceService::getPaymentMethodLabel($order->payment_method) }}
                 </dd>
             @endif
 
             @if($order->shipping_method)
-                <dt class="col-sm-4 py-1">Szállítási mód</dt>
+                <dt class="col-sm-4 py-1">{{ __('webshop::checkout.order.shipping_method') }}</dt>
                 <dd class="col-sm-8 py-1">
                     {{ \Weboldalnet\WebshopAiDefault\Services\Webshop\Commerce\WebshopCommerceService::getShippingMethodLabel($order->shipping_method) }}
                 </dd>
@@ -70,7 +70,7 @@
 
             {{-- Csomagkövetés: csak akkor, ha a futárszolgálat már adott azonosítót --}}
             @if($order->shipment && $order->shipment->tracking_number)
-                <dt class="col-sm-4 py-1">Csomagazonosító</dt>
+                <dt class="col-sm-4 py-1">{{ __('webshop::checkout.order.tracking_number') }}</dt>
                 <dd class="col-sm-8 py-1">
                     @if($order->shipment->tracking_url)
                         <a href="{{ $order->shipment->tracking_url }}" target="_blank" rel="noopener">
@@ -85,11 +85,11 @@
             {{-- Számla: a számot és a kiállítás idejét mutatjuk. Letöltési link
                  szándékosan nincs: a PDF-hez ma csak admin útvonal létezik. --}}
             @if($order->invoiceDocument && $order->invoiceDocument->invoice_number)
-                <dt class="col-sm-4 py-1">Számlaszám</dt>
+                <dt class="col-sm-4 py-1">{{ __('webshop::checkout.order.invoice_number') }}</dt>
                 <dd class="col-sm-8 py-1">
                     {{ $order->invoiceDocument->invoice_number }}
                     @if($order->invoiceDocument->issued_at)
-                        <span class="text-muted small ml-1">{{ $order->invoiceDocument->issued_at->format('Y.m.d') }}</span>
+                        <span class="text-muted small ml-1">{{ WsFormat::date($order->invoiceDocument->issued_at) }}</span>
                     @endif
                 </dd>
             @endif

@@ -82,6 +82,7 @@ class WebshopOrder extends Model
     const SHIPPING_STATUS_DELIVERED = 'delivered';
     const SHIPPING_STATUS_FAILED = 'failed';
 
+    // Kódkészlet + magyar felirat; a nyelvfüggő felirat: typeLabels(), statusLabels() … és a *_label accessorok
     const TYPES = [
         self::TYPE_ORDER => 'Rendelés',
         self::TYPE_QUOTE => 'Ajánlatkérés',
@@ -440,11 +441,39 @@ class WebshopOrder extends Model
         });
     }
 
+    // --- Feliratok az aktuális nyelven ---
+
+    /*
+     * A fenti konstans tömbök a kódkészletet (validáció) és a magyar feliratot tartják; a megjelenített felirat a
+     * webshop::order nyelvi fájlból jön, így a vásárlói oldalon és a levélben a kérés / levél nyelvén, az adminban az
+     * admin nyelvén látszik. Kód => felirat tömbök (pl. <select>-hez):
+     */
+    public static function typeLabels(): array { return self::translateLabels(self::TYPES, 'type'); }
+    public static function statusLabels(): array { return self::translateLabels(self::STATUSES, 'status'); }
+    public static function paymentStatusLabels(): array { return self::translateLabels(self::PAYMENT_STATUSES, 'payment_status'); }
+    public static function invoiceStatusLabels(): array { return self::translateLabels(self::INVOICE_STATUSES, 'invoice_status'); }
+    public static function shippingStatusLabels(): array { return self::translateLabels(self::SHIPPING_STATUSES, 'shipping_status'); }
+
+    protected static function translateLabels(array $labels, string $group): array
+    {
+        foreach ($labels as $code => $label) {
+            $labels[$code] = __('webshop::order.' . $group . '.' . $code);
+        }
+
+        return $labels;
+    }
+
+    /** Egy kód felirata; ismeretlen kódnál maga a kód (mint korábban). */
+    protected static function translateLabel(array $labels, string $group, $code)
+    {
+        return isset($labels[$code]) ? __('webshop::order.' . $group . '.' . $code) : $code;
+    }
+
     // --- Attribute accessors ---
 
-    public function getStatusLabelAttribute(): string { return self::STATUSES[$this->status] ?? $this->status; }
-    public function getTypeLabelAttribute(): string { return self::TYPES[$this->type] ?? $this->type; }
-    public function getPaymentStatusLabelAttribute(): string { return self::PAYMENT_STATUSES[$this->payment_status] ?? $this->payment_status; }
-    public function getInvoiceStatusLabelAttribute(): string { return self::INVOICE_STATUSES[$this->invoice_status] ?? $this->invoice_status; }
-    public function getShippingStatusLabelAttribute(): string { return self::SHIPPING_STATUSES[$this->shipping_status] ?? $this->shipping_status; }
+    public function getStatusLabelAttribute(): string { return self::translateLabel(self::STATUSES, 'status', $this->status); }
+    public function getTypeLabelAttribute(): string { return self::translateLabel(self::TYPES, 'type', $this->type); }
+    public function getPaymentStatusLabelAttribute(): string { return self::translateLabel(self::PAYMENT_STATUSES, 'payment_status', $this->payment_status); }
+    public function getInvoiceStatusLabelAttribute(): string { return self::translateLabel(self::INVOICE_STATUSES, 'invoice_status', $this->invoice_status); }
+    public function getShippingStatusLabelAttribute(): string { return self::translateLabel(self::SHIPPING_STATUSES, 'shipping_status', $this->shipping_status); }
 }

@@ -89,13 +89,13 @@ class WebshopReviewService
         $parts = [];
 
         if (self::verifiedOnly()) {
-            $parts[] = 'Véleményt csak a terméket nálunk megvásárló vevők írhatnak: ezt a rendelésszám és az e-mail-cím alapján ellenőrizzük.';
+            $parts[] = __('webshop::product.reviews.disclosure_verified_only');
         } else {
-            $parts[] = 'Az „Ellenőrzött vásárló” jelölésű véleményeknél a véleményező a rendelésszámával igazolta, hogy a terméket nálunk vásárolta. A jelölés nélküli véleményeknél a vásárlást nem ellenőrizzük.';
+            $parts[] = __('webshop::product.reviews.disclosure_verified_marked');
         }
 
         if (self::moderationEnabled()) {
-            $parts[] = 'A véleményeket közzététel előtt átnézzük.';
+            $parts[] = __('webshop::product.reviews.disclosure_moderated');
         }
 
         return implode(' ', $parts);
