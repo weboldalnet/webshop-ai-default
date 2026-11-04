@@ -1,4 +1,23 @@
 ## [Unreleased]
+### Fordítások — javítások a tesztoldali AI-próbából (az 1.1.22 után)
+Migrációt NEM igényel, csak `composer update` + `vendor:publish --tag=webshop-assets-js --force` (a
+`webshop-translations.js` változott).
+- **Az AI-futás szünete a szerveren is rögzül** (új végpont: `POST …/translations/runs/{run}/pause`,
+  `WebshopTranslationRunService::pause()`). Eddig a szünet csak a böngészőben élt: újratöltés után a lista
+  „Folyamatban”-t mutatott, és a „Riport” megnyitásakor a futás magától folytatódott. Most:
+  - a „Szünet” után a lista „Szünetel”-t mutat;
+  - futás közben bezárt ablak vagy fül esetén is szünetelőre áll (az ablak bezárásakor kéréssel, a fül
+    bezárásakor / újratöltésekor `sendBeacon`-nel a `beforeunload`-ban és a `pagehide`-ban; újratöltésnél a lista
+    első betöltése ezt még megelőzheti, ilyenkor egyszer még „Folyamatban” látszik);
+  - a félbemaradt futás a „Riport” gombbal szünetelő folyamatjelzőt nyit (tétel- és mezőszámmal, a kredithiba
+    üzenetével), és csak a „Folytatás” viszi tovább;
+  - a futó lépés alatt adott szünet a lépés után jut el a szerverhez, így az nem írja vissza „Folyamatban”-ra;
+    gyors szünet–folytatás nem indít két párhuzamos léptetést.
+  A riport AJAX-válasza a futás állapotát is adja (`run`: végpontok + haladás).
+- A szűrésnek megfelelő összes fordítása gomb tiltott, ha a szűrés 0 tételt ad (eddig üres ablakot nyitott).
+- A szerkesztők fordítássávján az „Az AI a mentett eredeti szöveget fordítja…” tipp csak akkor látszik, ha az AI-fordítás
+  elérhető (eddig AI nélkül is kiírta).
+
 ### Többnyelvű webshop — pénztár: GLS-térkép és fizetés-újrapróba a vásárló nyelvén (az 1.1.21 után)
 Migrációt NEM igényel.
 - A GLS csomagpont-térkép (gls-dpm) felülete az oldal nyelvén (`language` attribútum; a komponens nyelvei: cs, hr, hu,

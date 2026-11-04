@@ -235,6 +235,7 @@ Route::middleware('web')->group(function () {
                 Route::post('/runs', [AdminTranslationController::class, 'storeRun'])->name('runs.store');
                 Route::get('/runs/{run}', [AdminTranslationController::class, 'showRun'])->whereNumber('run')->name('runs.show');
                 Route::post('/runs/{run}/step', [AdminTranslationController::class, 'step'])->whereNumber('run')->name('runs.step');
+                Route::post('/runs/{run}/pause', [AdminTranslationController::class, 'pauseRun'])->whereNumber('run')->name('runs.pause');
                 Route::post('/runs/{run}/cancel', [AdminTranslationController::class, 'cancelRun'])->whereNumber('run')->name('runs.cancel');
                 Route::post('/runs/{run}/restore', [AdminTranslationController::class, 'restoreRun'])->whereNumber('run')->name('runs.restore');
                 Route::post('/run-items/{item}/restore', [AdminTranslationController::class, 'restoreItem'])->whereNumber('item')->name('run-items.restore');

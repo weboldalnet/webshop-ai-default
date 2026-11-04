@@ -11,8 +11,12 @@ const WebshopTranslations = (function ($) {
 
     const modalSelector = '#wsTranslationModal';
     let config = {};
-    let current = null;     // a futó futás: {urls, paused, stopped}
+    let current = null;     // a futó futás: {urls, paused, stopped, busy, pending}
     let changedSomething = false;
+
+    function csrfToken() {
+        return $('meta[name="csrf-token"]').attr('content') || '';
+    }
 
     function request(url, data, method) {
         if (typeof window.wnAdminRequest === 'function') {
@@ -25,7 +29,7 @@ const WebshopTranslations = (function ($) {
                 method: method || 'POST',
                 data: data || {},
                 dataType: 'json',
-                headers: {'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content') || '', 'X-Requested-With': 'XMLHttpRequest'}
+                headers: {'X-CSRF-TOKEN': csrfToken(), 'X-Requested-With': 'XMLHttpRequest'}
             }).done(resolve).fail(function (xhr) {
                 const error = new Error((xhr.responseJSON && xhr.responseJSON.message) || 'A kérés nem sikerült.');
                 error.status = xhr.status;
@@ -162,20 +166,33 @@ const WebshopTranslations = (function ($) {
             '</div>';
     }
 
-    function startRun(run) {
-        current = {urls: run.urls, paused: false, stopped: false};
+    /**
+     * A futás folyamatjelzője. `paused`: a listából megnyitott, félbemaradt futás — nem indul magától, a „Folytatás”
+     * viszi tovább onnan, ahol abbamaradt.
+     */
+    function startRun(run, paused) {
+        current = {urls: run.urls, paused: !!paused, stopped: false, busy: false, pending: null};
         changedSomething = true;
         setModal(progressHtml(),
-            '<button type="button" class="btn btn-outline-secondary js-tr-pause"><i class="fa-solid fa-pause"></i> Szünet</button>' +
+            '<button type="button" class="btn btn-outline-secondary js-tr-pause"></button>' +
             '<button type="button" class="btn btn-outline-danger js-tr-cancel"><i class="fa-solid fa-stop"></i> Leállítás</button>');
         updateProgress(run);
+        setPausedState(current.paused, run.status === 'paused' ? null : 'A futás félbemaradt — a „Folytatás” onnan viszi tovább, ahol abbamaradt.');
+        if (run.error) {
+            modal().find('.js-tr-run-error').text(run.error).show();
+        }
 
         modal().find('.js-tr-pause').on('click', function () {
-            if (!current) return;
-            current.paused = !current.paused;
-            $(this).html(current.paused ? '<i class="fa-solid fa-play"></i> Folytatás' : '<i class="fa-solid fa-pause"></i> Szünet');
-            if (!current.paused) step();
-            else modal().find('.js-tr-run-status').text('Szünetel — a már lefordított tételek élesek.');
+            const active = current;
+            if (!active) return;
+            active.paused = !active.paused;
+            setPausedState(active.paused);
+            if (active.paused) {
+                pauseOnServer(active);
+            } else {
+                modal().find('.js-tr-run-error').hide();
+                step();
+            }
         });
         modal().find('.js-tr-cancel').on('click', function () {
             confirmDialog({title: 'A fordítás leállítása', message: 'A hátralévő tételek kimaradnak; a már lefordítottak élesek maradnak (a riportból visszavonhatók).', confirmLabel: 'Leállítás', danger: true})
@@ -193,19 +210,51 @@ const WebshopTranslations = (function ($) {
         }
     }
 
-    function step() {
-        if (!current || current.paused || current.stopped) return;
+    function setPausedState(paused, message) {
+        modal().find('.js-tr-pause').html(paused ? '<i class="fa-solid fa-play"></i> Folytatás' : '<i class="fa-solid fa-pause"></i> Szünet');
+        modal().find('.js-tr-run-bar').toggleClass('progress-bar-animated', !paused);
+        modal().find('.js-tr-run-status').text(paused ? (message || 'Szünetel — a már lefordított tételek élesek.') : 'Fordítás folyamatban…');
+    }
 
-        request(current.urls.step).then(function (progress) {
-            if (!current || current.stopped) return;
+    /**
+     * A szünet a szerveren is rögzül, így a lista „Szünetel”-t mutat, és a futás csak a „Folytatás”-ra megy tovább.
+     * A folyamatban lévő lépés után küldi (az ne írja vissza „Folyamatban”-ra); ha közben folytatták, nem küldi.
+     */
+    function pauseOnServer(run) {
+        return Promise.resolve(run.pending).then(function () {
+            if (!run.paused && !run.stopped) return null;
+            return request(run.urls.pause);
+        }).catch(function () {
+            return null;
+        });
+    }
+
+    /** Bezárt ablak: a futás megáll, a szerveren szünetelőre áll (a listából folytatható) */
+    function stopCurrent() {
+        const run = current;
+        current = null;
+        if (!run) return Promise.resolve();
+        run.stopped = true;
+
+        return pauseOnServer(run);
+    }
+
+    function step() {
+        const run = current;
+        if (!run || run.paused || run.stopped || run.busy) return;
+
+        run.busy = true;
+        run.pending = request(run.urls.step).then(function (progress) {
+            run.busy = false;
+            if (run.stopped || current !== run) return;
             updateProgress(progress);
             if (progress.item) logItem(progress.item);
 
             if (progress.paused) {
-                current.paused = true;
-                modal().find('.js-tr-run-status').text('Szünetel');
+                // a szerver állította szünetelőre (pl. elfogyott az AI-kredit)
+                run.paused = true;
+                setPausedState(true, 'Szünetel');
                 modal().find('.js-tr-run-error').text(progress.error || '').show();
-                modal().find('.js-tr-pause').html('<i class="fa-solid fa-play"></i> Folytatás');
                 return;
             }
             if (progress.finished) {
@@ -214,11 +263,13 @@ const WebshopTranslations = (function ($) {
             }
             step();
         }).catch(function (error) {
-            // hálózati / időtúllépési hiba: szünet, a vásárló (admin) folytathatja
-            if (!current) return;
-            current.paused = true;
+            // hálózati / időtúllépési hiba: szünet, az admin folytathatja
+            run.busy = false;
+            if (run.stopped || current !== run) return;
+            run.paused = true;
+            setPausedState(true, 'Szünetel');
             modal().find('.js-tr-run-error').text('A lépés nem sikerült (' + error.message + '). A „Folytatás” újrapróbálja.').show();
-            modal().find('.js-tr-pause').html('<i class="fa-solid fa-play"></i> Folytatás');
+            pauseOnServer(run);
         });
     }
 
@@ -250,13 +301,53 @@ const WebshopTranslations = (function ($) {
 
     function showReport(reportUrl, restoreUrl) {
         request(reportUrl, {}, 'GET').then(function (response) {
-            setModal('<div class="js-tr-report" data-restore-run-url="' + escapeHtml(restoreUrl || '') + '">' + response.html + '</div>',
-                (restoreUrl ? '<button type="button" class="btn btn-outline-danger mr-auto js-tr-restore-run"><i class="fa-solid fa-rotate-left"></i> A teljes futás visszavonása</button>' : '') +
-                '<button type="button" class="btn btn-primary" data-dismiss="modal">Bezárás</button>');
-            initReportActions(modal().find('.js-tr-report')[0], modal());
+            renderReport(response.html, restoreUrl);
         }).catch(function (error) {
             toast(error.message, 'error');
         });
+    }
+
+    function renderReport(html, restoreUrl) {
+        setModal('<div class="js-tr-report" data-restore-run-url="' + escapeHtml(restoreUrl || '') + '">' + html + '</div>',
+            (restoreUrl ? '<button type="button" class="btn btn-outline-danger mr-auto js-tr-restore-run"><i class="fa-solid fa-rotate-left"></i> A teljes futás visszavonása</button>' : '') +
+            '<button type="button" class="btn btn-primary" data-dismiss="modal">Bezárás</button>');
+        initReportActions(modal().find('.js-tr-report')[0], modal());
+    }
+
+    /** A lista „Riport” gombja: lezárt futásnál a riport, félbemaradtnál a szünetelő folyamatjelző */
+    function openRun(reportUrl) {
+        current = null;
+        showModal();
+        setModal('<p class="text-muted mb-0"><i class="fa-solid fa-spinner fa-spin"></i> Betöltés…</p>', '');
+
+        request(reportUrl, {}, 'GET').then(function (response) {
+            const run = response.run;
+            if (run && !run.finished) {
+                startRun(run, true);
+            } else {
+                renderReport(response.html, run ? run.urls.restore : reportUrl + '/restore');
+            }
+        }).catch(function (error) {
+            setModal('<div class="alert alert-danger mb-0">' + escapeHtml(error.message) + '</div>',
+                '<button type="button" class="btn btn-secondary" data-dismiss="modal">Bezárás</button>');
+        });
+    }
+
+    /**
+     * Futás közben bezárt vagy újratöltött fül: a futás a szerveren is szünetelőre áll (a listából folytatható). A
+     * beforeunload még a navigációs kérés előtt fut, így az újratöltött lista már „Szünetel”-t mutat; a pagehide a
+     * tartalék (mobilon a beforeunload elmaradhat). A kétszeri küldés ártalmatlan.
+     */
+    function pauseOnPageHide() {
+        function sendPause() {
+            if (!current || current.stopped || !current.urls.pause || !navigator.sendBeacon) return;
+            const data = new FormData();
+            data.append('_token', csrfToken());
+            navigator.sendBeacon(current.urls.pause, data);
+        }
+
+        window.addEventListener('beforeunload', sendPause);
+        window.addEventListener('pagehide', sendPause);
     }
 
     function initReportActions(container, $scope) {
@@ -328,6 +419,7 @@ const WebshopTranslations = (function ($) {
                     $('.js-tr-rows').html(response.rows).css('opacity', 1);
                     $('.js-tr-pagination').html(response.pagination);
                     $('.js-tr-total').text(response.total);
+                    $('.js-tr-translate-all').prop('disabled', !response.total);
                     $('.js-tr-check-all').prop('checked', false);
                     updateSelection();
                     config.type = params.type;
@@ -392,27 +484,15 @@ const WebshopTranslations = (function ($) {
         });
 
         $(document).on('click', '.js-tr-open-report', function () {
-            showModal();
-            setModal('<p class="text-muted mb-0"><i class="fa-solid fa-spinner fa-spin"></i> Betöltés…</p>', '');
-            const reportUrl = $(this).data('url');
-            const status = $(this).data('status');
-            if (status === 'paused' || status === 'running' || status === 'pending') {
-                // félbemaradt futás: folytatható
-                const stepUrl = $(this).data('step-url');
-                const base = stepUrl.replace(/\/step$/, '');
-                startRun({urls: {step: stepUrl, cancel: base + '/cancel', restore: base + '/restore', report: reportUrl}, total: 0, processed: 0, fields: 0, errors: 0, finished: false});
-            } else {
-                showReport(reportUrl, reportUrl + '/restore');
-            }
+            openRun($(this).data('url'));
         });
 
         modal().on('hidden.bs.modal', function () {
-            if (current) {
-                current.stopped = true;
-                current = null;
-            }
-            if (changedSomething) reload();
+            stopCurrent().then(function () {
+                if (changedSomething) reload();
+            });
         });
+        pauseOnPageHide();
     }
 
     /** A szerkesztők (és a fordítás-szerkesztő) „Fordítás AI-val” gombja: egy tételes futás */
@@ -422,12 +502,11 @@ const WebshopTranslations = (function ($) {
             openDialog({type: $(this).data('type'), ids: [$(this).data('id')]}, $(this).data('locale') || null);
         });
         modal().on('hidden.bs.modal', function () {
-            if (current) {
-                current.stopped = true;
-                current = null;
-            }
-            if (changedSomething && config.reloadOnFinish) window.location.reload();
+            stopCurrent().then(function () {
+                if (changedSomething && config.reloadOnFinish) window.location.reload();
+            });
         });
+        pauseOnPageHide();
     }
 
     return {

@@ -198,11 +198,12 @@ class WebshopTranslationController extends Controller
         return response()->json(['urls' => self::runUrls($run)] + WebshopTranslationRunService::step($run, auth('admin')->id()));
     }
 
-    /** A futás végpontjai a böngészőnek (lépés, leállítás, visszavonás, riport) */
+    /** A futás végpontjai a böngészőnek (lépés, szünet, leállítás, visszavonás, riport) */
     private static function runUrls(WebshopTranslationRun $run): array
     {
         return [
             'step' => route('admin.webshop.translations.runs.step', $run),
+            'pause' => route('admin.webshop.translations.runs.pause', $run),
             'cancel' => route('admin.webshop.translations.runs.cancel', $run),
             'restore' => route('admin.webshop.translations.runs.restore', $run),
             'report' => route('admin.webshop.translations.runs.show', $run),
@@ -221,9 +222,20 @@ class WebshopTranslationController extends Controller
             'groups' => WebshopTranslationStatusService::GROUPS,
         ];
 
+        // a futás állapota is: félbemaradt futásnál a lista a riport helyett a (szünetelő) folyamatjelzőt nyitja meg
         return $request->ajax()
-            ? response()->json(['html' => view('admin.webshop.translations.partials.report', $data)->render()])
+            ? response()->json([
+                'html' => view('admin.webshop.translations.partials.report', $data)->render(),
+                'run' => ['urls' => self::runUrls($run)] + WebshopTranslationRunService::progress($run),
+            ])
             : view('admin.webshop.translations.run', $data);
+    }
+
+    public function pauseRun(WebshopTranslationRun $run)
+    {
+        WebshopTranslationRunService::pause($run);
+
+        return response()->json(['success' => true] + WebshopTranslationRunService::progress($run->fresh()));
     }
 
     public function cancelRun(WebshopTranslationRun $run)

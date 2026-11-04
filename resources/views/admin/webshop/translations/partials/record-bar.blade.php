@@ -29,7 +29,7 @@
         </div>
     @endif
     @if($wsTrRow)
-        <div class="ws-tr-record-bar">
+        <div class="ws-tr-record-bar {{ $wsTrAi ? '' : 'mb-3' }}">
             <span class="fw-600"><i class="fa-solid fa-language"></i> Fordítások:</span>
             @foreach($wsTrLocales as $wsTrLocale)
                 @php($wsTrSummary = $wsTrRow['locales'][$wsTrLocale])
@@ -44,9 +44,9 @@
                 </button>
             @endif
         </div>
-        <span class="ws-hint d-block mb-3">Az AI a mentett eredeti szöveget fordítja — előbb mentsd a módosításokat.</span>
 
         @if($wsTrAi)
+            <span class="ws-hint d-block mb-3">Az AI a mentett eredeti szöveget fordítja — előbb mentsd a módosításokat.</span>
             @once
                 @include('admin.webshop.translations.partials.modal')
                 <script src="/packages/webshop/admin/js/webshop-translations.js?v={{ @filemtime(public_path('packages/webshop/admin/js/webshop-translations.js')) }}"></script>

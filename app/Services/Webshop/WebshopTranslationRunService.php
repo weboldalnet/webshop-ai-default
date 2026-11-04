@@ -453,6 +453,17 @@ class WebshopTranslationRunService
         return $restored;
     }
 
+    /**
+     * Szünet: a „Szünet” gomb, illetve futás közben bezárt ablak vagy fül. A függő tételek maradnak, a futás a
+     * listából („Riport”) folytatható. Lezárt futáson nem változtat.
+     */
+    public static function pause(WebshopTranslationRun $run): void
+    {
+        if (!$run->isFinished()) {
+            $run->update(['status' => WebshopTranslationRun::STATUS_PAUSED]);
+        }
+    }
+
     public static function cancel(WebshopTranslationRun $run): void
     {
         $run->items()->where('status', WebshopTranslationRunItem::STATUS_PENDING)

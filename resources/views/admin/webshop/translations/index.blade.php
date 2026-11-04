@@ -121,7 +121,7 @@
                         <button type="button" class="btn btn-outline-primary js-tr-translate-selected" disabled>
                             <i class="fa-solid fa-language"></i> Kijelöltek fordítása AI-val
                         </button>
-                        <button type="button" class="btn btn-primary js-tr-translate-all">
+                        <button type="button" class="btn btn-primary js-tr-translate-all" @disabled(!$total)>
                             <i class="fa-solid fa-language"></i> A szűrésnek megfelelő összes fordítása
                         </button>
                     </div>
@@ -190,8 +190,7 @@
                                 <td>{{ $wsRun->done_items }} / {{ $wsRun->total_items }}@if($wsRun->error_items) <span class="text-danger">· {{ $wsRun->error_items }} hiba</span>@endif</td>
                                 <td>{{ $wsRun->translated_fields }}</td>
                                 <td class="text-right">
-                                    <button type="button" class="btn btn-sm btn-light border js-tr-open-report" data-url="{{ route('admin.webshop.translations.runs.show', $wsRun) }}"
-                                            data-step-url="{{ route('admin.webshop.translations.runs.step', $wsRun) }}" data-status="{{ $wsRun->status }}">
+                                    <button type="button" class="btn btn-sm btn-light border js-tr-open-report" data-url="{{ route('admin.webshop.translations.runs.show', $wsRun) }}">
                                         Riport
                                     </button>
                                 </td>
